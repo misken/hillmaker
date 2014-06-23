@@ -94,8 +94,6 @@ def bin_of_week(dt, bin_size_mins=30):
     return time_bin
 
 
-
-
 def dt_floor(dt, minutes):
     """
    Find floor of a datetime object to specified number of minutes.
@@ -112,9 +110,6 @@ def dt_floor(dt, minutes):
     return dt + timedelta(0, floor_time - tot_seconds, -dt.microsecond)
 
 
-
-
-
 def dt_ceiling(dt, minutes):
     """
    Find ceiling of a datetime object to specified number of minutes
@@ -127,9 +122,6 @@ def dt_ceiling(dt, minutes):
 
     ceiling_time = math.ceil(seconds / ceiling_seconds) * ceiling_seconds
     return dt + timedelta(0, ceiling_time - seconds, -dt.microsecond)
-
-
-
 
 
 def isgt2bins(indtbin, outdtbin, binsize_mins):
