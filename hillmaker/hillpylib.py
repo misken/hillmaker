@@ -20,8 +20,8 @@ def td_to_mins(x):
 
     """
 
-    nsecs = x * (10 ** (-9)) / 60.0
-    return int(nsecs)
+    num_secs = x * (10 ** (-9)) / 60.0
+    return int(num_secs)
 
 
 
