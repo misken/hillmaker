@@ -5,22 +5,22 @@ Created on Fri Nov  1 23:50:39 2013
 @author: mark
 """
 
-__author__ = 'mark'
+__author__ = 'isken'
 
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from datetime import datetime
 from datetime import timedelta
-from itertools import izip
+from itertools import zip_longest
 import time
 
 
 def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total_str='Total',bin_size_mins=60):
     """
-    Generate all simple paths in the graph G from source to target.
+    Create bydatetime table based on user inputs.
 
-    A simple path is a path with no repeated nodes.
+    This is the table from which summary statistics can be computed.
 
     Parameters
     ----------
@@ -74,8 +74,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
     import hillpylib as hlib
 
-
-    analysis_range = [start_date,end_date]
+    analysis_range = [start_date, end_date]
 
     # Create date and range and convert it from a pandas DateTimeIndex to a
     # reqular old array of datetimes to try to get around the weird problems
@@ -84,23 +83,21 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     #rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq).to_pydatetime()
     rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq)
 
+    print ("rng_bydt created: {}".format(time.clock()))
+
 
     # Get the unique category values
     categories = [c for c in stops_df[catfield].unique()]
+
+    print ("found unique categories: {}".format(time.clock()))
 
 
     # Create a list of column names for the by date table and then an empty data frame based on these columns.
     columns=['category','datetime','arrivals','departures','occupancy']
     bydt_df = DataFrame(columns=columns)
 
-
-
-
-    # <markdowncell>
-
-    # Now we'll build up the seeded by date table a category at a time. Along the way we'll initialize all the measures to 0.
-
-    # <codecell>
+    # Now we'll build up the seeded by date table a category at a time.
+    # Along the way we'll initialize all the measures to 0.
 
     len_bydt = len(rng_bydt)
     for cat in categories:
@@ -116,6 +113,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
         bydt_df = pd.concat([bydt_df,bydt_df_cat])
 
 
+    print ("Seeded bydatetime DataFrame created: {}".format(time.clock()))
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
     # regular columns as well since it's hard
@@ -124,15 +122,18 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
     bydt_df = bydt_df.set_index(['category', 'datetime'], drop=False)
 
+    print ("Multi-index on bydatetime DataFrame created: {}".format(time.clock()))
+
     bydt_df['dayofweek'] = bydt_df['datetime'].map(lambda x: x.weekday())
     bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hlib.bin_of_day(x,bin_size_mins))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hlib.bin_of_week(x,bin_size_mins))
 
+    print ("dayofweek, bin_of_day, bin_of_week computed: {}".format(time.clock()))
     # Main occupancy, arrivals, departures loop. Process each record in the
 # stop data file.
 
     num_processed = 0
-    for intime, outtime, cat in izip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
+    for intime, outtime, cat in zip_longest(stops_df[infield], stops_df[outfield], stops_df[catfield]):
         good_rec = True
         rectype = hlib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
     
@@ -199,7 +200,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             num_processed += 1
             #print numprocessed
 
-    print "Done processing {} stop recs: {}".format(num_processed, time.clock())
+    print ("Done processing {} stop recs: {}".format(num_processed, time.clock()))
 
 
     return bydt_df
