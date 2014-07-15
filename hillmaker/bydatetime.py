@@ -74,16 +74,35 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
     import hillpylib as hlib
 
+    from pandas.tseries.offsets import Minute
+
     analysis_range = [start_date, end_date]
 
     # Create date and range and convert it from a pandas DateTimeIndex to a
     # reqular old array of datetimes to try to get around the weird problems
     # in computing day of week on datetime64 values.
-    bin_freq = str(bin_size_mins) + 'min'
+    # bin_freq = str(bin_size_mins) + 'min'
     #rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq).to_pydatetime()
-    rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq)
+    #rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq)
+
+    rng_bydt = pd.date_range(start_date, end_date, freq=Minute(bin_size_mins))
 
     print ("rng_bydt created: {}".format(time.clock()))
+
+    # import sys
+    # sys.exit("Stopping after rng_bydt_list creation")
+    #
+    # num_days = (end_date-start_date).days + 1
+    # num_periods = num_days * (1440//bin_size_mins)
+    # print(num_periods)
+    #
+    # # The following is no faster than the pandas date_range() method.
+    # #rng_bydt = [start_date + timedelta(minutes=i*60) for i in range(num_periods)]
+    # rng_int = [100 + i*60 for i in range(num_periods)]
+    #
+    # print ("rng_bydt list created: {}".format(time.clock()))
+
+
 
 
     # Get the unique category values
@@ -114,6 +133,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
 
     print ("Seeded bydatetime DataFrame created: {}".format(time.clock()))
+
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
     # regular columns as well since it's hard
@@ -214,13 +234,15 @@ if __name__ == '__main__':
     out_fld_name = 'OutRoomTS'
     cat_fld_name = 'PatType'
     file_stopdata = 'data/ShortStay.csv'
+    file_stopdata_pkl = 'data/ShortStay.pkl'
     start_analysis = '1/2/1996'
     end_analysis = '3/31/1996 23:45'
     ## Convert string dates to actual datetimes
     start_analysis_dt = pd.Timestamp(start_analysis)
     end_analysis_dt = pd.Timestamp(end_analysis)
 
-    df = pd.read_csv(file_stopdata,parse_dates=[in_fld_name,out_fld_name])
+    df = pd.read_pickle(file_stopdata_pkl)
+    print ("Pickled stop data file read: {}".format(time.clock()))
     bydt_df = make_bydatetime(df,in_fld_name,out_fld_name,cat_fld_name,start_analysis_dt,end_analysis_dt,'Total',60)
 
     file_bydt_csv = 'bydatetime_' + scenario_name + '.csv'
