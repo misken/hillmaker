@@ -152,6 +152,9 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     # Main occupancy, arrivals, departures loop. Process each record in the
 # stop data file.
 
+    # The following "standard approach" is slow and very non-Pythonic
+    # This
+
     num_processed = 0
     for intime, outtime, cat in zip_longest(stops_df[infield], stops_df[outfield], stops_df[catfield]):
         good_rec = True
