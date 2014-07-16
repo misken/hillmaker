@@ -140,15 +140,20 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     # to do a column transformation using a specific level of a multiindex.
     # http://stackoverflow.com/questions/13703720/converting-between-datetime-timestamp-and-datetime64?rq=1
 
-    bydt_df = bydt_df.set_index(['category', 'datetime'], drop=False)
 
-    print ("Multi-index on bydatetime DataFrame created: {}".format(time.clock()))
 
     bydt_df['dayofweek'] = bydt_df['datetime'].map(lambda x: x.weekday())
     bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hlib.bin_of_day(x,bin_size_mins))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hlib.bin_of_week(x,bin_size_mins))
 
     print ("dayofweek, bin_of_day, bin_of_week computed: {}".format(time.clock()))
+    print(bydt_df.head())
+
+    bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
+    print ("Multi-index on bydatetime DataFrame created: {}".format(time.clock()))
+
+    bydt_df.sortlevel(inplace=True)
+    print ("Multi-index fully lexsorted: {}".format(time.clock()))
     # Main occupancy, arrivals, departures loop. Process each record in the
 # stop data file.
 
@@ -165,9 +170,8 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             good_rec = False
     
         if good_rec and rectype != 'none':
-            indtbin = hlib.dt_floor(intime,bin_size_mins)
-            #print indtbin
-            outdtbin = hlib.dt_floor(outtime,bin_size_mins)
+            indtbin =  hlib.dt_floor(intime,bin_size_mins)
+            outdtbin =  hlib.dt_floor(outtime,bin_size_mins)
             inout_occ_frac = hlib.occ_frac([intime, outtime], bin_size_mins)
             
             # print "{} {} {} {} {:.3f} {:.3f} {:.3f}".format(intime, outtime, cat,
