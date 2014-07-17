@@ -28,3 +28,9 @@ pandas 0.14.0 introduces [MultiIndex slicers](http://pandas.pydata.org/pandas-do
 - I think this is the ticket -- see alignable example at bottom of doc section
 
 Separate dataframes by category? Dict or list of df's?
+
+DataFrame class has some methods that might end up being useful. I need to be really careful about whether
+views or copies are being returned and/or if new objects are getting spawned
+
+combineAdd
+http://pandas.pydata.org/pandas-docs/dev/generated/pandas.DataFrame.combineAdd.html#pandas.DataFrame.combineAdd

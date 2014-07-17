@@ -127,6 +127,9 @@ def dt_ceiling(dt, minutes):
 def isgt2bins(indtbin, outdtbin, binsize_mins):
     return (outdtbin - indtbin) > timedelta(minutes=binsize_mins)
 
+def numbins(indtbin, outdtbin, binsize_mins):
+    return 1 + ((outdtbin - indtbin).seconds/60.0) / binsize_mins
+
 
 def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
     """

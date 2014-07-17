@@ -147,7 +147,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hlib.bin_of_week(x,bin_size_mins))
 
     print ("dayofweek, bin_of_day, bin_of_week computed: {}".format(time.clock()))
-    print(bydt_df.head())
+    #print(bydt_df.head())
 
     bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
     print ("Multi-index on bydatetime DataFrame created: {}".format(time.clock()))
@@ -160,7 +160,10 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     # The following "standard approach" is slow and very non-Pythonic
     # This
 
+    idx = pd.IndexSlice
+
     num_processed = 0
+    num_inner = 0
     for intime, outtime, cat in zip_longest(stops_df[infield], stops_df[outfield], stops_df[catfield]):
         good_rec = True
         rectype = hlib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
@@ -173,43 +176,67 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             indtbin =  hlib.dt_floor(intime,bin_size_mins)
             outdtbin =  hlib.dt_floor(outtime,bin_size_mins)
             inout_occ_frac = hlib.occ_frac([intime, outtime], bin_size_mins)
+            inc_list = []
+            numbins = hlib.numbins(indtbin, outdtbin, bin_size_mins)
+            dtbin = indtbin
+
+
             
             # print "{} {} {} {} {:.3f} {:.3f} {:.3f}".format(intime, outtime, cat,
             #    rectype, time.clock(), inout_occ_frac[0], inout_occ_frac[1])
-    
+
             if rectype == 'inner':
-                bydt_df.ix[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
-                bydt_df.ix[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
-                bydt_df.ix[(cat,indtbin), 'arrivals'] += 1.0
-                bydt_df.ix[(cat,outdtbin), 'departures'] += 1.0
+                num_inner += 1
+                # inc_list.append(inout_occ_frac[0])
+                bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
+                bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
+                bydt_df.at[(cat,outdtbin), 'departures'] += 1.0
     
-                if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
-                    bin = indtbin + timedelta(minutes=bin_size_mins)
-                    while bin < outdtbin:
-                        bydt_df.ix[(cat,bin), 'occupancy'] += 1.0
-                        bin += timedelta(minutes=bin_size_mins)
-    
+
+                #if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
+                bin = 2
+                dtbin += timedelta(minutes=bin_size_mins)
+                while bin < numbins:
+                    #inc_list.append(1.0)
+                    bydt_df.at[(cat,dtbin), 'occupancy'] += 1.0
+                    bin += 1
+                    dtbin += timedelta(minutes=bin_size_mins)
+
+                if numbins > 1:
+                    #inc_list.append(inout_occ_frac[1])
+                    bydt_df.at[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
+
+                # I'm counting on this being a copy
+                #print(num_processed+1,cat,indtbin,outdtbin,numbins,inc_list)
+                #print(DataFrame(bydt_df.loc[idx[[cat],indtbin:outdtbin],idx['occupancy']]))
+
+                #inc_df = DataFrame(bydt_df.loc[idx[cat,indtbin:outdtbin],idx['occupancy']] + inc_list) # 169.5
+                # inc_df = (bydt_df.loc[idx[cat,indtbin:outdtbin],idx['occupancy']] + inc_list) # 166.8
+                # bydt_df.loc[idx[[cat],indtbin:outdtbin],idx['occupancy']] += inc_list # Error
+
+                #The update takes the bulk of the time
+                #bydt_df.update(inc_df)
     
             elif rectype == 'right':
                 # departure is outside analysis window
-                bydt_df.ix[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
-                bydt_df.ix[(cat,indtbin), 'arrivals'] += 1.0
+                bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
+                bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
     
                 if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
                     bin = indtbin + timedelta(minutes=bin_size_mins)
                     while bin <= end_analysis_dt:
-                        bydt_df.ix[(cat,bin), 'occupancy'] += 1.0
+                        bydt_df.at[(cat,bin), 'occupancy'] += 1.0
                         bin += timedelta(minutes=bin_size_mins)
     
             elif rectype == 'left':
                 # arrival is outside analysis window
-                bydt_df.ix[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
-                bydt_df.ix[(cat,outdtbin), 'departures'] += 1.0
+                bydt_df.at[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
+                bydt_df.at[(cat,outdtbin), 'departures'] += 1.0
     
                 if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
                     bin = start_analysis_dt + timedelta(minutes=bin_size_mins)
                     while bin < outdtbin:
-                        bydt_df.ix[(cat,bin), 'occupancy'] += 1.0
+                        bydt_df.at[(cat,bin), 'occupancy'] += 1.0
                         bin += timedelta(minutes=bin_size_mins)
     
             elif rectype == 'outer':
@@ -218,7 +245,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
                 if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
                     bin = start_analysis_dt
                     while bin <= end_analysis_dt:
-                        bydt_df.ix[(cat,bin), 'occupancy'] += 1.0
+                        bydt_df.at[(cat,bin), 'occupancy'] += 1.0
                         bin += timedelta(minutes=bin_size_mins)
     
             else:
@@ -227,6 +254,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             num_processed += 1
             #print numprocessed
 
+    print("Num inner: {}".format(num_inner))
     print ("Done processing {} stop recs: {}".format(num_processed, time.clock()))
 
 
