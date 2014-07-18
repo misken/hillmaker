@@ -31,7 +31,7 @@ Input specification
 --------------------
 
 General bin size choice
-Percentile method choice
+Percentile method choice - go with pandas default for now
 Bin contribution choices
 Analysis date range should have some appropriateness check
 Stop data should be checked for gaps or potential errors
