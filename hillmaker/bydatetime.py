@@ -12,7 +12,7 @@ import pandas as pd
 from pandas import DataFrame
 from datetime import datetime
 from datetime import timedelta
-from itertools import zip_longest
+#from itertools import zip_longest
 import time
 
 
@@ -49,7 +49,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
     Examples
     --------
-    >>> bydt_df = make_bydatetime(stops_df,'InTime','OutTime','PatientType',
+    bydt_df = make_bydatetime(stops_df,'InTime','OutTime','PatientType',
     ...                        datetime(2014, 3, 1),datetime(2014, 6, 30),'Total',60)
 
 
@@ -142,7 +142,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
 
 
-    bydt_df['dayofweek'] = bydt_df['datetime'].map(lambda x: x.weekday())
+    bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
     bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hlib.bin_of_day(x,bin_size_mins))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hlib.bin_of_week(x,bin_size_mins))
 
@@ -164,7 +164,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
     num_processed = 0
     num_inner = 0
-    for intime, outtime, cat in zip_longest(stops_df[infield], stops_df[outfield], stops_df[catfield]):
+    for intime, outtime, cat in zip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
         good_rec = True
         rectype = hlib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
     
@@ -176,7 +176,6 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             indtbin =  hlib.dt_floor(intime,bin_size_mins)
             outdtbin =  hlib.dt_floor(outtime,bin_size_mins)
             inout_occ_frac = hlib.occ_frac([intime, outtime], bin_size_mins)
-            inc_list = []
             numbins = hlib.numbins(indtbin, outdtbin, bin_size_mins)
             dtbin = indtbin
 
@@ -186,24 +185,19 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             #    rectype, time.clock(), inout_occ_frac[0], inout_occ_frac[1])
 
             if rectype == 'inner':
-                num_inner += 1
-                # inc_list.append(inout_occ_frac[0])
+                #num_inner += 1
+
                 bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
                 bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
                 bydt_df.at[(cat,outdtbin), 'departures'] += 1.0
-    
 
-                #if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
                 bin = 2
-                dtbin += timedelta(minutes=bin_size_mins)
                 while bin < numbins:
-                    #inc_list.append(1.0)
+                    dtbin += timedelta(minutes=bin_size_mins)
                     bydt_df.at[(cat,dtbin), 'occupancy'] += 1.0
                     bin += 1
-                    dtbin += timedelta(minutes=bin_size_mins)
 
                 if numbins > 1:
-                    #inc_list.append(inout_occ_frac[1])
                     bydt_df.at[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
 
                 # I'm counting on this being a copy
@@ -257,7 +251,6 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     print("Num inner: {}".format(num_inner))
     print ("Done processing {} stop recs: {}".format(num_processed, time.clock()))
 
-
     return bydt_df
 
 
@@ -278,7 +271,12 @@ if __name__ == '__main__':
 
     df = pd.read_pickle(file_stopdata_pkl)
     print ("Pickled stop data file read: {}".format(time.clock()))
+
     bydt_df = make_bydatetime(df,in_fld_name,out_fld_name,cat_fld_name,start_analysis_dt,end_analysis_dt,'Total',60)
 
-    file_bydt_csv = 'bydatetime_' + scenario_name + '.csv'
+    file_bydt_csv = 'data/bydatetime_' + scenario_name + '.csv'
+    file_bydt_pkl = 'data/bydatetime_' + scenario_name + '.pkl'
+
     bydt_df.to_csv(file_bydt_csv)
+    bydt_df.to_pickle(file_bydt_pkl)
+
