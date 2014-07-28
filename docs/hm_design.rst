@@ -1,3 +1,13 @@
+Hillmaker is a Python library
+
+May have some architectural things to learn and ideas to glean from matplot lib at
+[http://aosabook.org/en/matplotlib.html](http://aosabook.org/en/matplotlib.html).
+
+- notion of multiple use modes such as the pylab vs api approaches
+- similar since hillmaker is data -> crunch -> visualize
+
+
+
 Possible classes
 ================
 
@@ -6,13 +16,13 @@ Scenario
 --------
 
 A *scenario* is the basic unit of analysis and is defined by an input
-dataset (Stopdata) and a set of input parameter values.
+dataset (IntervalData) and a set of input parameter values.
 
 Is this really an ScenarioInputs object and should we then also have a
 ScenarioOutputs object?
 
-Stopdata
---------
+IntervalData
+------------
 
 This is the primary input data on which Hillmaker is run.
 
@@ -20,6 +30,18 @@ ParameterSet
 ------------
 
 The input parameters for a scenario.
+
+Hillmaker
+---------
+
+The calculation engine
+
+Hills
+-----
+
+Output data
+
+
 
 Stopdata reading and connections and conversion to DataFrame
 ============================================================
