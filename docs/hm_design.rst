@@ -18,8 +18,36 @@ Scenario
 A *scenario* is the basic unit of analysis and is defined by an input
 dataset (IntervalData) and a set of input parameter values.
 
-Is this really an ScenarioInputs object and should we then also have a
-ScenarioOutputs object?
+Properties
+^^^^^^^^^^
+
+name : string
+    Scenario identifier
+
+interval_data : pandas DataFrame
+
+in_field : string
+   Name of column in D to use as arrival datetime
+
+out_field : string
+   Name of column in D to use as departure datetime
+
+cat_field : string
+   Name of column in D to use as category field
+
+start_date : datetime
+   Start date for the analysis
+
+end_date : datetime
+   End date for the analysis
+
+total_str : string
+   Value to use for the totals
+
+bin_size_mins : int
+   Bin size in minutes. Should divide evenly into 1440.
+
+
 
 IntervalData
 ------------

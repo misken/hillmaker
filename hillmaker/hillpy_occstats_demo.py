@@ -1,47 +1,61 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
-
-# <markdowncell>
-
-# #Computing occupancy statistics with Python - Part 2 of 3#
-# In the second part of this series, we will use Python to compute summary occupancy statistics (such as means and percentiles) by time of day, day of week, and patient category (recall that this example is from a hospital short stay unit - go back to Part 1 for all of the background info). Computation of percentiles by one or more grouping fields is a pain using tools like Excel, Access and SQL Server. With Python+pandas it's easy.
-
-# <markdowncell>
-
-# ##Preliminaries##
-
-# <codecell>
 
 import pandas as pd
 
-# <markdowncell>
+def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total_str='Total',bin_size_mins=60):
+    """
+    Create bydatetime table based on user inputs.
 
-# At the end of Part 1 of this tutorial series, we ended up with a csv file called bydate_shortstay_csv.csv. Let's read it in and take a look at it.
+    This is the table from which summary statistics can be computed.
 
-# <codecell>
+    Parameters
+    ----------
+    D : pandas DataFrame
+       Stop data
 
-## Read sample data set and convert string dates to datetimes
-bydate_df = pd.read_csv('data/bydate_shortstay_csv.csv',parse_dates=['datetime'])
+    infield : string
+       Name of column in D to use as arrival datetime
 
-# <codecell>
+    outfield : string
+       Name of column in D to use as departure datetime
 
-bydate_df.head()
+    catfield : string
+       Name of column in D to use as category field
 
-# <codecell>
+    total_str : string
+       Value to use for the totals
 
-bydate_df[1320:1350].values
+    bin_size_mins : int
+       Bin size in minutes. Should divide evenly into 1440.
 
-# <markdowncell>
+    Returns
+    -------
+    bydatetime: pandas DataFrame
+       The computed bydatetime table as a DataFrame
 
-# With this data frame we can compute all kinds of interesting summary statistics by category, by day of week and time of day. To facilitate this type of "group by" analysis, **pandas** takes what is known as the Split-Apply-Combine approach. The [pandas documentation has a nice discussion](http://pandas.pydata.org/pandas-docs/dev/groupby.html) of this. To really understand split-apply-combine, [check out the article](http://www.jstatsoft.org/v40/i01) by [Hadley Wickham](http://had.co.nz/) who created the **plyr** package for [R](http://www.r-project.org/). I also created a tutorial on [Getting started with Python (with pandas and matplotlib) for group by analysis](http://hselab.org/machinery/content/getting-started-python-pandas-and-matplotlib-group-analysis) that covers some of the basics. A [companion tutorial shows how to do the same analysis using R](http://hselab.org/machinery/content/getting-started-r-plyr-and-ggplot2-group-analysis) instead of Python.
+    Examples
+    --------
+    >>> bydt_df = make_bydatetime(stops_df,'InTime','OutTime','PatientType',
+    ...                        datetime(2014, 3, 1),datetime(2014, 6, 30),'Total',60)
 
-# <markdowncell>
 
-# Pandas provides a `GroupBy` object to facilitate computing aggregate statistics by grouping fields. 
+    TODO
+    ----
 
-# <codecell>
+    - add parameter and code to handle occ frac choice
+    - generalize to handle choice of arr, dep, occ or some combo of
 
-# Create a GroupBy object for the summary stats    
+     Notes
+    -----
+
+
+    References
+    ----------
+
+
+    See Also
+    --------
+    """
+
 bydate_dfgrp1 = bydate_df.groupby(['category','binofweek'])
 
 # <codecell>
