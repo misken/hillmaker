@@ -22,15 +22,9 @@ from dateutil.parser import parse
 
 # Change directory into working HillPy dir
 # Change directory into working HillPy dir
-if os.name == 'nt':
-    if os.getenv('COMPUTERNAME') == 'ISKEN_HP':
-        os.chdir('C:\Users\isken\Dropbox\HillPy')
-    else:
-        os.chdir('C:\Users\mark\Dropbox\HillPy')
-else:
-    os.chdir('/home/mark/Dropbox/HillPy')
+
     
-occ_df = pd.read_csv('occ.csv')
+occ_df = pd.read_csv('data/occ_stats_summary_sstest.csv')
 
 tot_df = occ_df[occ_df['category']=='_Total']
 
