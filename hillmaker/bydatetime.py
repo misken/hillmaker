@@ -170,14 +170,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
     num_processed = 0
     num_inner = 0
-    for intime, outtime, cat in zip(stops_df[infield],
-
-
-
-
-
-
-                                    stops_df[outfield], stops_df[catfield]):
+    for intime, outtime, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
         good_rec = True
         rectype = hlib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
     
