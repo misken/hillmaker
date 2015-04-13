@@ -10,13 +10,20 @@ __author__ = 'isken'
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+from pandas import Timestamp
 from datetime import datetime
 from datetime import timedelta
+
 #from itertools import zip_longest
 import time
+from timeit import default_timer as timer
+
+import hillpylib as hlib
+
+from pandas.tseries.offsets import Minute
 
 
-def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total_str='Total',bin_size_mins=60):
+def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_analysis_dt,total_str='Total',bin_size_mins=60):
     """
     Create bydatetime table based on user inputs.
 
@@ -78,11 +85,9 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     """
 
 
-    import hillpylib as hlib
+    start = timer()
 
-    from pandas.tseries.offsets import Minute
-
-    analysis_range = [start_date, end_date]
+    analysis_range = [start_analysis_dt, end_analysis_dt]
 
     # Create date and range and convert it from a pandas DateTimeIndex to a
     # reqular old array of datetimes to try to get around the weird problems
@@ -91,9 +96,12 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     #rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq).to_pydatetime()
     #rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq)
 
-    rng_bydt = pd.date_range(start_date, end_date, freq=Minute(bin_size_mins))
+    rng_bydt = pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_mins))
+    datebins = pd.DataFrame(index=rng_bydt)
+    
+    
 
-    print ("rng_bydt created: {}".format(time.clock()))
+    print ("rng_bydt created: {}".format(timer()-start))
 
     # import sys
     # sys.exit("Stopping after rng_bydt_list creation")
@@ -114,7 +122,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     # Get the unique category values
     categories = [c for c in stops_df[catfield].unique()]
 
-    print ("found unique categories: {}".format(time.clock()))
+    print ("found unique categories: {}".format(timer()-start))
 
 
     # Create a list of column names for the by date table and then an empty data frame based on these columns.
@@ -138,7 +146,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
         bydt_df = pd.concat([bydt_df,bydt_df_cat])
 
 
-    print ("Seeded bydatetime DataFrame created: {}".format(time.clock()))
+    print ("Seeded bydatetime DataFrame created: {}".format(timer()-start))
 
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
@@ -152,14 +160,16 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
     bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hlib.bin_of_day(x,bin_size_mins))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hlib.bin_of_week(x,bin_size_mins))
 
-    print ("dayofweek, bin_of_day, bin_of_week computed: {}".format(time.clock()))
+    print ("dayofweek, bin_of_day, bin_of_week computed: {}".format(timer()-start))
     #print(bydt_df.head())
 
     bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
-    print ("Multi-index on bydatetime DataFrame created: {}".format(time.clock()))
+    print ("Multi-index on bydatetime DataFrame created: {}".format(timer()-start))
 
     bydt_df.sortlevel(inplace=True)
-    print ("Multi-index fully lexsorted: {}".format(time.clock()))
+    print ("Multi-index fully lexsorted: {}".format(timer()-start))
+    
+    # bydt_df.to_csv('after_lexsort.csv')
     # Main occupancy, arrivals, departures loop. Process each record in the
 # stop data file.
 
@@ -170,7 +180,9 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
 
     num_processed = 0
     num_inner = 0
-    for intime, outtime, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
+    for intime_raw, outtime_raw, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
+        intime = hlib.to_the_second(intime_raw)
+        outtime = hlib.to_the_second(outtime_raw)
         good_rec = True
         rectype = hlib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
     
@@ -179,8 +191,13 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             good_rec = False
     
         if good_rec and rectype != 'none':
-            indtbin =  hlib.dt_floor(intime,bin_size_mins)
-            outdtbin =  hlib.dt_floor(outtime,bin_size_mins)
+            #indtbin =  hlib.dt_floor(intime,bin_size_mins)
+            i = datebins.index.searchsorted(intime)
+            indtbin =datebins.index[i-1]
+            #outdtbin =  hlib.dt_floor(outtime,bin_size_mins)
+            i = datebins.index.searchsorted(outtime)
+            outdtbin =datebins.index[i-1]
+            
             inout_occ_frac = hlib.occ_frac([intime, outtime], bin_size_mins)
             numbins = hlib.numbins(indtbin, outdtbin, bin_size_mins)
             dtbin = indtbin
@@ -191,7 +208,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             #    rectype, time.clock(), inout_occ_frac[0], inout_occ_frac[1])
 
             if rectype == 'inner':
-                #num_inner += 1
+                num_inner += 1
 
                 bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
                 bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
@@ -255,7 +272,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_date,end_date,total
             #print numprocessed
 
     print("Num inner: {}".format(num_inner))
-    print ("Done processing {} stop recs: {}".format(num_processed, time.clock()))
+    print ("Done processing {} stop recs: {}".format(num_processed, timer()-start))
 
     return bydt_df
 
@@ -389,6 +406,8 @@ def make_bydatetime_2(scenario):
 
     bydt_df.sortlevel(inplace=True)
     print ("Multi-index fully lexsorted: {}".format(time.clock()))
+    
+
     # Main occupancy, arrivals, departures loop. Process each record in the
 # stop data file.
 
@@ -491,25 +510,42 @@ def make_bydatetime_2(scenario):
 
 if __name__ == '__main__':
 
-    scenario_name = 'sstest'
-    in_fld_name = 'InRoomTS'
-    out_fld_name = 'OutRoomTS'
-    cat_fld_name = 'PatType'
-    file_stopdata = 'data/ShortStay.csv'
-    file_stopdata_pkl = 'data/ShortStay.pkl'
-    start_analysis = '1/2/1996'
-    end_analysis = '3/31/1996 23:45'
-    ## Convert string dates to actual datetimes
+    
+    scenario_name = 'log_unitocc_test'
+    in_fld_name = 'EnteredTS'
+    out_fld_name = 'ExitedTS'
+    cat_fld_name = 'Unit'
+    start_analysis = '2/15/2015 00:00'
+    end_analysis = '6/16/2015 00:00'
+ ## Convert string dates to actual datetimes
     start_analysis_dt = pd.Timestamp(start_analysis)
     end_analysis_dt = pd.Timestamp(end_analysis)
+    
+    
+#    scenario_name = 'sstest'
+#    in_fld_name = 'InRoomTS'
+#    out_fld_name = 'OutRoomTS'
+#    cat_fld_name = 'PatType'
+    file_stopdata = 'logs/unit_stop_log_Experiment1_Scenario1_Rep1.csv'
+#    file_stopdata_pkl = 'data/ShortStay.pkl'
+#    start_analysis = '1/2/1996'
+#    end_analysis = '3/31/1996 23:45'
+#    ## Convert string dates to actual datetimes
+#    start_analysis_dt = pd.Timestamp(start_analysis)
+#    end_analysis_dt = pd.Timestamp(end_analysis)
 
-    df = pd.read_pickle(file_stopdata_pkl)
-    print ("Pickled stop data file read: {}".format(time.clock()))
+#    df = pd.read_pickle(file_stopdata_pkl)
+#    print ("Pickled stop data file read: {}".format(time.clock()))
+
+    df = pd.read_csv(file_stopdata)
+    basedate = Timestamp('20150215 00:00:00')
+    df['EnteredTS'] = df.apply(lambda row: basedate + pd.DateOffset(hours=row['Entered']), axis=1)
+    df['ExitedTS'] = df.apply(lambda row: basedate + pd.DateOffset(hours=row['Exited']), axis=1)
 
     bydt_df = make_bydatetime(df,in_fld_name,out_fld_name,cat_fld_name,start_analysis_dt,end_analysis_dt,'Total',60)
 
-    file_bydt_csv = 'data/bydatetime_' + scenario_name + '.csv'
-    file_bydt_pkl = 'data/bydatetime_' + scenario_name + '.pkl'
+    file_bydt_csv = 'data/bydatetime_main_' + scenario_name + '.csv'
+    file_bydt_pkl = 'data/bydatetime_main_' + scenario_name + '.pkl'
 
     bydt_df.to_csv(file_bydt_csv)
     bydt_df.to_pickle(file_bydt_pkl)

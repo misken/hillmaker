@@ -107,7 +107,8 @@ def dt_floor(dt, minutes):
     tot_seconds = delta.total_seconds()
 
     floor_time = (tot_seconds // floor_seconds) * floor_seconds
-    return dt + timedelta(0, floor_time - tot_seconds, -dt.microsecond)
+    return dt + timedelta(0, floor_time - tot_seconds)
+    #return dt + timedelta(0, floor_time - tot_seconds, -dt.microsecond)
 
 
 def dt_ceiling(dt, minutes):
@@ -130,7 +131,9 @@ def isgt2bins(indtbin, outdtbin, binsize_mins):
 def numbins(indtbin, outdtbin, binsize_mins):
     return 1 + ((outdtbin - indtbin).seconds/60.0) / binsize_mins
 
-
+def to_the_second(ts):
+    return Timestamp(round(ts.value, -9))
+    
 def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
     """
     Computes fractional occupancy in inbin and outbin.
