@@ -104,7 +104,7 @@ def dt_floor(dt, minutes):
     floor_seconds = minutes * 60
     dt_date = Timestamp(dt.date())
     delta = dt - dt_date
-    tot_seconds = delta.total_seconds()
+    tot_seconds = timedelta_to_seconds(delta)
 
     floor_time = (tot_seconds // floor_seconds) * floor_seconds
     return dt + timedelta(0, floor_time - tot_seconds)
@@ -119,7 +119,7 @@ def dt_ceiling(dt, minutes):
    roundMinsTo : Closest number of minutes to round to.
    """
     ceiling_seconds = minutes * 60.0
-    seconds = (dt - dt.min).seconds
+    seconds = timedelta_to_seconds(dt - dt.min)
 
     ceiling_time = math.ceil(seconds / ceiling_seconds) * ceiling_seconds
     return dt + timedelta(0, ceiling_time - seconds, -dt.microsecond)
@@ -129,10 +129,13 @@ def isgt2bins(indtbin, outdtbin, binsize_mins):
     return (outdtbin - indtbin) > timedelta(minutes=binsize_mins)
 
 def numbins(indtbin, outdtbin, binsize_mins):
-    return 1 + ((outdtbin - indtbin).seconds/60.0) / binsize_mins
+    return 1 + (timedelta_to_seconds(outdtbin - indtbin)/60.0) / binsize_mins
 
 def to_the_second(ts):
     return Timestamp(round(ts.value, -9))
+    
+def timedelta_to_seconds(td):
+    return td.days*86400 + td.hours*3600 + td.minutes*60 + td.seconds
     
 def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
     """
@@ -159,7 +162,7 @@ def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
 
     # inbin occupancy
     rightedge = min(indtbin + timedelta(minutes=binsize_mins), outtime)
-    inbin_occ_secs = (rightedge - intime).seconds
+    inbin_occ_secs = timedelta_to_seconds(rightedge - intime)
     inbin_occ_frac = inbin_occ_secs / (binsize_mins * 60.0)
 
     # outbin occupancy
@@ -167,7 +170,7 @@ def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
         outbin_occ_frac = 0.0  # Use inbin_occ_frac
     else:
         leftedge = max(outdtbin, intime)
-        outbin_occ_secs = (outtime - leftedge).seconds
+        outbin_occ_secs = timedelta_to_seconds(outtime - leftedge)
         outbin_occ_frac = outbin_occ_secs / (binsize_mins * 60.0)
 
     assert inbin_occ_frac <= 1.0 and inbin_occ_frac >= 0.0, \
