@@ -1,0 +1,6 @@
+# ignore all csv files in the testing/ directory
+testing/*.csv
+
+# ignore temporary Python stuff
+.ipynb_checkpoints/
+__pycache__/
