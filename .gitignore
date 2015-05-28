@@ -1,5 +1,5 @@
 # ignore all csv files in the testing/ directory
-testing/*.csv
+hillmaker/testing/*.csv
 
 # ignore temporary Python stuff
 .ipynb_checkpoints/
