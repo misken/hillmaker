@@ -180,6 +180,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
 
     num_processed = 0
     num_inner = 0
+    print ("Latest edits 1:36p")
     for intime_raw, outtime_raw, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
         intime = hlib.to_the_second(intime_raw)
         outtime = hlib.to_the_second(outtime_raw)
@@ -193,10 +194,17 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
         if good_rec and rectype != 'none':
             #indtbin =  hlib.dt_floor(intime,bin_size_mins)
             i = datebins.index.searchsorted(intime)
-            indtbin =datebins.index[i-1]
+            if (intime == datebins.index[i]):
+                indtbin = datebins.index[i]
+            else:     
+                indtbin = datebins.index[i-1]
             #outdtbin =  hlib.dt_floor(outtime,bin_size_mins)
             i = datebins.index.searchsorted(outtime)
-            outdtbin =datebins.index[i-1]
+            
+            if (outtime == datebins.index[i]):
+                outdtbin = datebins.index[i]
+            else:     
+                outdtbin = datebins.index[i-1]
             
             inout_occ_frac = hlib.occ_frac([intime, outtime], bin_size_mins)
             numbins = hlib.numbins(indtbin, outdtbin, bin_size_mins)
