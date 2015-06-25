@@ -203,19 +203,19 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
             good_rec = False
     
         if good_rec and rectype != 'none':
-            #indtbin =  hm.dt_floor(intime,bin_size_minutes)
-            i = datebins.index.searchsorted(intime)
-            if (intime == datebins.index[i]):
-                indtbin = datebins.index[i]
-            else:     
-                indtbin = datebins.index[i-1]
-            #outdtbin =  hm.dt_floor(outtime,bin_size_minutes)
-            i = datebins.index.searchsorted(outtime)
-            
-            if (outtime == datebins.index[i]):
-                outdtbin = datebins.index[i]
-            else:     
-                outdtbin = datebins.index[i-1]
+            indtbin =  hm.dt_floor(intime,bin_size_minutes)
+            # i = datebins.index.searchsorted(intime)
+            # if (intime == datebins.index[i]):
+            #     indtbin = datebins.index[i]
+            # else:
+            #     indtbin = datebins.index[i-1]
+            outdtbin =  hm.dt_floor(outtime,bin_size_minutes)
+            # i = datebins.index.searchsorted(outtime)
+            #
+            # if (outtime == datebins.index[i]):
+            #     outdtbin = datebins.index[i]
+            # else:
+            #     outdtbin = datebins.index[i-1]
             
             inout_occ_frac = hm.occ_frac([intime, outtime], bin_size_minutes)
             numbins = hm.numbins(indtbin, outdtbin, bin_size_minutes)
@@ -324,40 +324,29 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
 
 if __name__ == '__main__':
 
-    
+    file_stopdata = 'data/unit_stop_log_Experiment1_Scenario1_Rep1.csv'
+
     scenario_name = 'log_unitocc_test'
     in_fld_name = 'EnteredTS'
     out_fld_name = 'ExitedTS'
     cat_fld_name = 'Unit'
     start_analysis = '2/15/2015 00:00'
     end_analysis = '6/16/2015 00:00'
- ## Convert string dates to actual datetimes
-    start_analysis_dt = pd.Timestamp(start_analysis)
-    end_analysis_dt = pd.Timestamp(end_analysis)
-    
-    
-#    scenario_name = 'sstest'
-#    in_fld_name = 'InRoomTS'
-#    out_fld_name = 'OutRoomTS'
-#    cat_fld_name = 'PatType'
-    file_stopdata = 'logs/unit_stop_log_Experiment1_Scenario1_Rep1.csv'
-#    file_stopdata_pkl = 'data/ShortStay.pkl'
-#    start_analysis = '1/2/1996'
-#    end_analysis = '3/31/1996 23:45'
-#    ## Convert string dates to actual datetimes
-#    start_analysis_dt = pd.Timestamp(start_analysis)
-#    end_analysis_dt = pd.Timestamp(end_analysis)
 
-#    df = pd.read_pickle(file_stopdata_pkl)
-#    print ("Pickled stop data file read: {}".format(time.clock()))
+    # Optional inputs
+
+    tot_fld_name = 'OBTot'
+    bin_size_mins = 60
+    includecats = ['LDR','PP']
 
     df = pd.read_csv(file_stopdata)
     basedate = Timestamp('20150215 00:00:00')
     df['EnteredTS'] = df.apply(lambda row: Timestamp(round((basedate + pd.DateOffset(hours=row['Entered'])).value,-9)), axis=1)
     df['ExitedTS'] = df.apply(lambda row: Timestamp(round((basedate + pd.DateOffset(hours=row['Exited'])).value,-9)), axis=1)
 
-    df_filtered = df[df['Unit'] != 'Obs']
-    bydt_df = make_bydatetime(df_filtered,in_fld_name,out_fld_name,cat_fld_name,start_analysis_dt,end_analysis_dt,'Total',60)
+    bydt_df = make_bydatetime(df,in_fld_name, out_fld_name,cat_fld_name,
+                                     start_analysis,end_analysis,
+                                     tot_fld_name,bin_size_mins,categories=includecats)
 
     file_bydt_csv = 'data/bydatetime_main_' + scenario_name + '.csv'
     file_bydt_pkl = 'data/bydatetime_main_' + scenario_name + '.pkl'
