@@ -7,23 +7,27 @@ Created on Fri Nov  1 23:50:39 2013
 
 __author__ = 'isken'
 
-import numpy as np
+
 import pandas as pd
 from pandas import DataFrame
 from pandas import Timestamp
 from datetime import datetime
 from datetime import timedelta
 
-#from itertools import zip_longest
-import time
+
 from timeit import default_timer as timer
 
-import hillpylib as hlib
+import hillpylib as hm
 
 from pandas.tseries.offsets import Minute
 
 
-def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_analysis_dt,total_str='Total',bin_size_mins=60):
+def make_bydatetime(stops_df,infield,outfield,catfield,
+                    start_analysis,end_analysis,
+                    total_str='Total',
+                    bin_size_minutes=60,
+                    categories=False,
+                    totals=True):
     """
     Create bydatetime table based on user inputs.
 
@@ -52,7 +56,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
     total_str : string
        Value to use for the totals
 
-    bin_size_mins : int
+    bin_size_minutes : int
        Bin size in minutes. Should divide evenly into 1440.
 
     Returns
@@ -87,27 +91,30 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
 
     start = timer()
 
+    start_analysis_dt = pd.Timestamp(start_analysis)
+    end_analysis_dt = pd.Timestamp(end_analysis)
+
     analysis_range = [start_analysis_dt, end_analysis_dt]
 
     # Create date and range and convert it from a pandas DateTimeIndex to a
     # reqular old array of datetimes to try to get around the weird problems
     # in computing day of week on datetime64 values.
-    # bin_freq = str(bin_size_mins) + 'min'
+    # bin_freq = str(bin_size_minutes) + 'min'
     #rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq).to_pydatetime()
     #rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq)
 
-    rng_bydt = pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_mins))
+    rng_bydt = pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes))
     datebins = pd.DataFrame(index=rng_bydt)
     
     
 
-    print ("rng_bydt created: {}".format(timer()-start))
+    print ("rng_bydt created: {:.4f}".format(timer()-start))
 
     # import sys
     # sys.exit("Stopping after rng_bydt_list creation")
     #
     # num_days = (end_date-start_date).days + 1
-    # num_periods = num_days * (1440//bin_size_mins)
+    # num_periods = num_days * (1440//bin_size_minutes)
     # print(num_periods)
     #
     # # The following is no faster than the pandas date_range() method.
@@ -119,10 +126,13 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
 
 
 
-    # Get the unique category values
-    categories = [c for c in stops_df[catfield].unique()]
-
-    print ("found unique categories: {}".format(timer()-start))
+    # Get the unique category values or used passed in list
+    if (not categories):
+        categories = [c for c in stops_df[catfield].unique()]
+        print ('using derived categories: {:.4f}'.format(timer()-start))
+    else:
+        stops_df = stops_df[stops_df[catfield].isin(categories)]
+        print ('using specified categories: {:.4f}'.format(timer()-start))
 
 
     # Create a list of column names for the by date table and then an empty data frame based on these columns.
@@ -146,7 +156,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
         bydt_df = pd.concat([bydt_df,bydt_df_cat])
 
 
-    print ("Seeded bydatetime DataFrame created: {}".format(timer()-start))
+    print ("Seeded bydatetime DataFrame created: {:.4f}".format(timer()-start))
 
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
@@ -157,17 +167,17 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
 
 
     bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
-    bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hlib.bin_of_day(x,bin_size_mins))
-    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hlib.bin_of_week(x,bin_size_mins))
+    bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hm.bin_of_day(x,bin_size_minutes))
+    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hm.bin_of_week(x,bin_size_minutes))
 
-    print ("dayofweek, bin_of_day, bin_of_week computed: {}".format(timer()-start))
+    print ("dayofweek, bin_of_day, bin_of_week computed: {:.4f}".format(timer()-start))
     #print(bydt_df.head())
 
     bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
-    print ("Multi-index on bydatetime DataFrame created: {}".format(timer()-start))
+    print ("Multi-index on bydatetime DataFrame created: {:.4f}".format(timer()-start))
 
     bydt_df.sortlevel(inplace=True)
-    print ("Multi-index fully lexsorted: {}".format(timer()-start))
+    print ("Multi-index fully lexsorted: {:.4f}".format(timer()-start))
     
     # bydt_df.to_csv('after_lexsort.csv')
     # Main occupancy, arrivals, departures loop. Process each record in the
@@ -180,25 +190,26 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
 
     num_processed = 0
     num_inner = 0
-    print ("Latest edits 1:36p")
+    print ("Latest edits at {}".format(datetime.now()))
+
     for intime_raw, outtime_raw, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
-        intime = hlib.to_the_second(intime_raw)
-        outtime = hlib.to_the_second(outtime_raw)
+        intime = hm.to_the_second(intime_raw)
+        outtime = hm.to_the_second(outtime_raw)
         good_rec = True
-        rectype = hlib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
+        rectype = hm.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
     
         if rectype in ['backwards']:
             # print "ERROR_{}: {} {} {}".format(rectype,intime,outtime,cat)
             good_rec = False
     
         if good_rec and rectype != 'none':
-            #indtbin =  hlib.dt_floor(intime,bin_size_mins)
+            #indtbin =  hm.dt_floor(intime,bin_size_minutes)
             i = datebins.index.searchsorted(intime)
             if (intime == datebins.index[i]):
                 indtbin = datebins.index[i]
             else:     
                 indtbin = datebins.index[i-1]
-            #outdtbin =  hlib.dt_floor(outtime,bin_size_mins)
+            #outdtbin =  hm.dt_floor(outtime,bin_size_minutes)
             i = datebins.index.searchsorted(outtime)
             
             if (outtime == datebins.index[i]):
@@ -206,8 +217,8 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
             else:     
                 outdtbin = datebins.index[i-1]
             
-            inout_occ_frac = hlib.occ_frac([intime, outtime], bin_size_mins)
-            numbins = hlib.numbins(indtbin, outdtbin, bin_size_mins)
+            inout_occ_frac = hm.occ_frac([intime, outtime], bin_size_minutes)
+            numbins = hm.numbins(indtbin, outdtbin, bin_size_minutes)
             dtbin = indtbin
 
 
@@ -224,7 +235,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
 
                 bin = 2
                 while bin < numbins:
-                    dtbin += timedelta(minutes=bin_size_mins)
+                    dtbin += timedelta(minutes=bin_size_minutes)
                     bydt_df.at[(cat,dtbin), 'occupancy'] += 1.0
                     bin += 1
 
@@ -247,31 +258,31 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
                 bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
                 bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
     
-                if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
-                    bin = indtbin + timedelta(minutes=bin_size_mins)
+                if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                    bin = indtbin + timedelta(minutes=bin_size_minutes)
                     while bin <= end_analysis_dt:
                         bydt_df.at[(cat,bin), 'occupancy'] += 1.0
-                        bin += timedelta(minutes=bin_size_mins)
+                        bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'left':
                 # arrival is outside analysis window
                 bydt_df.at[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
                 bydt_df.at[(cat,outdtbin), 'departures'] += 1.0
     
-                if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
-                    bin = start_analysis_dt + timedelta(minutes=bin_size_mins)
+                if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                    bin = start_analysis_dt + timedelta(minutes=bin_size_minutes)
                     while bin < outdtbin:
                         bydt_df.at[(cat,bin), 'occupancy'] += 1.0
-                        bin += timedelta(minutes=bin_size_mins)
+                        bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'outer':
                 # arrival and departure sandwich analysis window
     
-                if hlib.isgt2bins(indtbin, outdtbin, bin_size_mins):
+                if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     bin = start_analysis_dt
                     while bin <= end_analysis_dt:
                         bydt_df.at[(cat,bin), 'occupancy'] += 1.0
-                        bin += timedelta(minutes=bin_size_mins)
+                        bin += timedelta(minutes=bin_size_minutes)
     
             else:
                 pass
@@ -280,7 +291,31 @@ def make_bydatetime(stops_df,infield,outfield,catfield,start_analysis_dt,end_ana
             #print numprocessed
 
     print("Num inner: {}".format(num_inner))
-    print ("Done processing {} stop recs: {}".format(num_processed, timer()-start))
+    print ("Done processing {} stop recs: {:.4f}".format(num_processed, timer()-start))
+
+    # Compute totals
+    if(totals):
+        bydt_group = bydt_df.groupby(['datetime'])
+
+        tot_arrivals = bydt_group.arrivals.sum()
+        tot_departures = bydt_group.departures.sum()
+        tot_occ = bydt_group.occupancy.sum()
+
+        tot_data = [tot_arrivals,tot_departures,tot_occ]
+        tot_df = pd.concat(tot_data, axis = 1, keys = [s.name for s in tot_data])
+        tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
+        tot_df['bin_of_day'] =  tot_df.index.map(lambda x: hm.bin_of_day(x,bin_size_minutes))
+        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hm.bin_of_week(x,bin_size_minutes))
+
+        tot_df['category'] = total_str
+        tot_df.set_index('category', append=True, inplace=True, drop=False)
+        tot_df = tot_df.reorder_levels(['category', 'datetime'])
+        tot_df['datetime'] = tot_df.index.levels[1]
+
+        bydt_df = pd.concat([bydt_df,tot_df])
+
+        print ("Done adding totals: {:.4f}".format(timer()-start))
+
 
     return bydt_df
 

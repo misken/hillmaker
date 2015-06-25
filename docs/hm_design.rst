@@ -3,9 +3,21 @@ Hillmaker is a Python library
 May have some architectural things to learn and ideas to glean from matplot lib at
 [http://aosabook.org/en/matplotlib.html](http://aosabook.org/en/matplotlib.html).
 
+Similarly, similarities to scikit-learn - check out its code structure
+
 - notion of multiple use modes such as the pylab vs api approaches
 - similar since hillmaker is data -> crunch -> visualize
 
+
+Possible features
+=================
+
+Input parameters
+----------------
+
+Ability to pass in list of category values to analyze. Default is all.
+
+Ability to specify whether or not to compute totals. Default is true.
 
 
 Possible classes
