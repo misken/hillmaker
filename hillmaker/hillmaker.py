@@ -22,7 +22,9 @@ def run_hillmaker(scenario_name,stops_df,infield,outfield,catfield,
                                      start_analysis,
                                      end_analysis,
                                      total_str,
-                                     bin_size_minutes)
+                                     bin_size_minutes,
+                                     categories=categories,
+                                     totals=totals)
 
     # Create the summary stats dataframes
     occ_stats_summary,arr_stats_summary,dep_stats_summary = summarize.summarize_bydatetime(bydt_df)
