@@ -312,7 +312,9 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
         tot_df = tot_df.reorder_levels(['category', 'datetime'])
         tot_df['datetime'] = tot_df.index.levels[1]
 
-        bydt_df = pd.concat([bydt_df,tot_df])
+        col_order = ['category','datetime','arrivals','departures','occupancy','day_of_week','bin_of_day','bin_of_week']
+        tot_df = tot_df[col_order]
+        bydt_df = bydt_df.append(tot_df)
 
         print ("Done adding totals: {:.4f}".format(timer()-start))
 
@@ -331,7 +333,7 @@ if __name__ == '__main__':
     out_fld_name = 'ExitedTS'
     cat_fld_name = 'Unit'
     start_analysis = '2/15/2015 00:00'
-    end_analysis = '6/16/2015 00:00'
+    end_analysis = '6/16/2016 00:00'
 
     # Optional inputs
 
@@ -348,8 +350,8 @@ if __name__ == '__main__':
                                      start_analysis,end_analysis,
                                      tot_fld_name,bin_size_mins,categories=includecats)
 
-    file_bydt_csv = 'data/bydatetime_main_' + scenario_name + '.csv'
-    file_bydt_pkl = 'data/bydatetime_main_' + scenario_name + '.pkl'
+    file_bydt_csv = 'testing/bydatetime_main_' + scenario_name + '.csv'
+    file_bydt_pkl = 'testing/bydatetime_main_' + scenario_name + '.pkl'
 
     bydt_df.to_csv(file_bydt_csv)
     bydt_df.to_pickle(file_bydt_pkl)

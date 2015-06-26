@@ -71,9 +71,6 @@ def summarize_bydatetime(bydt_df):
     return (occ_stats_summary,arr_stats_summary,dep_stats_summary)
 
 
-    # <markdowncell>
-
-    # The real reason I exported them to csv was to make it easy to read these results back in for Part 3 of this series of tutorials. In Part 3, we'll create some plots using matplotlib based on these summary statistics.
 
 def get_occstats(group, stub=''):
         return {stub+'count': group.count(), stub+'mean': group.mean(),
@@ -89,18 +86,18 @@ def get_occstats(group, stub=''):
 
 if __name__ == '__main__':
 
-    scenario_name = 'sstest'
-    file_bydt_pkl = 'data/bydatetime_' + scenario_name + '.pkl'
+    scenario_name = 'sstest_60'
+    file_bydt_csv = 'testing/bydate_' + scenario_name + '.csv'
 
 
-    bydt_df = pd.read_pickle(file_bydt_pkl)
-    print ("Pickled bydt data file read: {}".format(time.clock()))
+    bydt_df = pd.read_csv(file_bydt_csv)
+    print ("CSV bydt data file read: {}".format(time.clock()))
 
     occ_stats_summary,arr_stats_summary,dep_stats_summary = summarize_bydatetime(bydt_df)
 
-    file_occ_csv = 'data/occ_stats_summary_' + scenario_name + '.csv'
-    file_arr_csv = 'data/arr_stats_summary_' + scenario_name + '.csv'
-    file_dep_csv = 'data/dep_stats_summary_' + scenario_name + '.csv'
+    file_occ_csv = 'testing/occ_stats_summary_' + scenario_name + '.csv'
+    file_arr_csv = 'testing/arr_stats_summary_' + scenario_name + '.csv'
+    file_dep_csv = 'testing/dep_stats_summary_' + scenario_name + '.csv'
 
     occ_stats_summary.to_csv(file_occ_csv)
     arr_stats_summary.to_csv(file_arr_csv)
