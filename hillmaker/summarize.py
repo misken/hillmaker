@@ -86,8 +86,8 @@ def get_occstats(group, stub=''):
 
 if __name__ == '__main__':
 
-    scenario_name = 'sstest_60'
-    file_bydt_csv = 'testing/bydate_' + scenario_name + '.csv'
+    scenario_name = 'log_unitocc_test'
+    file_bydt_csv = 'testing/bydatetime_' + scenario_name + '.csv'
 
 
     bydt_df = pd.read_csv(file_bydt_csv)
