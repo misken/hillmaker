@@ -13,13 +13,13 @@ scenario_name = 'log_unitocc_test'
 in_fld_name = 'EnteredTS'
 out_fld_name = 'ExitedTS'
 cat_fld_name = 'Unit'
-start_analysis = '2/15/2015 00:00'
+start_analysis = '3/24/2015 00:00'
 end_analysis = '6/16/2016 00:00'
 
 # Optional inputs
 
 tot_fld_name = 'OBTot'
-bin_size_mins = 60
+bin_size_mins = 1440
 includecats = ['LDR','PP']
 
 df = pd.read_csv(file_stopdata)

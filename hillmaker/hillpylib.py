@@ -98,16 +98,21 @@ def dt_floor(dt, minutes):
     """
    Find floor of a datetime object to specified number of minutes.
    
-   dt : datetime.datetime object
+   dt : Pandas Timestamp object
    floor_minutes : Closest number of minutes to round to.
    """
     floor_seconds = minutes * 60
     dt_date = Timestamp(dt.date())
     delta = dt - dt_date
-    tot_seconds = timedelta_to_seconds(delta)
+    #print(delta)
+    tot_seconds = delta.total_seconds()
+    #print(tot_seconds)
 
     floor_time = (tot_seconds // floor_seconds) * floor_seconds
-    return dt + timedelta(0, floor_time - tot_seconds)
+    #print(floor_time)
+    #gap_seconds = tot_seconds - floor_time
+    #print(dt_date + pd.DateOffset(seconds=floor_time))
+    return dt_date + pd.DateOffset(seconds=floor_time)
     #return dt + timedelta(0, floor_time - tot_seconds, -dt.microsecond)
 
 
@@ -135,7 +140,8 @@ def to_the_second(ts):
     return Timestamp(round(ts.value, -9))
     
 def timedelta_to_seconds(td):
-    return td.days*86400 + td.hours*3600 + td.minutes*60 + td.seconds
+    #return td.days*86400 + td.hours*3600 + td.minutes*60 + td.seconds
+    return td.total_seconds()
     
 def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
     """
