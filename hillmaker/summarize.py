@@ -70,7 +70,73 @@ def summarize_bydatetime(bydt_df):
 
     return (occ_stats_summary,arr_stats_summary,dep_stats_summary)
 
+def summarize_category(bydt_df):
+    """
+    Create bydatetime table based on user inputs.
 
+    This is the table from which summary statistics can be computed.
+
+    Parameters
+    ----------
+    D : pandas DataFrame
+       Stop data
+
+    infield : string
+       Name of column in D to use as arrival datetime
+
+    outfield : string
+       Name of column in D to use as departure datetime
+
+    catfield : string
+       Name of column in D to use as category field
+
+    total_str : string
+       Value to use for the totals
+
+    bin_size_mins : int
+       Bin size in minutes. Should divide evenly into 1440.
+
+    Returns
+    -------
+    bydatetime: pandas DataFrame
+       The computed bydatetime table as a DataFrame
+
+    Examples
+    --------
+
+
+
+    TODO
+    ----
+
+    - add parameter and code to handle occ frac choice
+    - generalize to handle choice of arr, dep, occ or some combo of
+
+     Notes
+    -----
+
+
+    References
+    ----------
+
+
+    See Also
+    --------
+    """
+
+    bydt_dfgrp = bydt_df.groupby(['category'])
+
+    occ_stats = bydt_dfgrp['occupancy'].apply(get_occstats)
+    arr_stats = bydt_dfgrp['arrivals'].apply(get_occstats)
+    dep_stats = bydt_dfgrp['departures'].apply(get_occstats)
+
+    occ_stats_summary = occ_stats.unstack()
+    arr_stats_summary = arr_stats.unstack()
+    dep_stats_summary = dep_stats.unstack()
+
+    print ('Done with overall summary stats: {}'.format(time.clock()))
+
+    return (occ_stats_summary,arr_stats_summary,dep_stats_summary)
 
 def get_occstats(group, stub=''):
         return {stub+'count': group.count(), stub+'mean': group.mean(),

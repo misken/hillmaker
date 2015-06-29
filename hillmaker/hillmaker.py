@@ -29,17 +29,29 @@ def run_hillmaker(scenario_name,stops_df,infield,outfield,catfield,
 
     # Create the summary stats dataframes
     occ_stats_summary,arr_stats_summary,dep_stats_summary = summarize.summarize_bydatetime(bydt_df)
+    occ_stats_summary_cat,arr_stats_summary_cat,dep_stats_summary_cat = summarize.summarize_category(bydt_df)
 
     # Output the files in csv format
     file_bydt_csv = outputpath + '/bydatetime_' + scenario_name + '.csv'
+
     file_occ_csv = outputpath + '/occ_stats_summary_' + scenario_name + '.csv'
     file_arr_csv = outputpath + '/arr_stats_summary_' + scenario_name + '.csv'
     file_dep_csv = outputpath + '/dep_stats_summary_' + scenario_name + '.csv'
 
+    file_occ_cat_csv = outputpath + '/occ_stats_summary_cat_' + scenario_name + '.csv'
+    file_arr_cat_csv = outputpath + '/arr_stats_summary_cat_' + scenario_name + '.csv'
+    file_dep_cat_csv = outputpath + '/dep_stats_summary_cat_' + scenario_name + '.csv'
+
+
     bydt_df.to_csv(file_bydt_csv, index=False)
+
     occ_stats_summary.to_csv(file_occ_csv)
     arr_stats_summary.to_csv(file_arr_csv)
     dep_stats_summary.to_csv(file_dep_csv)
+
+    occ_stats_summary_cat.to_csv(file_occ_cat_csv)
+    arr_stats_summary_cat.to_csv(file_arr_cat_csv)
+    dep_stats_summary_cat.to_csv(file_dep_cat_csv)
 
 
 

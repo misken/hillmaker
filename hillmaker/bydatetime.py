@@ -100,6 +100,9 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
     min_outtime = stops_df[outfield].min()
     max_outtime = stops_df[outfield].max()
 
+    print("min of intime: {}".format(min_intime))
+    print("max of outtime: {}".format(max_outtime))
+
     # Add warnings here related to min and maxes out of whack with analysis range
 
     #
