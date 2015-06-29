@@ -14,6 +14,7 @@ def run_hillmaker(scenario_name,stops_df,infield,outfield,catfield,
                     totals=True,
                     outputpath=''):
 
+
     # Create the bydatetime dataframe
     bydt_df = bydatetime.make_bydatetime(stops_df,
                                      infield,
@@ -39,10 +40,6 @@ def run_hillmaker(scenario_name,stops_df,infield,outfield,catfield,
     occ_stats_summary.to_csv(file_occ_csv)
     arr_stats_summary.to_csv(file_arr_csv)
     dep_stats_summary.to_csv(file_dep_csv)
-
-
-
-
 
 
 

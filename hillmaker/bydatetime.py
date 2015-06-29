@@ -94,6 +94,16 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
     start_analysis_dt = pd.Timestamp(start_analysis)
     end_analysis_dt = pd.Timestamp(end_analysis)
 
+    # Compute min and max of in and out times
+    min_intime = stops_df[infield].min()
+    max_intime = stops_df[infield].max()
+    min_outtime = stops_df[outfield].min()
+    max_outtime = stops_df[outfield].max()
+
+    # Add warnings here related to min and maxes out of whack with analysis range
+
+    #
+
     analysis_range = [start_analysis_dt, end_analysis_dt]
 
     # Create date and range and convert it from a pandas DateTimeIndex to a
@@ -171,7 +181,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hm.bin_of_week(x,bin_size_minutes))
 
     print ("dayofweek, bin_of_day, bin_of_week computed: {:.4f}".format(timer()-start))
-    #print(bydt_df.head())
+
 
     bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
     print ("Multi-index on bydatetime DataFrame created: {:.4f}".format(timer()-start))
@@ -192,6 +202,8 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
     num_inner = 0
     print ("Latest edits at {}".format(datetime.now()))
 
+    rectype_counts = {}
+
     for intime_raw, outtime_raw, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
         intime = hm.to_the_second(intime_raw)
         outtime = hm.to_the_second(outtime_raw)
@@ -201,6 +213,8 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
         if rectype in ['backwards']:
             # print "ERROR_{}: {} {} {}".format(rectype,intime,outtime,cat)
             good_rec = False
+
+            rectype_counts['backwards'] = rectype_counts.get('backwards',0) + 1
     
         if good_rec and rectype != 'none':
             indtbin =  hm.dt_floor(intime,bin_size_minutes)
@@ -228,6 +242,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
 
             if rectype == 'inner':
                 num_inner += 1
+                rectype_counts['inner'] = rectype_counts.get('inner',0) + 1
 
                 bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
                 bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
@@ -254,6 +269,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
                 #bydt_df.update(inc_df)
     
             elif rectype == 'right':
+                rectype_counts['right'] = rectype_counts.get('right',0) + 1
                 # departure is outside analysis window
                 bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
                 bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
@@ -265,17 +281,19 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
                         bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'left':
+                rectype_counts['left'] = rectype_counts.get('left',0) + 1
                 # arrival is outside analysis window
                 bydt_df.at[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
                 bydt_df.at[(cat,outdtbin), 'departures'] += 1.0
     
                 if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
-                    bin = start_analysis_dt + timedelta(minutes=bin_size_minutes)
+                    bin = start_analysis_dt
                     while bin < outdtbin:
                         bydt_df.at[(cat,bin), 'occupancy'] += 1.0
                         bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'outer':
+                rectype_counts['outer'] = rectype_counts.get('outer',0) + 1
                 # arrival and departure sandwich analysis window
     
                 if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
@@ -291,6 +309,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
             #print numprocessed
 
     print("Num inner: {}".format(num_inner))
+    print(rectype_counts)
     print ("Done processing {} stop recs: {:.4f}".format(num_processed, timer()-start))
 
     # Compute totals
