@@ -223,9 +223,10 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
             indtbin =  hm.dt_floor(intime,bin_size_minutes)
             # i = datebins.index.searchsorted(intime)
             # if (intime == datebins.index[i]):
-            #     indtbin = datebins.index[i]
+            #      indtbin = datebins.index[i]
             # else:
-            #     indtbin = datebins.index[i-1]
+            #      indtbin = datebins.index[i-1]
+
             outdtbin =  hm.dt_floor(outtime,bin_size_minutes)
             # i = datebins.index.searchsorted(outtime)
             #

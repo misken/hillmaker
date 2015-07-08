@@ -94,33 +94,29 @@ def bin_of_week(dt, bin_size_mins=30):
     return time_bin
 
 
-def dt_floor_original(dt, minutes):
+def dt_floor(dt, minutes):
     """
    Find floor of a datetime object to specified number of minutes.
    
    dt : Pandas Timestamp object
    floor_minutes : Closest number of minutes to round to.
    """
-    nsmin=minutes*60*1000000000   # 5 minutes in nanoseconds
-    totns = dt.total_seconds*1000000000
-    #pd.DatetimeIndex(((df.index.astype(np.int64) // ns5min + 1 ) * ns5min))
-    ns = (totns // nsmin) * nsmin
-    return pd.to_datetime(ns, unit='ns')
-    # floor_seconds = minutes * 60
-    # dt_date = Timestamp(dt.date())
-    # delta = dt - dt_date
+
+    floor_seconds = minutes * 60
+    dt_date = Timestamp(dt.date())
+    delta = dt - dt_date
     # #print(delta)
-    # tot_seconds = delta.total_seconds()
+    tot_seconds = delta.total_seconds()
     # #print(tot_seconds)
     #
-    # floor_time = (tot_seconds // floor_seconds) * floor_seconds
+    floor_time = (tot_seconds // floor_seconds) * floor_seconds
     # #print(floor_time)
     # #gap_seconds = tot_seconds - floor_time
     # #print(dt_date + pd.DateOffset(seconds=floor_time))
-    # return dt_date + pd.DateOffset(seconds=floor_time)
+    return dt_date + pd.DateOffset(seconds=floor_time)
     #return dt + timedelta(0, floor_time - tot_seconds, -dt.microsecond)
 
-def dt_floor(dt, binsizemins=60):
+def dt_floor_exp(dt, binsizemins=60):
     """Round a datetime object to a multiple of a timedelta
     dt : datetime.datetime object, default now.
     dateDelta : timedelta object, we round to a multiple of this, default 1 minute.
