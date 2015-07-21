@@ -2,5 +2,6 @@
 hillmaker/testing/*.csv
 
 # ignore temporary Python stuff
+*.pyc
 .ipynb_checkpoints/
 __pycache__/
