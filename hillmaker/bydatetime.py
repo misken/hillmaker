@@ -17,7 +17,7 @@ from datetime import timedelta
 
 from timeit import default_timer as timer
 
-import hillpylib as hm
+from . import hillpylib
 
 from pandas.tseries.offsets import Minute
 
@@ -180,8 +180,8 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
 
 
     bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
-    bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hm.bin_of_day(x,bin_size_minutes))
-    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hm.bin_of_week(x,bin_size_minutes))
+    bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hillpylib.bin_of_day(x,bin_size_minutes))
+    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hillpylib.bin_of_week(x,bin_size_minutes))
 
     print ("dayofweek, bin_of_day, bin_of_week computed: {:.4f}".format(timer()-start))
 
@@ -208,10 +208,10 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
     rectype_counts = {}
 
     for intime_raw, outtime_raw, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
-        intime = hm.to_the_second(intime_raw)
-        outtime = hm.to_the_second(outtime_raw)
+        intime = hillpylib.to_the_second(intime_raw)
+        outtime = hillpylib.to_the_second(outtime_raw)
         good_rec = True
-        rectype = hm.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
+        rectype = hillpylib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
     
         if rectype in ['backwards']:
             # print "ERROR_{}: {} {} {}".format(rectype,intime,outtime,cat)
@@ -220,14 +220,14 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
             rectype_counts['backwards'] = rectype_counts.get('backwards',0) + 1
     
         if good_rec and rectype != 'none':
-            indtbin =  hm.dt_floor(intime,bin_size_minutes)
+            indtbin =  hillpylib.dt_floor(intime,bin_size_minutes)
             # i = datebins.index.searchsorted(intime)
             # if (intime == datebins.index[i]):
             #      indtbin = datebins.index[i]
             # else:
             #      indtbin = datebins.index[i-1]
 
-            outdtbin =  hm.dt_floor(outtime,bin_size_minutes)
+            outdtbin =  hillpylib.dt_floor(outtime,bin_size_minutes)
             # i = datebins.index.searchsorted(outtime)
             #
             # if (outtime == datebins.index[i]):
@@ -235,8 +235,8 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
             # else:
             #     outdtbin = datebins.index[i-1]
             
-            inout_occ_frac = hm.occ_frac([intime, outtime], bin_size_minutes)
-            numbins = hm.numbins(indtbin, outdtbin, bin_size_minutes)
+            inout_occ_frac = hillpylib.occ_frac([intime, outtime], bin_size_minutes)
+            numbins = hillpylib.numbins(indtbin, outdtbin, bin_size_minutes)
             dtbin = indtbin
 
 
@@ -278,7 +278,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
                 bydt_df.at[(cat,indtbin), 'occupancy'] += inout_occ_frac[0]
                 bydt_df.at[(cat,indtbin), 'arrivals'] += 1.0
     
-                if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                if hillpylib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     bin = indtbin + timedelta(minutes=bin_size_minutes)
                     while bin <= end_analysis_dt:
                         bydt_df.at[(cat,bin), 'occupancy'] += 1.0
@@ -290,7 +290,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
                 bydt_df.at[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
                 bydt_df.at[(cat,outdtbin), 'departures'] += 1.0
     
-                if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                if hillpylib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     bin = start_analysis_dt
                     while bin < outdtbin:
                         bydt_df.at[(cat,bin), 'occupancy'] += 1.0
@@ -300,7 +300,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
                 rectype_counts['outer'] = rectype_counts.get('outer',0) + 1
                 # arrival and departure sandwich analysis window
     
-                if hm.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                if hillpylib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     bin = start_analysis_dt
                     while bin <= end_analysis_dt:
                         bydt_df.at[(cat,bin), 'occupancy'] += 1.0
@@ -327,8 +327,8 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
         tot_data = [tot_arrivals,tot_departures,tot_occ]
         tot_df = pd.concat(tot_data, axis = 1, keys = [s.name for s in tot_data])
         tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
-        tot_df['bin_of_day'] =  tot_df.index.map(lambda x: hm.bin_of_day(x,bin_size_minutes))
-        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hm.bin_of_week(x,bin_size_minutes))
+        tot_df['bin_of_day'] =  tot_df.index.map(lambda x: hillpylib.bin_of_day(x,bin_size_minutes))
+        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hillpylib.bin_of_week(x,bin_size_minutes))
 
         tot_df['category'] = total_str
         tot_df.set_index('category', append=True, inplace=True, drop=False)

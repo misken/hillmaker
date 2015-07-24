@@ -2,8 +2,8 @@ __author__ = 'mark'
 
 import pandas as pd
 
-import bydatetime
-import summarize
+from . import bydatetime
+from . import summarize
 
 
 def run_hillmaker(scenario_name,stops_df,infield,outfield,catfield,
