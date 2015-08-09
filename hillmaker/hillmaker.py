@@ -1,9 +1,19 @@
-__author__ = 'mark'
+"""Hillmaker"""
+
+# Authors: Mark Isken <isken@oakland.edu>
+# License: BSD 3 clause
 
 import pandas as pd
 
 from . import bydatetime
 from . import summarize
+
+
+
+
+
+
+
 
 
 def run_hillmaker(scenario_name,stops_df,infield,outfield,catfield,
