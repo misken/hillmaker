@@ -101,6 +101,7 @@ Pickles
 
 Easy to read in a pickle file containing a pandas DataFrame
 - how does this work across Python versions (both major and minor)?
+- perhaps too Python specific and remember reading some "bad" things about pickle format
 
 Excel
 -----
