@@ -142,7 +142,7 @@ def get_occstats(group, stub=''):
         return {stub+'count': group.count(), stub+'mean': group.mean(),
                 stub+'min': group.min(),
                 stub+'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
-                stub+'var': group.var(), 'cv': group.std()/group.mean(),
+                stub+'var': group.var(), 'cv': group.std()/group.mean() if group.mean()>0 else 0,
                 stub+'skew': group.skew(), 'kurt': group.kurt(),
                 stub+'p50': group.quantile(0.5), stub+'p55': group.quantile(0.55),
                 stub+'p60': group.quantile(0.6), stub+'p65': group.quantile(0.65),
