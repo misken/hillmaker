@@ -7,7 +7,7 @@ import hillmaker as hm
 
 
 
-file_stopdata = 'data/unit_stop_log_Experiment2_Scenario1_Rep1.csv'
+file_stopdata = 'data/unit_stop_log_Experiment1_Scenario1_Rep1.csv'
 
 scenario_name = 'log_unitocc_test_steadystate'
 in_fld_name = 'EnteredTS'
