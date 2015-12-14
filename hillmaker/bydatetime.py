@@ -35,7 +35,7 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
 
     Parameters
     ----------
-    D : pandas DataFrame
+    stops_df : pandas DataFrame
        Stop data
 
     infield : string
