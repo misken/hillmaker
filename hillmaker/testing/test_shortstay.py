@@ -28,7 +28,7 @@ includecats = ['ART','IVT']
 
 df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name,out_fld_name])
 
-hm.run_hillmaker(scenario_name,df,in_fld_name, out_fld_name,cat_fld_name,
+hm.hillmaker(scenario_name,df,in_fld_name, out_fld_name,cat_fld_name,
                                      start_analysis,end_analysis,
                                      tot_fld_name,bin_size_mins,
                                      categories=False,

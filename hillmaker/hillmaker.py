@@ -9,14 +9,7 @@ from . import bydatetime
 from . import summarize
 
 
-
-
-
-
-
-
-
-def run_hillmaker(scenario_name,stops_df,infield,outfield,catfield,
+def hillmaker(scenario_name,stops_df,infield,outfield,catfield,
                     start_analysis,end_analysis,
                     total_str='Total',
                     bin_size_minutes=60,
@@ -84,7 +77,7 @@ if __name__ == '__main__':
 
     df = pd.read_csv(file_stopdata,parse_dates=[in_fld_name,out_fld_name])
 
-    run_hillmaker(scenario_name,df,in_fld_name, out_fld_name,cat_fld_name,
+    hillmaker(scenario_name,df,in_fld_name, out_fld_name,cat_fld_name,
                                      start_analysis,end_analysis,
                                      tot_fld_name,bin_size_mins,
                                      categories=includecats,
