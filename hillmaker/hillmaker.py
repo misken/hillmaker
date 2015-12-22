@@ -5,17 +5,19 @@
 
 import pandas as pd
 
-from . import bydatetime
-from . import summarize
+import bydatetime
+import summarize
 
 
-def hillmaker(scenario_name,stops_df,infield,outfield,catfield,
-                    start_analysis,end_analysis,
-                    total_str='Total',
-                    bin_size_minutes=60,
-                    categories=False,
-                    totals=True,
-                    outputpath=''):
+def hillmaker(scenario_name, stops_df, infield, outfield, catfield,
+              start_analysis, end_analysis,
+              total_str='Total',
+              bin_size_minutes=60,
+              categories=False,
+              totals=True,
+              return_data=True,
+              export_csv=True,
+              export_path=''):
 
 
     # Create the bydatetime dataframe
@@ -34,27 +36,49 @@ def hillmaker(scenario_name,stops_df,infield,outfield,catfield,
     occ_stats_summary,arr_stats_summary,dep_stats_summary = summarize.summarize_bydatetime(bydt_df)
     occ_stats_summary_cat,arr_stats_summary_cat,dep_stats_summary_cat = summarize.summarize_category(bydt_df)
 
-    # Output the files in csv format
-    file_bydt_csv = outputpath + '/bydatetime_' + scenario_name + '.csv'
+    # Export results to csv if requested
+    if export_csv:
 
-    file_occ_csv = outputpath + '/occ_stats_summary_' + scenario_name + '.csv'
-    file_arr_csv = outputpath + '/arr_stats_summary_' + scenario_name + '.csv'
-    file_dep_csv = outputpath + '/dep_stats_summary_' + scenario_name + '.csv'
+        # Output the files in csv format
+        file_bydt_csv = export_path + '/bydatetime_' + scenario_name + '.csv'
 
-    file_occ_cat_csv = outputpath + '/occ_stats_summary_cat_' + scenario_name + '.csv'
-    file_arr_cat_csv = outputpath + '/arr_stats_summary_cat_' + scenario_name + '.csv'
-    file_dep_cat_csv = outputpath + '/dep_stats_summary_cat_' + scenario_name + '.csv'
+        file_occ_csv = export_path + '/occ_stats_summary_' + scenario_name + '.csv'
+        file_arr_csv = export_path + '/arr_stats_summary_' + scenario_name + '.csv'
+        file_dep_csv = export_path + '/dep_stats_summary_' + scenario_name + '.csv'
+
+        file_occ_cat_csv = export_path + '/occ_stats_summary_cat_' + scenario_name + '.csv'
+        file_arr_cat_csv = export_path + '/arr_stats_summary_cat_' + scenario_name + '.csv'
+        file_dep_cat_csv = export_path + '/dep_stats_summary_cat_' + scenario_name + '.csv'
+
+        dt_cols = ['category','datetime','arrivals','departures','occupancy']
+        bydt_df.to_csv(file_bydt_csv, index=False, float_format='%.6f', columns=dt_cols)
+
+        summary_cols = ['category','day_of_week','bin_of_day',
+                        'count', 'mean', 'stdev', 'sem', 'cv',
+                        'var', 'skew', 'kurt',
+                        'p50', 'p55', 'p60', 'p65', 'p70', 'p75',
+                        'p80', 'p85', 'p90', 'p95', 'p975', 'p99']
 
 
-    bydt_df.to_csv(file_bydt_csv, index=False)
+        occ_stats_summary.to_csv(file_occ_csv, float_format='%.6f', columns=summary_cols)
+        arr_stats_summary.to_csv(file_arr_csv, float_format='%.6f', columns=summary_cols)
+        dep_stats_summary.to_csv(file_dep_csv, float_format='%.6f', columns=summary_cols)
 
-    occ_stats_summary.to_csv(file_occ_csv)
-    arr_stats_summary.to_csv(file_arr_csv)
-    dep_stats_summary.to_csv(file_dep_csv)
+        occ_stats_summary_cat.to_csv(file_occ_cat_csv, float_format='%.6f', columns=summary_cols)
+        arr_stats_summary_cat.to_csv(file_arr_cat_csv, float_format='%.6f', columns=summary_cols)
+        dep_stats_summary_cat.to_csv(file_dep_cat_csv, float_format='%.6f', columns=summary_cols)
 
-    occ_stats_summary_cat.to_csv(file_occ_cat_csv)
-    arr_stats_summary_cat.to_csv(file_arr_cat_csv)
-    dep_stats_summary_cat.to_csv(file_dep_cat_csv)
+    # Return data frames if requested
+    if return_data:
+        summaries = {'bydatetime':bydt_df,
+                     'occupancy':occ_stats_summary,
+                     'arrivals':arr_stats_summary,
+                     'departures':dep_stats_summary,
+                     'tot_occ':occ_stats_summary_cat,
+                     'tot_arr':arr_stats_summary_cat,
+                     'tot_dep':dep_stats_summary_cat}
+
+        return summaries
 
 
 
@@ -77,9 +101,9 @@ if __name__ == '__main__':
 
     df = pd.read_csv(file_stopdata,parse_dates=[in_fld_name,out_fld_name])
 
-    hillmaker(scenario_name,df,in_fld_name, out_fld_name,cat_fld_name,
-                                     start_analysis,end_analysis,
-                                     tot_fld_name,bin_size_mins,
-                                     categories=includecats,
-                                     outputpath='./testing')
+    hillmaker(scenario_name, df, in_fld_name, out_fld_name, cat_fld_name,
+              start_analysis, end_analysis,
+              tot_fld_name, bin_size_mins,
+              categories=includecats,
+              export_path='./testing')
 

@@ -17,7 +17,7 @@ from datetime import timedelta
 
 from timeit import default_timer as timer
 
-from . import hillpylib
+import hillpylib
 
 from pandas.tseries.offsets import Minute
 
