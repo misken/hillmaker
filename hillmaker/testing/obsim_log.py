@@ -30,8 +30,8 @@ df['EnteredTS'] = df.apply(lambda row:
 df['ExitedTS'] = df.apply(lambda row:
                           Timestamp(round((basedate + pd.DateOffset(hours=row['Exited'])).value,-9)), axis=1)
 
-hm.run_hillmaker(scenario_name,df,in_fld_name, out_fld_name,cat_fld_name,
-                                     start_analysis,end_analysis,
+hm.run_hillmaker(scenario_name,df,in_fld_name, out_fld_name,
+                                     start_analysis,end_analysis,cat_fld_name,
                                      tot_fld_name,bin_size_mins,
                                      categories=includecats,
                                      outputpath='./testing')

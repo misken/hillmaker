@@ -5,9 +5,6 @@ Created on Fri Nov  1 23:50:39 2013
 @author: mark
 """
 
-__author__ = 'isken'
-
-
 import pandas as pd
 from pandas import DataFrame
 from pandas import Timestamp
@@ -22,11 +19,11 @@ import hillpylib
 from pandas.tseries.offsets import Minute
 
 
-def make_bydatetime(stops_df,infield,outfield,catfield,
-                    start_analysis,end_analysis,
+def make_bydatetime(stops_df, infield, outfield,
+                    start_analysis, end_analysis, catfield,
                     total_str='Total',
                     bin_size_minutes=60,
-                    categories=False,
+                    cat_to_exclude=False,
                     totals=True):
     """
     Create bydatetime table based on user inputs.
@@ -35,17 +32,14 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
 
     Parameters
     ----------
-    D : pandas DataFrame
+    stops_df : DataFrame
        Stop data
 
     infield : string
-       Name of column in D to use as arrival datetime
+       Name of column in stops_df to use as arrival datetime
 
     outfield : string
-       Name of column in D to use as departure datetime
-
-    catfield : string
-       Name of column in D to use as category field
+       Name of column in stops_df to use as departure datetime
 
     start_date : datetime
        Start date for the analysis
@@ -53,21 +47,24 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
     end_date : datetime
        End date for the analysis
 
-    total_str : string
+    catfield : string, default=''
+       Name of column in stops_df to use as category field
+
+    total_str : string, default='Total'
        Value to use for the totals
 
-    bin_size_minutes : int
+    bin_size_minutes : int, default=60
        Bin size in minutes. Should divide evenly into 1440.
 
     Returns
     -------
-    bydatetime: pandas DataFrame
-       The computed bydatetime table as a DataFrame
+    DataFrame
+       Occupancy, arrivals, departures by category by datetime bin
 
     Examples
     --------
-    bydt_df = make_bydatetime(stops_df,'InTime','OutTime','PatientType',
-    ...                        datetime(2014, 3, 1),datetime(2014, 6, 30),'Total',60)
+    bydt_df = make_bydatetime(stops_df,'InTime','OutTime',
+    ...                        datetime(2014, 3, 1),datetime(2014, 6, 30),'PatientType','Total',60)
 
 
     TODO
@@ -118,38 +115,17 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
 
     rng_bydt = pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes))
     datebins = pd.DataFrame(index=rng_bydt)
-    
-    
 
     print ("rng_bydt created: {:.4f}".format(timer()-start))
 
-    # import sys
-    # sys.exit("Stopping after rng_bydt_list creation")
-    #
-    # num_days = (end_date-start_date).days + 1
-    # num_periods = num_days * (1440//bin_size_minutes)
-    # print(num_periods)
-    #
-    # # The following is no faster than the pandas date_range() method.
-    # #rng_bydt = [start_date + timedelta(minutes=i*60) for i in range(num_periods)]
-    # rng_int = [100 + i*60 for i in range(num_periods)]
-    #
-    # print ("rng_bydt list created: {}".format(time.clock()))
-
-
-
-
     # Get the unique category values or used passed in list
-    if (not categories):
-        categories = [c for c in stops_df[catfield].unique()]
-        print ('using derived categories: {:.4f}'.format(timer()-start))
-    else:
-        stops_df = stops_df[stops_df[catfield].isin(categories)]
-        print ('using specified categories: {:.4f}'.format(timer()-start))
+    categories_all = [c for c in stops_df[catfield].unique()]
+    categories = [c for c in categories_all if c not in cat_to_exclude]
 
+    stops_df = stops_df[stops_df[catfield].isin(categories)]
 
-    # Create a list of column names for the by date table and then an empty data frame based on these columns.
-    columns=['category','datetime','arrivals','departures','occupancy']
+    # Create a list of column names for the by datetime table and then an empty data frame based on these columns.
+    columns = ['category', 'datetime', 'arrivals', 'departures', 'occupancy']
     bydt_df = DataFrame(columns=columns)
 
     # Now we'll build up the seeded by date table a category at a time.
@@ -160,14 +136,9 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
         bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
                      'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
 
-        bydt_df_cat = DataFrame(bydt_data,columns=['category',
-                       'datetime',
-                       'arrivals',
-                       'departures',
-                       'occupancy'])
+        bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
 
         bydt_df = pd.concat([bydt_df,bydt_df_cat])
-
 
     print ("Seeded bydatetime DataFrame created: {:.4f}".format(timer()-start))
 
@@ -177,70 +148,41 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
     # to do a column transformation using a specific level of a multiindex.
     # http://stackoverflow.com/questions/13703720/converting-between-datetime-timestamp-and-datetime64?rq=1
 
-
-
     bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
     bydt_df['bin_of_day'] =  bydt_df['datetime'].map(lambda x: hillpylib.bin_of_day(x,bin_size_minutes))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hillpylib.bin_of_week(x,bin_size_minutes))
 
     print ("dayofweek, bin_of_day, bin_of_week computed: {:.4f}".format(timer()-start))
 
-
     bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
     print ("Multi-index on bydatetime DataFrame created: {:.4f}".format(timer()-start))
 
     bydt_df.sortlevel(inplace=True)
     print ("Multi-index fully lexsorted: {:.4f}".format(timer()-start))
-    
-    # bydt_df.to_csv('after_lexsort.csv')
-    # Main occupancy, arrivals, departures loop. Process each record in the
-# stop data file.
 
-    # The following "standard approach" is slow and very non-Pythonic
-    # This
-
-    #idx = pd.IndexSlice
+    # Main occupancy, arrivals, departures loop. Process each record in `stops_df`.
 
     num_processed = 0
     num_inner = 0
-    print ("Latest edits at {}".format(datetime.now()))
-
     rectype_counts = {}
 
-    for intime_raw, outtime_raw, cat in zip(stops_df[infield],stops_df[outfield], stops_df[catfield]):
+    for intime_raw, outtime_raw, cat in zip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
         intime = hillpylib.to_the_second(intime_raw)
         outtime = hillpylib.to_the_second(outtime_raw)
         good_rec = True
-        rectype = hillpylib.stoprec_analysis_rltnshp([intime,outtime],analysis_range)
+        rectype = hillpylib.stoprec_analysis_rltnshp([intime,outtime], analysis_range)
     
         if rectype in ['backwards']:
-            # print "ERROR_{}: {} {} {}".format(rectype,intime,outtime,cat)
             good_rec = False
-
             rectype_counts['backwards'] = rectype_counts.get('backwards',0) + 1
     
         if good_rec and rectype != 'none':
-            indtbin =  hillpylib.dt_floor(intime,bin_size_minutes)
-            # i = datebins.index.searchsorted(intime)
-            # if (intime == datebins.index[i]):
-            #      indtbin = datebins.index[i]
-            # else:
-            #      indtbin = datebins.index[i-1]
-
-            outdtbin =  hillpylib.dt_floor(outtime,bin_size_minutes)
-            # i = datebins.index.searchsorted(outtime)
-            #
-            # if (outtime == datebins.index[i]):
-            #     outdtbin = datebins.index[i]
-            # else:
-            #     outdtbin = datebins.index[i-1]
-            
+            indtbin =  hillpylib.dt_floor(intime, bin_size_minutes)
+            outdtbin =  hillpylib.dt_floor(outtime, bin_size_minutes)
             inout_occ_frac = hillpylib.occ_frac([intime, outtime], bin_size_minutes)
             numbins = hillpylib.numbins(indtbin, outdtbin, bin_size_minutes)
             dtbin = indtbin
 
-
-            
             # print "{} {} {} {} {:.3f} {:.3f} {:.3f}".format(intime, outtime, cat,
             #    rectype, time.clock(), inout_occ_frac[0], inout_occ_frac[1])
 
@@ -260,17 +202,6 @@ def make_bydatetime(stops_df,infield,outfield,catfield,
 
                 if numbins > 1:
                     bydt_df.at[(cat,outdtbin), 'occupancy'] += inout_occ_frac[1]
-
-                # I'm counting on this being a copy
-                #print(num_processed+1,cat,indtbin,outdtbin,numbins,inc_list)
-                #print(DataFrame(bydt_df.loc[idx[[cat],indtbin:outdtbin],idx['occupancy']]))
-
-                #inc_df = DataFrame(bydt_df.loc[idx[cat,indtbin:outdtbin],idx['occupancy']] + inc_list) # 169.5
-                # inc_df = (bydt_df.loc[idx[cat,indtbin:outdtbin],idx['occupancy']] + inc_list) # 166.8
-                # bydt_df.loc[idx[[cat],indtbin:outdtbin],idx['occupancy']] += inc_list # Error
-
-                #The update takes the bulk of the time
-                #bydt_df.update(inc_df)
     
             elif rectype == 'right':
                 rectype_counts['right'] = rectype_counts.get('right',0) + 1
@@ -369,9 +300,9 @@ if __name__ == '__main__':
     df['EnteredTS'] = df.apply(lambda row: Timestamp(round((basedate + pd.DateOffset(hours=row['Entered'])).value,-9)), axis=1)
     df['ExitedTS'] = df.apply(lambda row: Timestamp(round((basedate + pd.DateOffset(hours=row['Exited'])).value,-9)), axis=1)
 
-    bydt_df = make_bydatetime(df,in_fld_name, out_fld_name,cat_fld_name,
-                                     start_analysis,end_analysis,
-                                     tot_fld_name,bin_size_mins,categories=includecats)
+    bydt_df = make_bydatetime(df, in_fld_name, out_fld_name, cat_fld_name,
+                              start_analysis, end_analysis,
+                              tot_fld_name, bin_size_mins, cat_to_exclude=includecats)
 
     file_bydt_csv = 'testing/bydatetime_main_' + scenario_name + '.csv'
     file_bydt_pkl = 'testing/bydatetime_main_' + scenario_name + '.pkl'

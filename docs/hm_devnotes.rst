@@ -11,3 +11,14 @@ How to create a well behaved Python command line application
 Handle input via files or pipes or command line args?
 
 http://stiglerdiet.com/blog/2015/Nov/24/my-python-environment-workflow-with-conda/
+
+Code profiling
+--------------
+
+https://zapier.com/engineering/profiling-python-boss/
+
+
+Decorators
+----------
+
+http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/

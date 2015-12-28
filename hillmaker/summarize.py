@@ -1,6 +1,6 @@
 
 import pandas as pd
-import time
+
 
 def summarize_bydatetime(bydt_df):
     """
@@ -30,7 +30,7 @@ def summarize_bydatetime(bydt_df):
 
     Returns
     -------
-    bydatetime: pandas DataFrame
+    DataFrame
        The computed bydatetime table as a DataFrame
 
     Examples
@@ -41,10 +41,9 @@ def summarize_bydatetime(bydt_df):
     TODO
     ----
 
-    - add parameter and code to handle occ frac choice
-    - generalize to handle choice of arr, dep, occ or some combo of
 
-     Notes
+
+    Notes
     -----
 
 
@@ -56,7 +55,7 @@ def summarize_bydatetime(bydt_df):
     --------
     """
 
-    bydt_dfgrp = bydt_df.groupby(['category','day_of_week','bin_of_day'])
+    bydt_dfgrp = bydt_df.groupby(['category', 'day_of_week', 'bin_of_day'])
 
     occ_stats = bydt_dfgrp['occupancy'].apply(get_occstats)
     arr_stats = bydt_dfgrp['arrivals'].apply(get_occstats)
@@ -65,8 +64,6 @@ def summarize_bydatetime(bydt_df):
     occ_stats_summary = occ_stats.unstack()
     arr_stats_summary = arr_stats.unstack()
     dep_stats_summary = dep_stats.unstack()
-
-    print ('Done with summary stats: {}'.format(time.clock()))
 
     return (occ_stats_summary,arr_stats_summary,dep_stats_summary)
 
@@ -159,7 +156,6 @@ if __name__ == '__main__':
 
 
     bydt_df = pd.read_csv(file_bydt_csv)
-    print ("CSV bydt data file read: {}".format(time.clock()))
 
     occ_stats_summary,arr_stats_summary,dep_stats_summary = summarize_bydatetime(bydt_df)
 
