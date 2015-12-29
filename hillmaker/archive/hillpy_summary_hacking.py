@@ -29,7 +29,7 @@ else:
     os.chdir('/home/mark/Dropbox/HillPy')
 
 # HillPy setup
-import hillpylib
+import hmlib
 
 # Read sample data set and convert string dates to datetimes
 

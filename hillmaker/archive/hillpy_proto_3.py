@@ -35,7 +35,7 @@ else:
     os.chdir('/home/mark/Dropbox/HillPy')
     
 # HillPy setup
-import hillpylib as hlib
+import hmlib as hlib
     
 # Input parameters
 file_stopdata = 'ShortStay.csv'

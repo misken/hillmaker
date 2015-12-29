@@ -26,7 +26,7 @@ from dateutil.parser import parse
 
 
 # HillPy setup
-import hillpylib as hlib
+import hmlib as hlib
 
 # Change directory into working HillPy dir
 if os.name == 'nt':

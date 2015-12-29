@@ -19,7 +19,7 @@ from pandas import DataFrame
 import pandas as pd
 
 # HillPy setup
-import hillpylib as hlib
+import hmlib as hlib
 
 # Input parameters
 file_stopdata_csv = 'medhome_sample_startstop.txt'

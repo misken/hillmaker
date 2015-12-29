@@ -39,7 +39,7 @@ import time
 # <codecell>
 
 ## HillPy library
-import hillpylib as hlib
+import hmlib as hlib
 
 # <markdowncell>
 

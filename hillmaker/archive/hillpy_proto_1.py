@@ -25,7 +25,7 @@ from dateutil.parser import parse
 
 
 # HillPy setup
-import hillpylib
+import hmlib
 
 # Change directory into working HillPy dir
 if os.name == 'nt':
@@ -51,7 +51,7 @@ df = pd.read_csv(file_stopdata,parse_dates=[in_fld_name,out_fld_name])
 
 # Compute LOS
 df['LOS'] = df[out_fld_name] - df[in_fld_name]
-df['LOSmins'] = hillpylib.vtd_to_mins(df['LOS'])
+df['LOSmins'] = hmlib.vtd_to_mins(df['LOS'])
 
 # Create seeded by date table
 bin_freq = str(binsize_mins) + 'min'
@@ -65,8 +65,8 @@ bydate_df = DataFrame(bydate_data, index=rng_bydate)
 
 for intime, outtime in izip(df[in_fld_name], df[out_fld_name]):
     print intime, outtime
-    indtbin = hillpylib.rounddownTime(intime)
-    outdtbin = hillpylib.rounddownTime(outtime)
+    indtbin = hmlib.rounddownTime(intime)
+    outdtbin = hmlib.rounddownTime(outtime)
     
     inbin_occ_secs = (indtbin + timedelta(minutes=30) - intime).seconds
     inbin_occ = inbin_occ_secs/(30.0*60.0)

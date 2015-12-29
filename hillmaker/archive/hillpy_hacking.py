@@ -29,7 +29,7 @@ else:
     os.chdir('/home/mark/Dropbox/HillPy')
 
 # HillPy setup
-import hillpylib
+import hmlib
 
 # Read sample data set and convert string dates to datetimes
 df = pd.read_csv('ShortStay.csv',parse_dates=['InTime','OutTime'])
@@ -71,11 +71,11 @@ print df['LOStd'].dtype
 # Turns out to be hard to get things like hours from a Series of timedelta objects
 # http://stackoverflow.com/questions/12405677/get-days-property-from-numpy-ndarray-of-timedelta-objects
 # Wrote a quick function, td_to_mins(), and a companion vectorizer to do the work.
-df['LOSmins'] = hillpylib.vtd_to_mins(df['LOStd'])
+df['LOSmins'] = hmlib.vtd_to_mins(df['LOStd'])
 
 # Now let's try with list comp. It works.
 
-df['LOSmins_lstcmp'] = [hillpylib.td_to_mins(df['LOStd'][i]) for i in range(len(df))]
+df['LOSmins_lstcmp'] = [hmlib.td_to_mins(df['LOStd'][i]) for i in range(len(df))]
 
 df['LOSmins'].quantile(0.75)
 
@@ -153,8 +153,8 @@ los  # datetime.timedelta(1, 8100)
 indate = intime.date() # Get a date object from a datetime obj
 
 # Compute in and out time bins
-df['indtbin'] = hillpylib.vrounddownTime(df['InTime'])
-df['outdtbin'] = hillpylib.vrounddownTime(df['OutTime'])
+df['indtbin'] = hmlib.vrounddownTime(df['InTime'])
+df['outdtbin'] = hmlib.vrounddownTime(df['OutTime'])
 
 for d in rng:
     print d
