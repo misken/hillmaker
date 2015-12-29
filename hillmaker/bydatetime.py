@@ -170,10 +170,12 @@ def make_bydatetime(stops_df, infield, outfield,
         print("dayofweek, bin_of_day, bin_of_week computed: {:.4f}".format(timer()-start_time))
 
     bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
+
     if verbose:
         print("Multi-index on bydatetime DataFrame created: {:.4f}".format(timer()-start_time))
 
     bydt_df.sortlevel(inplace=True)
+
     if verbose:
         print("Multi-index fully lexsorted: {:.4f}".format(timer()-start_time))
 
@@ -261,10 +263,9 @@ def make_bydatetime(stops_df, infield, outfield,
             num_processed += 1
             if verbose == 2:
                 print(num_processed)
-
-    print("Num inner: {}".format(num_inner))
-    print(rectype_counts)
-    print("Done processing {} stop recs: {:.4f}".format(num_processed, timer()-start_time))
+    if verbose:
+        print("Done processing {} stop recs: {:.4f}".format(num_processed, timer()-start_time))
+        print(rectype_counts)
 
     # Compute totals
     if totals:
@@ -290,7 +291,8 @@ def make_bydatetime(stops_df, infield, outfield,
         tot_df = tot_df[col_order]
         bydt_df = bydt_df.append(tot_df)
 
-        print("Done adding totals: {:.4f}".format(timer()-start_time))
+        if verbose:
+            print("Done adding totals: {:.4f}".format(timer()-start_time))
 
     return bydt_df
 
@@ -321,9 +323,10 @@ if __name__ == '__main__':
                               axis=1)
 
     # Create the bydatetime DataFrame
-    bydatetime_df = make_bydatetime(df, in_fld_name, out_fld_name, cat_fld_name,
-                                    start, end,
-                                    tot_fld_name, bin_size_mins, cat_to_exclude=excludecats)
+    bydatetime_df = make_bydatetime(df, in_fld_name, out_fld_name,
+                                    start, end, cat_fld_name,
+                                    total_str=tot_fld_name, bin_size_minutes=bin_size_mins,
+                                    cat_to_exclude=excludecats, verbose=1)
 
     # Export results to csv
     file_bydt_csv = 'testing/bydatetime_main_' + scenario_name + '.csv'

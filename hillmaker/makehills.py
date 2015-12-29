@@ -9,7 +9,7 @@ import bydatetime
 import summarize
 
 
-def hillmaker(scenario_name, stops_df, infield, outfield,
+def makehills(scenario_name, stops_df, infield, outfield,
               start_analysis, end_analysis,
               catfield='',
               total_str='Total',
@@ -148,7 +148,7 @@ if __name__ == '__main__':
 
     df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 
-    hillmaker(scenario, df, in_fld_name, out_fld_name,
+    makehills(scenario, df, in_fld_name, out_fld_name,
               start, end, cat_fld_name,
               tot_fld_name, bin_mins,
               cat_to_exclude=whichcats_to_exclude,

@@ -1,9 +1,9 @@
 
 
 import pandas as pd
-from pandas import Timestamp
 
-import hillmaker as hm
+# from antigravity.antigravity import my_object
+import makehills
 
 file_stopdata = 'data/ShortStay.csv'
 
@@ -22,8 +22,9 @@ whichcats_to_exclude = ['ART', 'IVT']
 
 df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 
-hm.hillmaker(scenario, df, in_fld_name, out_fld_name,
-          start, end, cat_fld_name,
-          tot_fld_name, bin_mins,
-          cat_to_exclude=whichcats_to_exclude,
-          export_path='./testing')
+makehills.makehills(scenario, df, in_fld_name, out_fld_name,
+                    start, end, cat_fld_name,
+                    tot_fld_name, bin_mins,
+                    cat_to_exclude=whichcats_to_exclude,
+                    export_path='./testing',verbose=1)
+
