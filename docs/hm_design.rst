@@ -116,3 +116,23 @@ Including sample stop data with package
 =======================================
 
 Much like many R and Python packages that include some test data, be nice to do this with hillmaker.
+
+User interface
+==============
+
+What to do?
+
+https://github.com/chriskiehl/Gooey
+
+https://github.com/pinterest/thrift-tools
+
+Model projects
+==============
+
+https://github.com/rasbt/biopandas
+
+https://github.com/bloomberg/bqplot
+
+https://github.com/pinterest/thrift-tools
+
+https://github.com/quantopian/pyfolio
