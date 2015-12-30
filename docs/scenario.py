@@ -1,6 +1,6 @@
 __author__ = 'isken'
 
-import hillpylib as hillpy
+import hmlib as hillpy
 
 class Scenario:
     """
