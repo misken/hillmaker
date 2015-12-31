@@ -5,8 +5,8 @@
 
 import pandas as pd
 
-import bydatetime
-import summarize
+from . import bydatetime
+from . import summarize
 
 
 def make_hills(scenario_name, stops_df, infield, outfield,
@@ -18,6 +18,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
                totals=True,
                export_csv=True,
                export_path='.',
+               return_dataframes=False,
                verbose=0):
 
     """
@@ -29,39 +30,54 @@ def make_hills(scenario_name, stops_df, infield, outfield,
 
     Parameters
     ----------
-    scenario_name: string
+    scenario_name : string
         Used in output filenames
-    stops_df: DataFrame
+    stops_df : DataFrame
         Base data containing one row per visit
-    infield: string
+    infield : string
         Column name corresponding to the arrival times
-    outfield: string
+    outfield : string
         Column name corresponding to the departure times
-    start_analysis: datetime-like, str
+    start_analysis : datetime-like, str
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis: datetime-like, str
+    end_analysis : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    catfield: string, default ''
+    catfield : string, optional
         Column name corresponding to the category. If none is specified, then only overall occupancy is analyzed.
-    total_str: string, default 'Total'
-        Column name to use for the overall category
-    bin_size_minutes: int, default 60
-        Number of minutes in each time bin of the day
-    cat_to_exclude: list, default []
-        Categories to ignore
-    totals: bool, default True
-       If true, overall totals are computed. Else, just category specific values computed.
-    export_csv: bool, default True
-       If true, results DataFrames are exported to csv files.
-    export_path: string, default 'Total'
-        Destination path for exported csv files
-    verbose : int, default 0
-        The verbosity level. The default, zero, means silent mode.
+        Default is ''
+    total_str : string, optional
+        Column name to use for the overall category, default is 'Total'
+    bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day, default is 60
+    cat_to_exclude : list, optional
+        Categories to ignore, default is None
+    totals : bool, optional
+       If true, overall totals are computed. Else, just category specific values computed. Default is True.
+    export_csv : bool, optional
+       If true, results DataFrames are exported to csv files. Default is True.
+    export_path : string, optional
+        Destination path for exported csv files, default is current directory
+    return_dataframes : bool, optional
+        If true, dictionary of DataFrames is returned. Default is False.
+    verbose : int, optional
+        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
 
     Returns
     -------
-    dict of DataFrames containing results
-       The bydatetime and all summaries
+    dict of DataFrames
+       The bydatetime and all summaries.
+
+       Only returned if return_dataframes=True
+
+       Example:
+
+       {'bydatetime': bydt_df,
+        'occupancy': occ_stats_summary,
+        'arrivals': arr_stats_summary,
+        'departures': dep_stats_summary,
+        'tot_occ': occ_stats_summary_cat,
+        'tot_arr': arr_stats_summary_cat,
+        'tot_dep': dep_stats_summary_cat}
 
     """
 
@@ -96,7 +112,9 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     if export_csv:
         export_hills(summaries, scenario_name, export_path)
 
-    return summaries
+    # Return results in DataFrames if requested
+    if return_dataframes:
+        return summaries
 
 
 def export_hills(summaries, scenario_name, export_path):

@@ -13,7 +13,7 @@ from datetime import datetime
 from datetime import timedelta
 from timeit import default_timer as timer
 
-import hmlib
+from . import hmlib
 
 from pandas.tseries.offsets import Minute
 

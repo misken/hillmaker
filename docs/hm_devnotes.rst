@@ -23,3 +23,13 @@ Decorators
 
 http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 
+Docstrings
+----------
+
+Sphinx has autodoc extension that can create docs from code based docstrings. In addition to rst style, Sphinx
+has an extension called Napolean that can translate both Google and Numpy Style docstrings into rst that autodoc
+can then use. I mostly seem to be seeing Numpy style out there and that's what I've unknowingly been using. So,
+Numpy style it is.
+
+http://sphinx-doc.org/ext/example_numpy.html#example-numpy
+

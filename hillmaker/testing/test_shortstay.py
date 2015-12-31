@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-import hills
+import hillmaker as hm
 
 file_stopdata = 'data/ShortStay.csv'
 
@@ -21,9 +21,9 @@ bin_mins = 60
 
 df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 
-hills.make_hills(scenario, df, in_fld_name, out_fld_name,
-                 start, end, cat_fld_name,
-                 tot_fld_name, bin_mins,
-                 cat_to_exclude=None,
-                 export_path='./testing/output', verbose=1)
+hm.make_hills(scenario, df, in_fld_name, out_fld_name,
+                     start, end, cat_fld_name,
+                     tot_fld_name, bin_mins,
+                     cat_to_exclude=None,
+                     export_path='./testing/output', verbose=1)
 

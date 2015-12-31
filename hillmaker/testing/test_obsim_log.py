@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas import Timestamp
 
-import hills
+import hillmaker
 
 file_stopdata = 'data/unit_stop_log_Experiment1_Scenario1_Rep1.csv'
 
@@ -30,8 +30,8 @@ df['ExitedTS'] = df.apply(lambda row:
 
 df = df[df[cat_fld_name].isnotin(excludecats)]
 
-hills.make_hills(scenario_name, df, in_fld_name, out_fld_name,
-                 start_analysis, end_analysis, cat_fld_name,
-                 total_str=tot_fld_name, bin_size_minutes=bin_size_mins,
-                 export_path='./testing/output',
-                 cat_to_exclude=excludecats, verbose=1)
+hillmaker.make_hills(scenario_name, df, in_fld_name, out_fld_name,
+                     start_analysis, end_analysis, cat_fld_name,
+                     total_str=tot_fld_name, bin_size_minutes=bin_size_mins,
+                     export_path='./testing/output',
+                     cat_to_exclude=excludecats, verbose=1)
