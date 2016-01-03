@@ -12,6 +12,18 @@ from datetime import datetime
 from datetime import timedelta
 import pandas as pd
 from pandas import Timestamp
+import time
+
+
+
+class Hilltimer:
+    def __enter__(self):
+        self.start = time.clock()
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.clock()
+        self.interval = self.end - self.start
 
 
 def td_to_mins(x):

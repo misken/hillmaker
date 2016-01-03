@@ -94,22 +94,20 @@ def make_bydatetime(stops_df, infield, outfield,
     --------
     """
 
-    start_time = timer()
-
     start_analysis_dt = pd.Timestamp(start_analysis)
     end_analysis_dt = pd.Timestamp(end_analysis)
 
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
-    max_intime = stops_df[infield].max()
-    min_outtime = stops_df[outfield].min()
+    #max_intime = stops_df[infield].max()
+    # min_outtime = stops_df[outfield].min()
     max_outtime = stops_df[outfield].max()
 
     if verbose:
         print("min of intime: {}".format(min_intime))
         print("max of outtime: {}".format(max_outtime))
-        print("max of intime: {}".format(max_intime))
-        print("min of outtime: {}".format(min_outtime))
+        # print("max of intime: {}".format(max_intime))
+        # print("min of outtime: {}".format(min_outtime))
 
     # TODO - Add warnings here related to min and maxes out of whack with analysis range
 
@@ -124,9 +122,6 @@ def make_bydatetime(stops_df, infield, outfield,
 
     rng_bydt = pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes))
     # datebins = pd.DataFrame(index=rng_bydt)
-
-    if verbose:
-        print("rng_bydt created: {:.4f}".format(timer()-start_time))
 
     # Get the unique category values and exclude any specified to exclude
     categories_all = [c for c in stops_df[catfield].unique()]
@@ -153,9 +148,6 @@ def make_bydatetime(stops_df, infield, outfield,
 
         bydt_df = pd.concat([bydt_df, bydt_df_cat])
 
-    if verbose:
-        print("Seeded bydatetime DataFrame created: {:.4f}".format(timer()-start_time))
-
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
     # regular columns as well since it's hard
@@ -166,18 +158,9 @@ def make_bydatetime(stops_df, infield, outfield,
     bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
-    if verbose:
-        print("dayofweek, bin_of_day, bin_of_week computed: {:.4f}".format(timer()-start_time))
-
     bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
 
-    if verbose:
-        print("Multi-index on bydatetime DataFrame created: {:.4f}".format(timer()-start_time))
-
     bydt_df.sortlevel(inplace=True)
-
-    if verbose:
-        print("Multi-index fully lexsorted: {:.4f}".format(timer()-start_time))
 
     # Main occupancy, arrivals, departures loop. Process each record in `stops_df`.
 
@@ -263,9 +246,6 @@ def make_bydatetime(stops_df, infield, outfield,
             num_processed += 1
             if verbose == 2:
                 print(num_processed)
-    if verbose:
-        print("Done processing {} stop recs: {:.4f}".format(num_processed, timer()-start_time))
-        print(rectype_counts)
 
     # Compute totals
     if totals:
@@ -290,9 +270,6 @@ def make_bydatetime(stops_df, infield, outfield,
                      'bin_of_day', 'bin_of_week']
         tot_df = tot_df[col_order]
         bydt_df = bydt_df.append(tot_df)
-
-        if verbose:
-            print("Done adding totals: {:.4f}".format(timer()-start_time))
 
     return bydt_df
 

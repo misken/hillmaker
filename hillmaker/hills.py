@@ -7,6 +7,7 @@ import pandas as pd
 
 from . import bydatetime
 from . import summarize
+from .hmlib import Hilltimer
 
 
 def make_hills(scenario_name, stops_df, infield, outfield,
@@ -82,21 +83,38 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     """
 
     # Create the bydatetime DataFrame
-    bydt_df = bydatetime.make_bydatetime(stops_df,
-                                         infield,
-                                         outfield,
-                                         start_analysis,
-                                         end_analysis,
-                                         catfield,
-                                         total_str,
-                                         bin_size_minutes,
-                                         cat_to_exclude=cat_to_exclude,
-                                         totals=totals,
-                                         verbose=verbose)
+    with Hilltimer() as t:
+        bydt_df = bydatetime.make_bydatetime(stops_df,
+                                             infield,
+                                             outfield,
+                                             start_analysis,
+                                             end_analysis,
+                                             catfield,
+                                             total_str,
+                                             bin_size_minutes,
+                                             cat_to_exclude=cat_to_exclude,
+                                             totals=totals,
+                                             verbose=verbose)
+
+        starttime = t.start
+
+    if verbose:
+        print("Datetime DataFrame created (seconds): {:.4f}".format(t.interval))
 
     # Create the summary stats DataFrames
-    occ_stats_summary, arr_stats_summary, dep_stats_summary = summarize.summarize_bydatetime(bydt_df)
-    occ_stats_summary_cat, arr_stats_summary_cat, dep_stats_summary_cat = summarize.summarize_bycategory(bydt_df)
+    with Hilltimer() as t:
+        occ_stats_summary, arr_stats_summary, dep_stats_summary = summarize.summarize_bydatetime(bydt_df)
+
+    if verbose:
+        print("Summaries by datetime created (seconds): {:.4f}".format(t.interval))
+
+    with Hilltimer() as t:
+        occ_stats_summary_cat, arr_stats_summary_cat, dep_stats_summary_cat = summarize.summarize_bycategory(bydt_df)
+
+    endtime = t.end
+
+    if verbose:
+        print("Summaries by category created (seconds): {:.4f}".format(t.interval))
 
     # Store summary DataFrames in a dict
 
@@ -110,7 +128,15 @@ def make_hills(scenario_name, stops_df, infield, outfield,
 
     # Export results to csv if requested
     if export_csv:
-        export_hills(summaries, scenario_name, export_path)
+        with Hilltimer() as t:
+            export_hills(summaries, scenario_name, export_path)
+        endtime = t.end
+
+        if verbose:
+            print("Summaries exported to csv (seconds): {:.4f}".format(t.interval))
+
+    if verbose:
+            print("Total time (seconds): {:.4f}".format(endtime - starttime))
 
     # Return results in DataFrames if requested
     if return_dataframes:
