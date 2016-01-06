@@ -16,7 +16,7 @@
 from setuptools import setup
 
 setup(name='hillmaker',
-      version='0.1',
+      version='0.1.0',
       description='Python based occupancy analysis tool',
       author='Mark Isken',
       author_email='isken@oakland.edu',

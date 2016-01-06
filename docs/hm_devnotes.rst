@@ -33,3 +33,10 @@ Numpy style it is.
 
 http://sphinx-doc.org/ext/example_numpy.html#example-numpy
 
+Packaging and distributing
+--------------------------
+
+https://mail.python.org/pipermail/distutils-sig/2014-December/025484.html
+
+http://python-packaging-user-guide.readthedocs.org/en/latest/science/
+
