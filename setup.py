@@ -22,6 +22,7 @@ setup(name='hillmaker',
       author_email='isken@oakland.edu',
       url='http://github.com/misken/hillmaker/',
       packages=['hillmaker'],
+      package_data={'hillmaker': ['data/*.csv']},
       platforms='any',
       classifiers = [
         'Programming Language :: Python :: 3 :: Only',
