@@ -40,3 +40,28 @@ https://mail.python.org/pipermail/distutils-sig/2014-December/025484.html
 
 http://python-packaging-user-guide.readthedocs.org/en/latest/science/
 
+
+
+
+
+Conda
+^^^^^
+
+http://technicaldiscovery.blogspot.com/2013/12/why-i-promote-conda.html
+
+https://www.continuum.io/content/python-3-support-anaconda
+
+https://groups.google.com/a/continuum.io/forum/#!topic/anaconda/z1hX-NLgQhM
+
+ - conda local build and install question answered by Oliphant
+
+Conda build command has option to specify which Python version(s) to build against:
+
+--python PYTHON_VER
+              Set the Python version used by conda build. Can be passed multi‐
+              ple  times  to  build against multiple versions. Can be 'all' to
+              build against all known versions (['2.6', '2.7',  '3.3',  '3.4',
+              '3.5'])
+
+Remember to run conda convert to create win-64 or other versions
+
