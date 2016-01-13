@@ -1,5 +1,6 @@
 # ignore all csv files in the testing/ directory
 hillmaker/testing/*.csv
+!hillmaker/testing/rectypes.csv
 hillmaker/examples/*.csv
 
 archive/*
