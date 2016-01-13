@@ -36,7 +36,6 @@ class Hilltimer:
 def td_to_mins(x):
     """
     Converts a timedelta object to minutes
-
     """
 
     num_secs = x * (10 ** (-9)) / 60.0
@@ -154,7 +153,7 @@ def dt_floor_exp(dt, binsizemins=60):
 
 def dt_ceiling(dt, minutes):
     """
-   Find ceiling of a datetime object to specified number of minutes
+   Finds ceiling of a datetime object to specified number of minutes
    
    dt : datetime.datetime object
    roundMinsTo : Closest number of minutes to round to.
@@ -167,9 +166,39 @@ def dt_ceiling(dt, minutes):
 
 
 def isgt2bins(indtbin, outdtbin, binsize_mins):
+    """
+    Returns True if (outdtbin-indtbin) > binsize_mins
+    Parameters
+    ----------
+    indtbin
+    outdtbin
+    binsize_mins
+
+    Returns
+    -------
+    bool
+        True
+
+
+    """
+
     return (outdtbin - indtbin) > timedelta(minutes=binsize_mins)
 
+
 def numbins(indtbin, outdtbin, binsize_mins):
+    """
+    Computes number of bins for which partial or full occupancy contributions exist.
+
+    Parameters
+    ----------
+    indtbin
+    outdtbin
+    binsize_mins
+
+    Returns
+    -------
+
+    """
     return 1 + (timedelta_to_seconds(outdtbin - indtbin)/60.0) / binsize_mins
 
 def to_the_second(ts):
