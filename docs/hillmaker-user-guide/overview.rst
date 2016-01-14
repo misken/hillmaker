@@ -9,7 +9,22 @@ What is hillmaker?
 
 Hillmaker facilitates statistical occupancy analysis of systems involving the
 arrival and departure of discrete entities. It is particularly useful when
-time of day and day of week effects are of interest. Typical examples
+time of day and day of week effects are of interest. Typical examples include
+healthcare subsystems such as emergency departments, post-anesthesia care units,
+inpatient nursing units, and clinics. However, it can be used in
+any domain in which entities "arrive", occupy capacity for some amount of time,
+and then "depart". The only data requirement is the arrival and departure times
+for each entity.
+
+----------------------------------
+Example - Hospital short stay unit
+----------------------------------
+
+
+
+------------------------
+The history of hillmaker
+------------------------
 
 Way back in 1985 I was an undergraduate student studying industrial and
 operations engineering and landed a summer internship with a local hospital. My
