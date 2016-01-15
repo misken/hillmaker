@@ -29,7 +29,15 @@ The history of hillmaker
 Way back in 1985 I was an undergraduate student studying industrial and
 operations engineering and landed a summer internship with a local hospital. My
 very first project involved analysis of bed capacity and staffing in the
-hospital's `endoscopy <>`_ unit.
+hospital's `endoscopy <>`_ unit. Relevant questions included:
+
+- 
+
+
+From a stack of paper records I entered
+hundreds of rows of data into Lotus 1-2-3. Each row was a patient and for
+each patient I entered their arrival and discharge times into and out of the
+endoscopy suite as well as the type of endoscopy procedure.
 
 
 
