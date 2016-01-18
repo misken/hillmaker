@@ -7,40 +7,103 @@
 What is hillmaker?
 ******************
 
-Hillmaker facilitates statistical occupancy analysis of systems involving the
-arrival and departure of discrete entities. It is particularly useful when
-time of day and day of week effects are of interest. Typical examples include
-healthcare subsystems such as emergency departments, post-anesthesia care units,
-inpatient nursing units, and clinics. However, it can be used in
-any domain in which entities "arrive", occupy capacity for some amount of time,
-and then "depart". The only data requirement is the arrival and departure times
-for each entity.
+Hillmaker is a Python package that facilitates statistical occupancy analysis of
+systems involving the arrival and departure of discrete entities. It is
+particularly useful when time of day and day of week effects are of interest. It
+gets its name from the hill-like nature of occupancy statistics plotted by time
+of day and day of week (see plot below). The original version of Hillmaker was
+developed many years ago (using MS Access and VBA) in response to capacity
+planning problems arising in health care delivery systems such as hospitals and
+outpatient clinics. Typical examples include emergency departments,
+post-anesthesia care units, inpatient nursing units, and clinics. However,
+hillmaker can be used in any domain in which entities "arrive", occupy capacity
+for some amount of time, and then "depart". For example, work in process within
+a manufacturing system can be analyzed using the entry and exit times of each
+part flowing into some process or stage of interest. The only data requirement
+is the arrival and departure times for each entity. Optionally, each entity
+can be labelled or classified as belonging to some category or class. If done,
+in addition to overall, occupancy statistics by category are also computed.
 
 ----------------------------------
 Example - Hospital short stay unit
 ----------------------------------
 
+Hospital short stay units (SSU) provide a place to care for patients that don't
+need to admitted but might stay for up to a day. Patients often use a SSU to
+undergo or recover from a therapy or procedure. Consider a simplified SSU caring
+for fived different patient types: ART (arterialgram), CAT (post cardiac-cath),
+MYE (myelogram), IVT (IV therapy), and OTH (other).
+
+Here's a snippet of a data file (CSV) containing records of patients visiting
+the SSU (the entire file contains just under 60,000 records corresponding
+to three months of SSU activity):
+
+  PatID,InRoomTS,OutRoomTS,PatType
+  1,1/1/1996 7:44,1/1/1996 8:50,IVT
+  2,1/1/1996 8:28,1/1/1996 9:20,IVT
+  3,1/1/1996 11:44,1/1/1996 13:30,MYE
+  4,1/1/1996 11:51,1/1/1996 12:55,CAT
+  5,1/1/1996 12:10,1/1/1996 13:00,IVT
+  6,1/1/1996 14:16,1/1/1996 15:35,IVT
+  7,1/1/1996 14:40,1/1/1996 15:25,IVT
+  8,1/1/1996 17:25,1/1/1996 19:00,CAT
+  9,1/2/1996 6:17,1/2/1996 8:25,MYE
+  10,1/2/1996 6:35,1/2/1996 8:30,ART
+
+The `InRoomTS` and `OutRoomTS` fields contain timestamps corresponding to when
+the patient entered and exited the SSU. `PatType` is the category for each
+patient. In order to help develop SSU staffing plans, we would like to compute
+the average and 95'th percentile of SSU occupancy by day of week and hour of
+day. In addition to overall occupancy statistics, we'd like to compute the same
+statistics by patient type. And, it's not just occupancy we are interested in.
+We also want to compute these statistics for arrivals and departures from the
+SSU. From such summaries we can create plots to visualize the results.
+
+.. image:: images/ssu_occ_1.png
 
 
-------------------------
-The history of hillmaker
-------------------------
 
-Way back in 1985 I was an undergraduate student studying industrial and
-operations engineering and landed a summer internship with a local hospital. My
-very first project involved analysis of bed capacity and staffing in the
-hospital's `endoscopy <>`_ unit. Relevant questions included:
+The key inputs needed for running hillmaker are the name of the `pandas
+<http://pandas.pydata.org/>`_ Dataframe containing the transaction records, the
+datetime field corresponding to the entry time, the datetime field corresponding
+to the exit time, the (optional) field corresponding to the categories, the date
+range for selecting transaction records for the analysis (the *analysis
+period*), and the *time bin* size (in minutes). While hillmaker has a number of
+options, the  simplest use case involves importing hillmaker and pandas, reading
+the data file into a Dataframe and making a single function call. The default
+timebin size is one hour.
 
-- 
+::
+
+  import pandas as pd
+  import hillmaker as hm
+
+  # Read data from CSV file into a pandas dataframe
+  stops_fn = '../data/ShortStay.csv'
+  stops_df = pd.read_csv(stops_fn, parse_dates=['InRoomTS','OutRoomTS'])
+
+  # Required inputs
+  scenario = 'ss_example_1'
+  in_fld_name = 'InRoomTS'
+  out_fld_name = 'OutRoomTS'
+  cat_fld_name = 'PatType'
+  start = '1/1/1996'
+  end = '3/30/1996 23:45'
+
+  # Run hillmaker
+  hm.make_hills(scenario, stops_df, in_fld_name, out_fld_name,
+                start, end, cat_fld_name)
 
 
-From a stack of paper records I entered
-hundreds of rows of data into Lotus 1-2-3. Each row was a patient and for
-each patient I entered their arrival and discharge times into and out of the
-endoscopy suite as well as the type of endoscopy procedure.
+hillmaker outputs a number of DataFrames containing the results of the
+analysis. One of these DataFrames contains the summary statistics used to
+drive the plot shown above. Here's a little bit of what that Dataframe looks
+like after being exported to a CSV file.
+
+.. image:: images/example_1_occ.png
 
 
-
+More details on hillmaker output are described in SECTION OUTPUT.
 
 
 
@@ -48,35 +111,24 @@ endoscopy suite as well as the type of endoscopy procedure.
 Package overview
 ****************
 
-:mod:`pandas` consists of the following things
+:mod:`hillmaker` consists of the following things and features
 
- * A set of labeled array data structures, the primary of which are
-   Series and DataFrame
- * Index objects enabling both simple axis indexing and multi-level /
-   hierarchical axis indexing
- * An integrated group by engine for aggregating and transforming data sets
- * Date range generation (date_range) and custom date offsets enabling the
-   implementation of customized frequencies
- * Input/Output tools: loading tabular data from flat files (CSV, delimited,
-   Excel 2003), and saving and loading pandas objects from the fast and
-   efficient PyTables/HDF5 format.
- * Memory-efficient "sparse" versions of the standard data structures for storing
-   data that is mostly missing or mostly constant (some fixed value)
- * Moving window statistics (rolling mean, rolling standard deviation, etc.)
- * Static and moving window linear and `panel regression
-   <http://en.wikipedia.org/wiki/Panel_data>`__
+ * Functions for computing arrival, departure and occupancy summary statistics
+   by time bin of day and day of week based on a pandas Dataframe containing one
+   record per visit.
+ * Functions for computing arrival, departure and occupancy for each datetime
+   bin in the analysis period.
+ * Select any time bin size (minutes) that divides evenly into a day.
+ * Optionally specify one or more categories to ignore in the analysis.
+ * Output statistics includes sample size, mean, min, max, standard deviation,
+   coefficient of variation, standard error, skew, kurtosis, and a whole slew
+   of percentiles (50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 97.5, 99).
+ * Output CSV files are written by default but can be supressed.
+ * Optionally capture outputs as a dictionary of pandas Dataframes for further
+   post-processing (e.g. plot creation).
 
-Data structures at a glance
----------------------------
 
-.. csv-table::
-    :header: "Dimensions", "Name", "Description"
-    :widths: 15, 20, 50
 
-    1, Series, "1D labeled homogeneously-typed array"
-    2, DataFrame, "General 2D labeled, size-mutable tabular structure with
-    potentially heterogeneously-typed columns"
-    3, Panel, "General 3D labeled, also size-mutable array"
 
 Why more than 1 data structure?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
