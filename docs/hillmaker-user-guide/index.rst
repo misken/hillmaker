@@ -14,12 +14,7 @@ Contents:
    overview
    user_guide
 
-  ..  preface
-  ..  tutorial/index
-  .. 
-  ..  auto_examples/index
-  ..  modules/classes
-  ..  developers/index
+
 
 
 

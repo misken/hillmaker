@@ -1,7 +1,13 @@
 # ignore all csv files in the testing/ directory
 hillmaker/testing/*.csv
 !hillmaker/testing/rectypes.csv
+hillmaker/testing/output/
 hillmaker/examples/*.csv
+docs/hm_*.rst
+docs/*.hmscn
+docs/devnotes/
+
+
 
 archive/*
 
@@ -9,3 +15,5 @@ archive/*
 *.pyc
 .ipynb_checkpoints/
 __pycache__/
+
+.idea/
