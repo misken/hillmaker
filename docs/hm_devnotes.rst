@@ -35,6 +35,10 @@ http://sphinx-doc.org/ext/example_numpy.html#example-numpy
 
 http://matplotlib.org/sampledoc/index.html
 
+mailing list?
+
+GitHub page is NOT a project website. NEED a project website.
+
 Packaging and distributing
 --------------------------
 
@@ -43,7 +47,17 @@ https://mail.python.org/pipermail/distutils-sig/2014-December/025484.html
 http://python-packaging-user-guide.readthedocs.org/en/latest/science/
 
 
+The README
+----------
 
+At the root of every project, you need a file called README. This plain text file should include at least these bits of information:
+
+Your project summary paragraph
+The author’s name and email address
+The URL of the project website, if there is one
+The URL of the project hosting page (GitHub, etc.)
+Where to find the project bug/issue tracker
+Where to find the project mailing list
 
 
 Conda

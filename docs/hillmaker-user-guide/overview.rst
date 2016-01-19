@@ -36,7 +36,7 @@ MYE (myelogram), IVT (IV therapy), and OTH (other).
 
 Here's a snippet of a data file (CSV) containing records of patients visiting
 the SSU (the entire file contains just under 60,000 records corresponding
-to three months of SSU activity):
+to nine months of SSU activity):
 
   PatID,InRoomTS,OutRoomTS,PatType
   1,1/1/1996 7:44,1/1/1996 8:50,IVT
@@ -64,14 +64,14 @@ SSU. From such summaries we can create plots to visualize the results.
 
 
 The key inputs needed for running hillmaker are the name of the `pandas
-<http://pandas.pydata.org/>`_ Dataframe containing the transaction records, the
+<http://pandas.pydata.org/>`__ DataFrame containing the transaction records, the
 datetime field corresponding to the entry time, the datetime field corresponding
 to the exit time, the (optional) field corresponding to the categories, the date
 range for selecting transaction records for the analysis (the *analysis
 period*), and the *time bin* size (in minutes). While hillmaker has a number of
 options, the  simplest use case involves importing hillmaker and pandas, reading
-the data file into a Dataframe and making a single function call. The default
-timebin size is one hour.
+the data file into a DataFrame and making a single function call to
+`make_hills`. The default timebin size is one hour.
 
 ::
 
@@ -113,8 +113,9 @@ Package overview
 
 :mod:`hillmaker` consists of the following things and features
 
+ * Takes a pandas DataFrame as the input data type
  * Functions for computing arrival, departure and occupancy summary statistics
-   by time bin of day and day of week based on a pandas Dataframe containing one
+   by time bin of day and day of week based on a pandas DataFrame containing one
    record per visit.
  * Functions for computing arrival, departure and occupancy for each datetime
    bin in the analysis period.
@@ -124,89 +125,53 @@ Package overview
    coefficient of variation, standard error, skew, kurtosis, and a whole slew
    of percentiles (50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 97.5, 99).
  * Output CSV files are written by default but can be supressed.
- * Optionally capture outputs as a dictionary of pandas Dataframes for further
+ * Optionally capture outputs as a dictionary of pandas DataFrames for further
    post-processing (e.g. plot creation).
 
-
-
-
-Why more than 1 data structure?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The best way to think about the pandas data structures is as flexible
-containers for lower dimensional data. For example, DataFrame is a container
-for Series, and Panel is a container for DataFrame objects. We would like to be
-able to insert and remove objects from these containers in a dictionary-like
-fashion.
-
-Also, we would like sensible default behaviors for the common API functions
-which take into account the typical orientation of time series and
-cross-sectional data sets. When using ndarrays to store 2- and 3-dimensional
-data, a burden is placed on the user to consider the orientation of the data
-set when writing functions; axes are considered more or less equivalent (except
-when C- or Fortran-contiguousness matters for performance). In pandas, the axes
-are intended to lend more semantic meaning to the data; i.e., for a particular
-data set there is likely to be a "right" way to orient the data. The goal,
-then, is to reduce the amount of mental effort required to code up data
-transformations in downstream functions.
-
-For example, with tabular data (DataFrame) it is more semantically helpful to
-think of the **index** (the rows) and the **columns** rather than axis 0 and
-axis 1. And iterating through the columns of the DataFrame thus results in more
-readable code:
-
-::
-
-    for col in df.columns:
-        series = df[col]
-        # do something with series
-
-Mutability and copying of data
-------------------------------
-
-All pandas data structures are value-mutable (the values they contain can be
-altered) but not always size-mutable. The length of a Series cannot be
-changed, but, for example, columns can be inserted into a DataFrame. However,
-the vast majority of methods produce new objects and leave the input data
-untouched. In general, though, we like to **favor immutability** where
-sensible.
 
 Getting Support
 ---------------
 
-The first stop for pandas issues and ideas is the `Github Issue Tracker
-<https://github.com/pydata/pandas/issues>`__. If you have a general question,
-pandas community experts can answer through `Stack Overflow
-<http://stackoverflow.com/questions/tagged/pandas>`__.
+To report bugs and issues or share ideas, visit the `Github Issue Tracker
+<https://github.com/misken/hillmaker/issues>`__.
 
-Longer discussions occur on the `developer mailing list
-<http://groups.google.com/group/pystatsmodels>`__, and commercial support
-inquiries for Lambda Foundry should be sent to: support@lambdafoundry.com
 
-Credits
--------
+History and Credits
+-------------------
 
-pandas development began at `AQR Capital Management <http://www.aqr.com>`__ in
-April 2008. It was open-sourced at the end of 2009. AQR continued to provide
-resources for development through the end of 2011, and continues to contribute
-bug reports today.
+Hillmaker got its start back in the 1980's when I was tasked with analyzing
+occupancy in a hospital endoscopy unit as an management engineering intern
+at William Beaumont Hospital. That first version was written in BASIC.
 
-Since January 2012, `Lambda Foundry <http://www.lambdafoundry.com>`__, has
-been providing development resources, as well as commercial support,
-training, and consulting for pandas.
+Next came a version written in FoxPro in the early 1990's while I was a Research
+Engineer at William Beaumont Hospital. A major rewrite using the then relatively
+new MS Access database package was done a few years later. This evolved into a
+version that was open sourced in 2005 and is still available today at
+`http://sourceforge.net/projects/hillmaker/
+<http://sourceforge.net/projects/hillmaker/>`__.
 
-pandas is only made possible by a group of people around the world like you
-who have contributed new code, bug reports, fixes, comments and ideas. A
-complete list can be found `on Github <http://www.github.com/pydata/pandas/contributors>`__.
+Over the past ten or so years, the Access version of Hillmaker got quite a bit
+of use at various healthcare institutions and consulting firms by operations
+analysts, management engineers and other such analytical folk. When I left
+industry to join Oakland University as a faculty member in the Department of
+Decision and Information Sciences in the School of Business Administration, I
+decided to write a paper about Hillmaker.
+
+Isken, M.W. (2002) Modeling and Analysis of Occupancy Data: A Healthcare
+Capacity Planning Application, *International Journal of Information Technology and Decision Making*, 1, 4 (December) 707-729.
+
+In 2013, I did a `series of blog posts
+<http://hselab.org/occupancy-analysis-with-python-pandas-part-1-create-by-date-data-frame.html>`__
+that introduced a Python based approach to Hillmaker. Those proof of concept
+blog posts led to the development of  the Python package hillmaker which was
+publicly released in 2016.
 
 Development Team
 ----------------
 
-pandas is a part of the PyData project. The PyData Development Team is a
-collection of developers focused on the improvement of Python's data
-libraries. The core team that coordinates development can be found on `Github
-<http://github.com/pydata>`__. If you're interested in contributing, please
-visit the `project website <http://pandas.pydata.org>`__.
+Right now, I (Mark Isken) am the team. If you're interested in contributing,
+please visit the `Github project website
+<https://github.com/misken/hillmaker>`__.
 
 License
 -------

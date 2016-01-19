@@ -11,15 +11,15 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   intro
+   overview
    user_guide
 
-   preface
-   tutorial/index
-
-   auto_examples/index
-   modules/classes
-   developers/index
+  ..  preface
+  ..  tutorial/index
+  .. 
+  ..  auto_examples/index
+  ..  modules/classes
+  ..  developers/index
 
 
 
