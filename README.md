@@ -24,3 +24,9 @@ statistics.
 - Output CSV files are written by default but can be supressed.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
+
+  # Quick Start
+
+  I put together an IPython notebook that explains how to use hillmaker.
+
+  https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
