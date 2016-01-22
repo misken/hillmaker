@@ -28,7 +28,7 @@ df['ExitedTS'] = df.apply(lambda row:
 
 # Filter input data by included included categories
 
-df = df[df[cat_fld_name].isnotin(excludecats)]
+df = df[df[cat_fld_name].isin(excludecats) == False]
 
 hillmaker.make_hills(scenario_name, df, in_fld_name, out_fld_name,
                      start_analysis, end_analysis, cat_fld_name,
