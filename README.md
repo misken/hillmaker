@@ -25,6 +25,7 @@ statistics.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
 - Requires Python 3 and pandas
+- Apache 2.0 licensed
 
   # Quick Start
 
