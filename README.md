@@ -34,13 +34,13 @@ statistics.
   https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
 
   The notebook above is aimed at Windows users of the MS Access version of hillmaker. It talks them through
-  installing hillmaker from a Conda build. For others, a source distribution and binary wheel are available. You
-  can install from source or do a standard install using pip:
+  installing hillmaker using Conda. Both Win-64 and Linux-64 versions are available.
+
+      conda install -c https://conda.anaconda.org/hselab hillmaker
+
+  The source and a binary wheel are available from PyPi. You can install using pip:
 
       pip install hillmaker
 
-  In addition, you can install using `conda`. Both Win-64 and Linux-64 versions are available.
-
-      conda install -c https://conda.anaconda.org/hselab hillmaker
 
   More examples and documentation are on the way.
