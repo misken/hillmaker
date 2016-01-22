@@ -39,4 +39,8 @@ statistics.
 
       pip install hillmaker
 
+  In addition, you can install using `conda`:
+
+      conda install -c https://conda.anaconda.org/hselab hillmaker
+
   More examples and documentation are on the way.
