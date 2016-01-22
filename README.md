@@ -28,7 +28,10 @@ statistics.
 
   # Quick Start
 
-  I put together an IPython notebook that explains how to get and
+  A companion repo, https://github.com/misken/hillmaker-examples/ contains
+  IPython notebooks and Python scripts illustrating the use of hillmaker.
+
+  In particular, the following IPython notebook explains how to get and
   use hillmaker.
 
   https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
