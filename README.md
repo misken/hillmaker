@@ -39,7 +39,7 @@ statistics.
 
       pip install hillmaker
 
-  In addition, you can install using `conda`:
+  In addition, you can install using `conda`. Both Win-64 and Linux-64 versions are available.
 
       conda install -c https://conda.anaconda.org/hselab hillmaker
 
