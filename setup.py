@@ -17,14 +17,14 @@ from setuptools import setup
 
 setup(name='hillmaker',
       version='0.1.0',
-      description='a Python based occupancy analysis tool',
+      description='occupancy analysis tool for systems having time of day and day of week effects',
       author='Mark Isken',
       author_email='isken@oakland.edu',
       url='http://github.com/misken/hillmaker/',
       #include_package_data = True,
       packages=['hillmaker'],
       #package_data={'hillmaker': ['data/*.csv']},
-      data_files=[('sample_data', ['data/*.csv'])],
+      #data_files=[('hillmaker', ['data/*.csv'])],
       platforms='any',
       classifiers = [
         'Programming Language :: Python :: 3 :: Only',
