@@ -12,10 +12,10 @@ statistics.
 
 - Takes a pandas DataFrame as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
-  by time bin of day and day of week based on a pandas DataFrame containing one
+  by time of day, day of week, and entity category based on a pandas DataFrame containing one
   record per visit.
 - Functions for computing arrival, departure and occupancy for each datetime
-  bin in the analysis period.
+  bin in the analysis period, by category.
 - Select any time bin size (minutes) that divides evenly into a day.
 - Optionally specify one or more categories to ignore in the analysis.
 - Output statistics includes sample size, mean, min, max, standard deviation,
@@ -32,17 +32,20 @@ statistics.
   A companion repo, https://github.com/misken/hillmaker-examples/ contains
   IPython notebooks and Python scripts illustrating the use of hillmaker.
 
-  In particular, the following IPython notebook explains how to get and
+  In particular, the following IPython notebooks explains how to get and
   use hillmaker.
 
+  **For Windows**
   https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
 
-  The notebook above is aimed at Windows users of the MS Access version of hillmaker. It talks them through
-  installing hillmaker using Conda. Both Win-64 and Linux-64 versions are available.
+  **For others**
+  https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit.ipynb
+
+  Both Win-64 and Linux-64 versions are available. ::
 
       conda install -c https://conda.anaconda.org/hselab hillmaker
 
-  The source and a binary wheel are available from PyPi. You can install using pip:
+  The source and a binary wheel are available from PyPi. You can install using pip: ::
 
       pip install hillmaker
 
