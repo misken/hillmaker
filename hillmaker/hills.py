@@ -187,8 +187,7 @@ def export_hills(summaries, scenario_name, export_path):
     # Set column output order
     dt_cols = ['category', 'datetime', 'arrivals', 'departures', 'occupancy']
 
-    summary_cols = ['category', 'day_of_week', 'bin_of_day',
-                    'count', 'mean', 'stdev', 'sem', 'cv',
+    summary_cols = ['count', 'mean', 'stdev', 'sem', 'cv',
                     'var', 'skew', 'kurt',
                     'p50', 'p55', 'p60', 'p65', 'p70', 'p75',
                     'p80', 'p85', 'p90', 'p95', 'p975', 'p99']
@@ -196,36 +195,15 @@ def export_hills(summaries, scenario_name, export_path):
     # Export to csv
     summaries['bydatetime'].to_csv(file_bydt_csv, index=False, float_format='%.6f', columns=dt_cols)
 
-    summaries['occupancy'].to_csv(file_occ_csv, float_format='%.6f', columns=summary_cols)
-    summaries['arrivals'].to_csv(file_arr_csv, float_format='%.6f', columns=summary_cols)
-    summaries['departures'].to_csv(file_dep_csv, float_format='%.6f', columns=summary_cols)
+    summaries['occupancy'].to_csv(file_occ_csv, float_format='%.6f', columns=summary_cols, index=True)
+    summaries['arrivals'].to_csv(file_arr_csv, float_format='%.6f', columns=summary_cols, index=True)
+    summaries['departures'].to_csv(file_dep_csv, float_format='%.6f', columns=summary_cols, index=True)
 
-    summaries['tot_occ'].to_csv(file_occ_cat_csv, float_format='%.6f', columns=summary_cols)
-    summaries['tot_arr'].to_csv(file_arr_cat_csv, float_format='%.6f', columns=summary_cols)
-    summaries['tot_dep'].to_csv(file_dep_cat_csv, float_format='%.6f', columns=summary_cols)
+    summaries['tot_occ'].to_csv(file_occ_cat_csv, float_format='%.6f', columns=summary_cols, index=True)
+    summaries['tot_arr'].to_csv(file_arr_cat_csv, float_format='%.6f', columns=summary_cols, index=True)
+    summaries['tot_dep'].to_csv(file_dep_cat_csv, float_format='%.6f', columns=summary_cols, index=True)
 
 
 if __name__ == '__main__':
 
-    file_stopdata = 'data/ShortStay.csv'
-
-    # Required inputs
-    scenario = 'sstest_60'
-    in_fld_name = 'InRoomTS'
-    out_fld_name = 'OutRoomTS'
-    cat_fld_name = 'PatType'
-    start = '1/1/1996'
-    end = '3/30/1996 23:45'
-
-    # Optional inputs
-    tot_fld_name = 'SSU'
-    bin_mins = 60
-    whichcats_to_exclude = ['ART', 'IVT']
-
-    df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
-
-    make_hills(scenario, df, in_fld_name, out_fld_name,
-               start, end, cat_fld_name,
-               tot_fld_name, bin_mins,
-               cat_to_exclude=whichcats_to_exclude,
-               export_path='./testing')
+    pass
