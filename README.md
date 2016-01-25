@@ -27,27 +27,36 @@ statistics.
 - Requires Python 3 and pandas
 - Apache 2.0 licensed
 
-  # Quick Start
+Where to get it
+---------------
 
-  A companion repo, https://github.com/misken/hillmaker-examples/ contains
-  IPython notebooks and Python scripts illustrating the use of hillmaker.
+* Source code: http://github.com/misken/hillmaker
+* Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
+* Binary on Anaconda.org: http://anaconda.org/hselab/hillmaker
+* Documentation: Coming soon
 
-  In particular, the following IPython notebooks explains how to get and
-  use hillmaker.
+Quick Start
+-----------
 
-  **For Windows**
-  https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
+A companion repo, https://github.com/misken/hillmaker-examples/ contains
+IPython notebooks and Python scripts illustrating the use of hillmaker.
 
-  **For others**
-  https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit.ipynb
+In particular, the following IPython notebooks explains how to get and
+use hillmaker.
 
-  Both Win-64 and Linux-64 versions are available. ::
+**For Windows**
+https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
 
-      conda install -c https://conda.anaconda.org/hselab hillmaker
+**For others**
+https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit.ipynb
 
-  The source and a binary wheel are available from PyPi. You can install using pip: ::
+Both Win-64 and Linux-64 versions are available. ::
 
-      pip install hillmaker
+    conda install -c https://conda.anaconda.org/hselab hillmaker
+
+The source and a binary wheel are available from PyPi. You can install using pip: ::
+
+    pip install hillmaker
 
 
-  More examples and documentation are on the way.
+More examples and documentation are on the way.
