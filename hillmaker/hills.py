@@ -54,8 +54,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
     end_analysis : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    catfield : string, optional
-        Column name corresponding to the category. If none is specified, then only overall occupancy is analyzed.
+    catfield : string or List of strings, optional
+        Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
         Default is ''
     total_str : string, optional
         Column name to use for the overall category, default is 'Total'

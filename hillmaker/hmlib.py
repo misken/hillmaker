@@ -151,6 +151,7 @@ def dt_floor_exp(dt, binsizemins=60):
     rounding = (totseconds // roundTo) * roundTo
     return dt + timedelta(0,rounding-totseconds, -dt.microsecond)
 
+
 def dt_ceiling(dt, minutes):
     """
    Finds ceiling of a datetime object to specified number of minutes
@@ -203,11 +204,13 @@ def numbins(indtbin, outdtbin, binsize_mins):
 
 def to_the_second(ts):
     return Timestamp(round(ts.value, -9))
-    
+
+
 def timedelta_to_seconds(td):
     #return td.days*86400 + td.hours*3600 + td.minutes*60 + td.seconds
     return td.total_seconds()
-    
+
+
 def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
     """
     Computes fractional occupancy in inbin and outbin.

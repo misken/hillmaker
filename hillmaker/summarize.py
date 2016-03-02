@@ -19,6 +19,7 @@ arrival, and departure statistics by time bin of day and day of week.
 
 import pandas as pd
 
+from numba import jit
 
 def summarize_bydatetime(bydt_df):
     """

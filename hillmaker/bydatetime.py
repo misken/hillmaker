@@ -22,11 +22,15 @@ from pandas import DataFrame
 from pandas import Timestamp
 from datetime import datetime
 from datetime import timedelta
+from pandas.tseries.offsets import Minute
+import itertools
 from timeit import default_timer as timer
+
 
 from . import hmlib
 
-from pandas.tseries.offsets import Minute
+
+
 
 
 def make_bydatetime(stops_df, infield, outfield,
@@ -58,8 +62,8 @@ def make_bydatetime(stops_df, infield, outfield,
     end_analysis: datetime
         End date for the analysis
 
-    catfield: string, default=''
-        Name of column in stops_df to use as category field
+    catfield : string or List of strings, optional
+        Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
 
     total_str: string, default 'Total'
         Value to use for the totals
@@ -135,16 +139,25 @@ def make_bydatetime(stops_df, infield, outfield,
     # datebins = pd.DataFrame(index=rng_bydt)
 
     # Get the unique category values and exclude any specified to exclude
-    categories_all = [c for c in stops_df[catfield].unique()]
+    categories = []
     if cat_to_exclude is not None:
-        categories = [c for c in categories_all if c not in cat_to_exclude]
+        for i in range(len(catfield)):
+            categories.append(tuple([c for c in stops_df[catfield[i]].unique() if c not in cat_to_exclude[i]]))
     else:
-        categories = [c for c in categories_all]
+        for i in range(len(catfield)):
+            categories.append(tuple([c for c in stops_df[catfield[i]].unique()]))
 
-    stops_df = stops_df[stops_df[catfield].isin(categories)]
+    for i in range(len(catfield)):
+        stops_df = stops_df[stops_df[catfield[i]].isin(categories[i])]
 
     # Create a list of column names for the by datetime table and then an empty data frame based on these columns.
-    columns = ['category', 'datetime', 'arrivals', 'departures', 'occupancy']
+    # The column names for the category fields are now the actual field names
+    columns = []
+    measures = ['datetime', 'arrivals', 'departures', 'occupancy']
+    for field in catfield:
+      columns.append(field)
+      columns.extend(measures)
+
     bydt_df = DataFrame(columns=columns)
 
     # Now we'll build up the seeded by date table a category at a time.
@@ -158,6 +171,28 @@ def make_bydatetime(stops_df, infield, outfield,
         bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
 
         bydt_df = pd.concat([bydt_df, bydt_df_cat])
+
+
+    len_bydt = len(rng_bydt)
+    for p in itertools.product(*categories):
+        i=0
+        cat_df = DataFrame(columns=catfield)
+        for c in [*p]:
+            bydt_catdata = {categories[i]: [c] * len_bydt}
+            cat_df_cat = DataFrame(bydt_catdata, columns=[categories[i]])
+            cat_df = pd.concat([cat_df, cat_df_cat],axis=1)
+            i+=1
+
+
+
+
+        bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
+                     'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
+
+        bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
+
+        bydt_df = pd.concat([bydt_df, bydt_df_cat])
+
 
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
