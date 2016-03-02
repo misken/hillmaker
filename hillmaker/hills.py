@@ -31,6 +31,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
                export_csv=True,
                export_path='.',
                return_dataframes=False,
+               edge_bins=1,
                verbose=0):
 
     """
@@ -71,6 +72,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Destination path for exported csv files, default is current directory
     return_dataframes : bool, optional
         If true, dictionary of DataFrames is returned. Default is False.
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     verbose : int, optional
         The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
 

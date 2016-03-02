@@ -35,6 +35,7 @@ def make_bydatetime(stops_df, infield, outfield,
                     bin_size_minutes=60,
                     cat_to_exclude=None,
                     totals=True,
+                    edge_bins=1,
                     verbose=0):
     """
     Create bydatetime table based on user inputs.
@@ -72,6 +73,10 @@ def make_bydatetime(stops_df, infield, outfield,
 
     totals: bool, default True
         If true, overall totals are computed. Else, just category specific values computed.
+
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
+
 
     verbose : int, default 0
         The verbosity level. The default, zero, means silent mode.
@@ -192,7 +197,9 @@ def make_bydatetime(stops_df, infield, outfield,
         if good_rec and rectype != 'none':
             indtbin = hmlib.dt_floor(intime, bin_size_minutes)
             outdtbin = hmlib.dt_floor(outtime, bin_size_minutes)
-            inout_occ_frac = hmlib.occ_frac([intime, outtime], bin_size_minutes)
+
+            inout_occ_frac = hmlib.occ_frac([intime, outtime], bin_size_minutes, edge_bins)
+
             numbins = hmlib.numbins(indtbin, outdtbin, bin_size_minutes)
             dtbin = indtbin
 

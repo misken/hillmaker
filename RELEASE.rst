@@ -26,6 +26,24 @@ Where to get it
 * Documentation: Coming soon
 
 
+hillmaker 0.1.2
+===============
+
+**Release date:** Not yet released
+
+**New features**
+
+- added `bin_edge` parameter to control how occupancy contribution is computed
+for arrival and departure bins. 1=fractional contribution (default), 2=whole bin
+
+**Improvements to existing features**
+
+**API Changes**
+
+**Bug Fixes**
+
+
+
 hillmaker 0.1.1
 ===============
 
