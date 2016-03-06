@@ -19,6 +19,7 @@ arrival, and departure statistics by time bin of day and date.
 
 import pandas as pd
 from pandas import DataFrame
+from pandas import Series
 from pandas import Timestamp
 from datetime import datetime
 from datetime import timedelta
@@ -140,7 +141,7 @@ def make_bydatetime(stops_df, infield, outfield,
     # rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq).to_pydatetime()
     # rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq)
 
-    rng_bydt = pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes))
+    rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
     # datebins = pd.DataFrame(index=rng_bydt)
 
     # Get the unique category values and exclude any specified to exclude
@@ -158,44 +159,52 @@ def make_bydatetime(stops_df, infield, outfield,
     # Create a list of column names for the by datetime table and then an empty data frame based on these columns.
     # The column names for the category fields are now the actual field names
     columns = []
-    measures = ['datetime', 'arrivals', 'departures', 'occupancy']
     for field in catfield:
-      columns.append(field)
-      columns.extend(measures)
+        columns.append(field)
 
-    bydt_df = DataFrame(columns=columns)
+    measures = ['datetime', 'arrivals', 'departures', 'occupancy']
+    columns.extend(measures)
+
+
 
     # Now we'll build up the seeded by date table a category at a time.
     # Along the way we'll initialize all the measures to 0.
 
+    # len_bydt = len(rng_bydt)
+    # for cat in categories:
+    #     bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
+    #                  'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
+    #
+    #     bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
+    #
+    #     bydt_df = pd.concat([bydt_df, bydt_df_cat])
+
+    # The following doesn't feel very Pythonic, but just trying to get it working for now
     len_bydt = len(rng_bydt)
-    for cat in categories:
-        bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
-                     'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
-
-        bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
-
-        bydt_df = pd.concat([bydt_df, bydt_df_cat])
-
-
-    len_bydt = len(rng_bydt)
+    all_cat_df = []
+    # After the following loops, all_cat_df will be a list of dataframes of just the category
+    # field columns
     for p in itertools.product(*categories):
-        i=0
-        cat_df = DataFrame(columns=catfield)
-        for c in [*p]:
-            bydt_catdata = {categories[i]: [c] * len_bydt}
-            cat_df_cat = DataFrame(bydt_catdata, columns=[categories[i]])
-            cat_df = pd.concat([cat_df, cat_df_cat],axis=1)
+            i=0
+            cat_df = DataFrame()
+            j=0
+            for c in [*p]:
+                print(c)
+                bydt_catdata = {catfield[j]: [c] * len_bydt}
+                cat_df_cat = DataFrame(bydt_catdata, columns=[catfield[j]])
+                j+=1
+                #cat_df_cat.info()
+                cat_df = pd.concat([cat_df, cat_df_cat],axis=1)
+            all_cat_df.append(cat_df)
             i+=1
 
+    bydt_df = DataFrame()
+    bydt_data = {'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
+                             'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
+    bydt_data_df = DataFrame(bydt_data, columns=['datetime', 'arrivals', 'departures', 'occupancy'])
 
-
-
-        bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
-                     'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
-
-        bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
-
+    for cat_df in all_cat_df:
+        bydt_df_cat = pd.concat([cat_df, bydt_data_df],axis=1)
         bydt_df = pd.concat([bydt_df, bydt_df_cat])
 
 

@@ -211,21 +211,23 @@ def timedelta_to_seconds(td):
     return td.total_seconds()
 
 
-def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
+def occ_frac(stoprecrange, binsize_mins, edge_bins=1, rectype='inner'):
+
     """
     Computes fractional occupancy in inbin and outbin.
-    
+
     Parameters
     ----------
     stoprecrange: list consisting of [intime, outtime]
     binsize_mins: bin size in minutes
-    rectype: One of'inner', 'outer', 'left', 'right'. See 
+    edge_bins: 1=fractional, 2=whole bin
+    rectype: One of'inner', 'outer', 'left', 'right'. See
              stoprec_analysis_rltnshp() doc for details.
 
     Returns
-    -------   
+    -------
     [inbin frac, outbin frac] where each is a real number in [0.0,1.0]
-    
+
     """
 
     intime = stoprecrange[0]
@@ -235,17 +237,24 @@ def occ_frac(stoprecrange, binsize_mins, rectype='inner'):
     outdtbin = dt_floor(outtime, binsize_mins)
 
     # inbin occupancy
-    rightedge = min(indtbin + timedelta(minutes=binsize_mins), outtime)
-    inbin_occ_secs = timedelta_to_seconds(rightedge - intime)
-    inbin_occ_frac = inbin_occ_secs / (binsize_mins * 60.0)
+    if edge_bins==1:
+        rightedge = min(indtbin + timedelta(minutes=binsize_mins), outtime)
+        inbin_occ_secs = timedelta_to_seconds(rightedge - intime)
+        inbin_occ_frac = inbin_occ_secs / (binsize_mins * 60.0)
+    else:
+        inbin_occ_frac = 1.0
+
 
     # outbin occupancy
     if indtbin == outdtbin:
         outbin_occ_frac = 0.0  # Use inbin_occ_frac
     else:
-        leftedge = max(outdtbin, intime)
-        outbin_occ_secs = timedelta_to_seconds(outtime - leftedge)
-        outbin_occ_frac = outbin_occ_secs / (binsize_mins * 60.0)
+        if edge_bins==1:
+            leftedge = max(outdtbin, intime)
+            outbin_occ_secs = timedelta_to_seconds(outtime - leftedge)
+            outbin_occ_frac = outbin_occ_secs / (binsize_mins * 60.0)
+        else:
+            outbin_occ_frac = 1.0
 
     assert inbin_occ_frac <= 1.0 and inbin_occ_frac >= 0.0, \
         "bad inbin_occ_frac={:.3f} in={} out={}".format(inbin_occ_frac,
