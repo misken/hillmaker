@@ -144,6 +144,21 @@ def make_bydatetime(stops_df, infield, outfield,
     rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
     # datebins = pd.DataFrame(index=rng_bydt)
 
+    # Handle cases of no catfield, a single fieldname, or a list of fields
+    if catfield is not None:
+        if isinstance(catfield, str):
+            catfield = [catfield]
+    else:
+        # If no category, let's add a dummy column populated with the totals str
+        CONST_FAKE_CATFIELDNAME = 'FakeCatForTotals'
+
+        totlist = [total_str]*len(stops_df)
+        totseries = Series(totlist,dtype=str,name=[CONST_FAKE_CATFIELDNAME])
+        totfield_df = DataFrame({CONST_FAKE_CATFIELDNAME: totseries})
+        stops_df = pd.concat([stops_df, totfield_df],axis=1)
+        catfield = [CONST_FAKE_CATFIELDNAME]
+
+
     # Get the unique category values and exclude any specified to exclude
     categories = []
     if cat_to_exclude is not None:
@@ -189,11 +204,9 @@ def make_bydatetime(stops_df, infield, outfield,
             cat_df = DataFrame()
             j=0
             for c in [*p]:
-                print(c)
                 bydt_catdata = {catfield[j]: [c] * len_bydt}
                 cat_df_cat = DataFrame(bydt_catdata, columns=[catfield[j]])
                 j+=1
-                #cat_df_cat.info()
                 cat_df = pd.concat([cat_df, cat_df_cat],axis=1)
             all_cat_df.append(cat_df)
             i+=1
@@ -231,14 +244,13 @@ def make_bydatetime(stops_df, infield, outfield,
     rectype_counts = {}
 
     #for intime_raw, outtime_raw, cat in zip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
-    for row in stops_df:
+    for row in stops_df.iterrows():
 
-        intime_raw = row[infield]
-        outtime_raw = row[outfield]
+        intime_raw = row[1][infield]
+        outtime_raw = row[1][outfield]
 
-        cat = tuple(row[catfield])
-
-
+        catseries = row[1][catfield]
+        cat = tuple(catseries)
 
         intime = hmlib.to_the_second(intime_raw)
         outtime = hmlib.to_the_second(outtime_raw)
