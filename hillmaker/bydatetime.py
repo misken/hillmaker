@@ -35,7 +35,7 @@ from . import hmlib
 
 
 def make_bydatetime(stops_df, infield, outfield,
-                    start_analysis, end_analysis, catfield,
+                    start_analysis, end_analysis, catfield=None,
                     total_str='Total',
                     bin_size_minutes=60,
                     cat_to_exclude=None,
@@ -218,7 +218,9 @@ def make_bydatetime(stops_df, infield, outfield,
     bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
-    bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
+    midx_fields = catfield.copy()
+    midx_fields.append('datetime')
+    bydt_df.set_index(midx_fields, inplace=True, drop=False)
 
     bydt_df.sortlevel(inplace=True)
 
@@ -228,7 +230,16 @@ def make_bydatetime(stops_df, infield, outfield,
     num_inner = 0
     rectype_counts = {}
 
-    for intime_raw, outtime_raw, cat in zip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
+    #for intime_raw, outtime_raw, cat in zip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
+    for row in stops_df:
+
+        intime_raw = row[infield]
+        outtime_raw = row[outfield]
+
+        cat = tuple(row[catfield])
+
+
+
         intime = hmlib.to_the_second(intime_raw)
         outtime = hmlib.to_the_second(outtime_raw)
         good_rec = True
@@ -248,48 +259,48 @@ def make_bydatetime(stops_df, infield, outfield,
             dtbin = indtbin
 
             if verbose == 2:
-                print("{} {} {} {} {:.3f} {:.3f} {:.3f}".format(intime, outtime, cat,
+                print("{} {} {} {} {:.3f} {:.3f} {:.3f}".format(intime, outtime, str(cat),
                       rectype, timer(), inout_occ_frac[0], inout_occ_frac[1]))
 
             if rectype == 'inner':
                 num_inner += 1
                 rectype_counts['inner'] = rectype_counts.get('inner', 0) + 1
 
-                bydt_df.at[(cat, indtbin), 'occupancy'] += inout_occ_frac[0]
-                bydt_df.at[(cat, indtbin), 'arrivals'] += 1.0
-                bydt_df.at[(cat, outdtbin), 'departures'] += 1.0
+                bydt_df.at[(*cat, indtbin), 'occupancy'] += inout_occ_frac[0]
+                bydt_df.at[(*cat, indtbin), 'arrivals'] += 1.0
+                bydt_df.at[(*cat, outdtbin), 'departures'] += 1.0
 
                 current_bin = 2
                 while current_bin < numbins:
                     dtbin += timedelta(minutes=bin_size_minutes)
-                    bydt_df.at[(cat, dtbin), 'occupancy'] += 1.0
+                    bydt_df.at[(*cat, dtbin), 'occupancy'] += 1.0
                     current_bin += 1
 
                 if numbins > 1:
-                    bydt_df.at[(cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
+                    bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
     
             elif rectype == 'right':
                 rectype_counts['right'] = rectype_counts.get('right', 0) + 1
                 # departure is outside analysis window
-                bydt_df.at[(cat, indtbin), 'occupancy'] += inout_occ_frac[0]
-                bydt_df.at[(cat, indtbin), 'arrivals'] += 1.0
+                bydt_df.at[(*cat, indtbin), 'occupancy'] += inout_occ_frac[0]
+                bydt_df.at[(*cat, indtbin), 'arrivals'] += 1.0
     
                 if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = indtbin + timedelta(minutes=bin_size_minutes)
                     while current_bin <= end_analysis_dt:
-                        bydt_df.at[(cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'left':
                 rectype_counts['left'] = rectype_counts.get('left', 0) + 1
                 # arrival is outside analysis window
-                bydt_df.at[(cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
-                bydt_df.at[(cat, outdtbin), 'departures'] += 1.0
+                bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
+                bydt_df.at[(*cat, outdtbin), 'departures'] += 1.0
     
                 if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin < outdtbin:
-                        bydt_df.at[(cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'outer':
@@ -299,7 +310,7 @@ def make_bydatetime(stops_df, infield, outfield,
                 if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin <= end_analysis_dt:
-                        bydt_df.at[(cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             else:
@@ -310,28 +321,28 @@ def make_bydatetime(stops_df, infield, outfield,
                 print(num_processed)
 
     # Compute totals
-    if totals:
-        bydt_group = bydt_df.groupby(['datetime'])
-
-        tot_arrivals = bydt_group.arrivals.sum()
-        tot_departures = bydt_group.departures.sum()
-        tot_occ = bydt_group.occupancy.sum()
-
-        tot_data = [tot_arrivals, tot_departures, tot_occ]
-        tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
-        tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
-        tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
-        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
-
-        tot_df['category'] = total_str
-        tot_df.set_index('category', append=True, inplace=True, drop=False)
-        tot_df = tot_df.reorder_levels(['category', 'datetime'])
-        tot_df['datetime'] = tot_df.index.levels[1]
-
-        col_order = ['category', 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
-                     'bin_of_day', 'bin_of_week']
-        tot_df = tot_df[col_order]
-        bydt_df = bydt_df.append(tot_df)
+    # if totals:
+    #     bydt_group = bydt_df.groupby(['datetime'])
+    #
+    #     tot_arrivals = bydt_group.arrivals.sum()
+    #     tot_departures = bydt_group.departures.sum()
+    #     tot_occ = bydt_group.occupancy.sum()
+    #
+    #     tot_data = [tot_arrivals, tot_departures, tot_occ]
+    #     tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
+    #     tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
+    #     tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
+    #     tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
+    #
+    #     tot_df['category'] = total_str
+    #     tot_df.set_index('category', append=True, inplace=True, drop=False)
+    #     tot_df = tot_df.reorder_levels(['category', 'datetime'])
+    #     tot_df['datetime'] = tot_df.index.levels[1]
+    #
+    #     col_order = ['category', 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
+    #                  'bin_of_day', 'bin_of_week']
+    #     tot_df = tot_df[col_order]
+    #     bydt_df = bydt_df.append(tot_df)
 
     return bydt_df
 
