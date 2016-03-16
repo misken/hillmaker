@@ -66,8 +66,9 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Number of minutes in each time bin of the day, default is 60
     cat_to_exclude : list, optional
         Categories to ignore, default is None
-    totals : bool, optional
-       If true, overall totals are computed. Else, just category specific values computed. Default is True.
+    totals: int, default 1
+        0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
+        catfields (only relevant for > 1 category field)
     nonstationary_stats : bool, optional
        If true, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional

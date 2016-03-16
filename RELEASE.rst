@@ -36,6 +36,12 @@ hillmaker 0.1.2
 - added `edge_bins` parameter to control how occupancy contribution is computed
 for arrival and departure bins. 1=fractional contribution (default), 2=whole bin
 
+- multiple category fields allowed.
+
+    totals: int, default 1
+        0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
+        catfields (only relevant for > 1 category field)
+
 **Improvements to existing features**
 
 **API Changes**

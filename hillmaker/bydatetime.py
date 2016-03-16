@@ -39,7 +39,7 @@ def make_bydatetime(stops_df, infield, outfield,
                     total_str='Total',
                     bin_size_minutes=60,
                     cat_to_exclude=None,
-                    totals=True,
+                    totals=1,
                     edge_bins=1,
                     verbose=0):
     """
@@ -76,8 +76,9 @@ def make_bydatetime(stops_df, infield, outfield,
     cat_to_exclude: list of str, default None
         Categories to ignore
 
-    totals: bool, default True
-        If true, overall totals are computed. Else, just category specific values computed.
+    totals: int, default 1
+        0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
+        catfields (only relevant for > 1 category field)
 
     edge_bins: int, default 1
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
@@ -134,30 +135,25 @@ def make_bydatetime(stops_df, infield, outfield,
 
     analysis_range = [start_analysis_dt, end_analysis_dt]
 
-    # Create date and range and convert it from a pandas DateTimeIndex to a
-    # reqular old array of datetimes to try to get around the weird problems
-    # in computing day of week on datetime64 values.
-    # bin_freq = str(bin_size_minutes) + 'min'
-    # rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq).to_pydatetime()
-    # rng_bydt = pd.date_range(start_date, end_date, freq=bin_freq)
-
     rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
-    # datebins = pd.DataFrame(index=rng_bydt)
 
     # Handle cases of no catfield, a single fieldname, or a list of fields
+    # If no category, let's add a dummy column populated with the totals str
+
+    CONST_FAKE_CATFIELDNAME = 'FakeCatForTotals'
+    total_str = 'total' # We can likely drop total_str as an input arg
+
+    bTotalsDone = False
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
     else:
-        # If no category, let's add a dummy column populated with the totals str
-        CONST_FAKE_CATFIELDNAME = 'FakeCatForTotals'
-
         totlist = [total_str]*len(stops_df)
         totseries = Series(totlist,dtype=str,name=[CONST_FAKE_CATFIELDNAME])
         totfield_df = DataFrame({CONST_FAKE_CATFIELDNAME: totseries})
         stops_df = pd.concat([stops_df, totfield_df],axis=1)
         catfield = [CONST_FAKE_CATFIELDNAME]
-
+        bTotalsDone = True
 
     # Get the unique category values and exclude any specified to exclude
     categories = []
@@ -180,23 +176,13 @@ def make_bydatetime(stops_df, infield, outfield,
     measures = ['datetime', 'arrivals', 'departures', 'occupancy']
     columns.extend(measures)
 
-
-
     # Now we'll build up the seeded by date table a category at a time.
     # Along the way we'll initialize all the measures to 0.
-
-    # len_bydt = len(rng_bydt)
-    # for cat in categories:
-    #     bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
-    #                  'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
-    #
-    #     bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
-    #
-    #     bydt_df = pd.concat([bydt_df, bydt_df_cat])
 
     # The following doesn't feel very Pythonic, but just trying to get it working for now
     len_bydt = len(rng_bydt)
     all_cat_df = []
+
     # After the following loops, all_cat_df will be a list of dataframes of just the category
     # field columns
     for p in itertools.product(*categories):
@@ -214,22 +200,23 @@ def make_bydatetime(stops_df, infield, outfield,
     bydt_df = DataFrame()
     bydt_data = {'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
                              'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
+
     bydt_data_df = DataFrame(bydt_data, columns=['datetime', 'arrivals', 'departures', 'occupancy'])
 
     for cat_df in all_cat_df:
         bydt_df_cat = pd.concat([cat_df, bydt_data_df],axis=1)
         bydt_df = pd.concat([bydt_df, bydt_df_cat])
 
+    # Compute various day and time bin related fields
+    bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
+    bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
+    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
     # regular columns as well since it's hard
     # to do a column transformation using a specific level of a multiindex.
     # http://stackoverflow.com/questions/13703720/converting-between-datetime-timestamp-and-datetime64?rq=1
-
-    bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
-    bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
-    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
     midx_fields = catfield.copy()
     midx_fields.append('datetime')
@@ -243,7 +230,6 @@ def make_bydatetime(stops_df, infield, outfield,
     num_inner = 0
     rectype_counts = {}
 
-    #for intime_raw, outtime_raw, cat in zip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
     for row in stops_df.iterrows():
 
         intime_raw = row[1][infield]
@@ -332,31 +318,50 @@ def make_bydatetime(stops_df, infield, outfield,
             if verbose == 2:
                 print(num_processed)
 
-    # Compute totals
-    # if totals:
-    #     bydt_group = bydt_df.groupby(['datetime'])
-    #
-    #     tot_arrivals = bydt_group.arrivals.sum()
-    #     tot_departures = bydt_group.departures.sum()
-    #     tot_occ = bydt_group.occupancy.sum()
-    #
-    #     tot_data = [tot_arrivals, tot_departures, tot_occ]
-    #     tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
-    #     tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
-    #     tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
-    #     tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
-    #
-    #     tot_df['category'] = total_str
-    #     tot_df.set_index('category', append=True, inplace=True, drop=False)
-    #     tot_df = tot_df.reorder_levels(['category', 'datetime'])
-    #     tot_df['datetime'] = tot_df.index.levels[1]
-    #
-    #     col_order = ['category', 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
-    #                  'bin_of_day', 'bin_of_week']
-    #     tot_df = tot_df[col_order]
-    #     bydt_df = bydt_df.append(tot_df)
 
-    return bydt_df
+
+
+    # If there was no category field, drop the fake field from the index and dataframe
+    if catfield[0] == CONST_FAKE_CATFIELDNAME:
+        #bydt_df.drop(total_str, axis=0, level=0, inplace=True, errors='raise')
+        bydt_df.set_index('datetime', inplace=True, drop=False)
+        bydt_df = bydt_df[['datetime', 'arrivals', 'departures', 'occupancy']]
+
+    # Compute totals
+
+    bydt_dfs = {}
+    totals_key = '_'.join(bydt_df.index.names)
+    bydt_dfs[totals_key] = bydt_df
+
+    if totals >= 1 and not bTotalsDone:
+
+        bydt_group = bydt_df.groupby(['datetime'])
+        totals_key = 'datetime'
+
+        tot_arrivals = bydt_group.arrivals.sum()
+        tot_departures = bydt_group.departures.sum()
+        tot_occ = bydt_group.occupancy.sum()
+
+        tot_data = [tot_arrivals, tot_departures, tot_occ]
+        #tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
+        tot_df = pd.concat(tot_data, axis=1)
+        tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
+        tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
+        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
+
+        #tot_df['category'] = total_str
+        #tot_df.set_index('category', append=True, inplace=True, drop=False)
+        #tot_df = tot_df.reorder_levels(['category', 'datetime'])
+        #tot_df['datetime'] = tot_df.index.levels[1]
+
+        col_order = ['datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
+                     'bin_of_day', 'bin_of_week']
+        tot_df = tot_df[col_order]
+        #bydt_df = bydt_df.append(tot_df)
+
+        bydt_dfs[totals_key] = tot_df
+
+    return bydt_dfs
 
 if __name__ == '__main__':
 
