@@ -36,7 +36,6 @@ from . import hmlib
 
 def make_bydatetime(stops_df, infield, outfield,
                     start_analysis, end_analysis, catfield=None,
-                    total_str='Total',
                     bin_size_minutes=60,
                     cat_to_exclude=None,
                     totals=1,
@@ -67,9 +66,6 @@ def make_bydatetime(stops_df, infield, outfield,
     catfield : string or List of strings, optional
         Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
 
-    total_str: string, default 'Total'
-        Value to use for the totals
-
     bin_size_minutes: int, default 60
         Bin size in minutes. Should divide evenly into 1440.
 
@@ -83,19 +79,18 @@ def make_bydatetime(stops_df, infield, outfield,
     edge_bins: int, default 1
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
 
-
     verbose : int, default 0
         The verbosity level. The default, zero, means silent mode.
 
     Returns
     -------
-    DataFrame
+    Dict of DataFrames
        Occupancy, arrivals, departures by category by datetime bin
 
     Examples
     --------
     bydt_df = make_bydatetime(stops_df,'InTime','OutTime',
-    ...                        datetime(2014, 3, 1),datetime(2014, 6, 30),'PatientType','Total',60)
+    ...                        datetime(2014, 3, 1),datetime(2014, 6, 30),'PatientType',60)
 
 
     TODO
@@ -318,22 +313,21 @@ def make_bydatetime(stops_df, infield, outfield,
             if verbose == 2:
                 print(num_processed)
 
-
-
-
     # If there was no category field, drop the fake field from the index and dataframe
     if catfield[0] == CONST_FAKE_CATFIELDNAME:
         #bydt_df.drop(total_str, axis=0, level=0, inplace=True, errors='raise')
         bydt_df.set_index('datetime', inplace=True, drop=False)
         bydt_df = bydt_df[['datetime', 'arrivals', 'departures', 'occupancy']]
 
-    # Compute totals
+    # Store main results bydatetime DataFrame
 
     bydt_dfs = {}
     totals_key = '_'.join(bydt_df.index.names)
     bydt_dfs[totals_key] = bydt_df
 
-    if totals >= 1 and not bTotalsDone:
+    # Compute totals
+
+    if totals == 1 and not bTotalsDone:
 
         bydt_group = bydt_df.groupby(['datetime'])
         totals_key = 'datetime'
@@ -352,7 +346,37 @@ def make_bydatetime(stops_df, infield, outfield,
         #tot_df['category'] = total_str
         #tot_df.set_index('category', append=True, inplace=True, drop=False)
         #tot_df = tot_df.reorder_levels(['category', 'datetime'])
-        #tot_df['datetime'] = tot_df.index.levels[1]
+        tot_df['datetime'] = tot_df.index
+
+        col_order = ['datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
+                     'bin_of_day', 'bin_of_week']
+        tot_df = tot_df[col_order]
+        #bydt_df = bydt_df.append(tot_df)
+
+        bydt_dfs[totals_key] = tot_df
+
+    if totals == 2:
+
+        totals_key = '_'.join(bydt_df.index.names)
+
+        bydt_group = bydt_df.groupby(['datetime'])
+
+
+        tot_arrivals = bydt_group.arrivals.sum()
+        tot_departures = bydt_group.departures.sum()
+        tot_occ = bydt_group.occupancy.sum()
+
+        tot_data = [tot_arrivals, tot_departures, tot_occ]
+        #tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
+        tot_df = pd.concat(tot_data, axis=1)
+        tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
+        tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
+        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
+
+        #tot_df['category'] = total_str
+        #tot_df.set_index('category', append=True, inplace=True, drop=False)
+        #tot_df = tot_df.reorder_levels(['category', 'datetime'])
+        tot_df['datetime'] = tot_df.index
 
         col_order = ['datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
                      'bin_of_day', 'bin_of_week']
