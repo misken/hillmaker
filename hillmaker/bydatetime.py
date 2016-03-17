@@ -315,7 +315,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # If there was no category field, drop the fake field from the index and dataframe
     if catfield[0] == CONST_FAKE_CATFIELDNAME:
-        #bydt_df.drop(total_str, axis=0, level=0, inplace=True, errors='raise')
+
         bydt_df.set_index('datetime', inplace=True, drop=False)
         bydt_df = bydt_df[['datetime', 'arrivals', 'departures', 'occupancy']]
 
@@ -327,7 +327,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Compute totals
 
-    if totals == 1 and not bTotalsDone:
+    if totals >= 1 and not bTotalsDone:
 
         bydt_group = bydt_df.groupby(['datetime'])
         totals_key = 'datetime'
@@ -337,53 +337,49 @@ def make_bydatetime(stops_df, infield, outfield,
         tot_occ = bydt_group.occupancy.sum()
 
         tot_data = [tot_arrivals, tot_departures, tot_occ]
-        #tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
+
         tot_df = pd.concat(tot_data, axis=1)
         tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
         tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
         tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
-        #tot_df['category'] = total_str
-        #tot_df.set_index('category', append=True, inplace=True, drop=False)
-        #tot_df = tot_df.reorder_levels(['category', 'datetime'])
         tot_df['datetime'] = tot_df.index
 
         col_order = ['datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
                      'bin_of_day', 'bin_of_week']
         tot_df = tot_df[col_order]
-        #bydt_df = bydt_df.append(tot_df)
 
         bydt_dfs[totals_key] = tot_df
 
     if totals == 2:
 
-        totals_key = '_'.join(bydt_df.index.names)
+        for cat in catfield:
+            midx_fields = [cat]
+            midx_fields.append('datetime')
+            bydt_df.set_index(midx_fields, inplace=True, drop=False)
 
-        bydt_group = bydt_df.groupby(['datetime'])
+            totals_key = '_'.join(bydt_df.index.names)
 
+            bydt_group = bydt_df.groupby([cat, 'datetime'])
 
-        tot_arrivals = bydt_group.arrivals.sum()
-        tot_departures = bydt_group.departures.sum()
-        tot_occ = bydt_group.occupancy.sum()
+            tot_arrivals = bydt_group.arrivals.sum()
+            tot_departures = bydt_group.departures.sum()
+            tot_occ = bydt_group.occupancy.sum()
 
-        tot_data = [tot_arrivals, tot_departures, tot_occ]
-        #tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
-        tot_df = pd.concat(tot_data, axis=1)
-        tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
-        tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
-        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
+            tot_data = [tot_arrivals, tot_departures, tot_occ]
+            #tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
+            tot_df = pd.concat(tot_data, axis=1)
+            tot_df['datetime'] = tot_df.index.get_level_values('datetime')
+            tot_df[cat] = tot_df.index.get_level_values(cat)
+            tot_df['day_of_week'] = tot_df['datetime'].map(lambda x: x.weekday())
+            tot_df['bin_of_day'] = tot_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
+            tot_df['bin_of_week'] = tot_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
-        #tot_df['category'] = total_str
-        #tot_df.set_index('category', append=True, inplace=True, drop=False)
-        #tot_df = tot_df.reorder_levels(['category', 'datetime'])
-        tot_df['datetime'] = tot_df.index
+            col_order = [cat, 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
+                         'bin_of_day', 'bin_of_week']
+            tot_df = tot_df[col_order]
 
-        col_order = ['datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
-                     'bin_of_day', 'bin_of_week']
-        tot_df = tot_df[col_order]
-        #bydt_df = bydt_df.append(tot_df)
-
-        bydt_dfs[totals_key] = tot_df
+            bydt_dfs[totals_key] = tot_df
 
     return bydt_dfs
 
