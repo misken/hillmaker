@@ -59,13 +59,13 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
     catfield : string or List of strings, optional
         Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
-        Default is ''
-    total_str : string, optional
-        Column name to use for the overall category, default is 'Total'
+        Default is None
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60
     cat_to_exclude : list, optional
         Categories to ignore, default is None
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     totals: int, default 1
         0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
         catfields (only relevant for > 1 category field)
@@ -77,19 +77,13 @@ def make_hills(scenario_name, stops_df, infield, outfield,
        If true, results DataFrames are exported to csv files. Default is True.
     export_path : string, optional
         Destination path for exported csv files, default is current directory
-    return_dataframes : bool, optional
-        If true, dictionary of DataFrames is returned. Default is False.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     verbose : int, optional
         The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
 
     Returns
     -------
     dict of DataFrames
-       The bydatetime and all summaries.
-
-       Only returned if return_dataframes=True
+       The bydatetime DataFrames and all summary DataFrames.
 
        Example:
 
@@ -105,18 +99,17 @@ def make_hills(scenario_name, stops_df, infield, outfield,
 
     # Create the bydatetime DataFrame
     with Hilltimer() as t:
-        bydt_df = bydatetime.make_bydatetime(stops_df,
-                                             infield,
-                                             outfield,
-                                             start_analysis,
-                                             end_analysis,
-                                             catfield,
-                                             total_str,
-                                             bin_size_minutes,
-                                             cat_to_exclude=cat_to_exclude,
-                                             totals=totals,
-                                             edge_bins=edge_bins,
-                                             verbose=verbose)
+        bydt_dfs = bydatetime.make_bydatetime(stops_df,
+                                              infield,
+                                              outfield,
+                                              start_analysis,
+                                              end_analysis,
+                                              catfield,
+                                              bin_size_minutes,
+                                              cat_to_exclude=cat_to_exclude,
+                                              edge_bins=edge_bins,
+                                              totals=totals,
+                                              verbose=verbose)
 
         starttime = t.start
 
@@ -126,20 +119,25 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     # Create the summary stats DataFrames
     if nonstationary_stats:
         with Hilltimer() as t:
-            occ_stats_summary, arr_stats_summary, dep_stats_summary = summarize.summarize_bydatetime(bydt_df)
+            # TODO - return now needs to be dict of dataframes since we don't know how many bydatetime dfs there are
+            #occ_stats_summary, arr_stats_summary, dep_stats_summary = summarize.summarize_bydatetime(bydt_dfs)
+            nonstationary_summaries = summarize.summarize_bydatetime(bydt_dfs)
 
         if verbose:
             print("Summaries by datetime created (seconds): {:.4f}".format(t.interval))
 
     if stationary_stats:
         with Hilltimer() as t:
-            occ_stats_summary_cat, arr_stats_summary_cat, dep_stats_summary_cat = summarize.summarize_bycategory(bydt_df)
+            # TODO - in addition to dict being needed for return, need to generalize summarize_bycategory for
+            # multiple categories.
+            #occ_stats_summary_cat, arr_stats_summary_cat, dep_stats_summary_cat = summarize.summarize_bycategory(bydt_df)
+            stationary_summaries = summarize.summarize_bycategory(bydt_dfs)
 
         if verbose:
             print("Summaries by category created (seconds): {:.4f}".format(t.interval))
 
     # Store summary DataFrames in a dict
-
+    # TODO - decide on final output data structure
     summaries = {'bydatetime': bydt_df}
 
     if nonstationary_stats:

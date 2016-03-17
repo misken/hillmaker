@@ -69,15 +69,15 @@ def make_bydatetime(stops_df, infield, outfield,
     bin_size_minutes: int, default 60
         Bin size in minutes. Should divide evenly into 1440.
 
-    cat_to_exclude: list of str, default None
+    cat_to_exclude: list of strings, default None
         Categories to ignore
+
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
 
     totals: int, default 1
         0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
         catfields (only relevant for > 1 category field)
-
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
 
     verbose : int, default 0
         The verbosity level. The default, zero, means silent mode.
@@ -89,15 +89,16 @@ def make_bydatetime(stops_df, infield, outfield,
 
     Examples
     --------
-    bydt_df = make_bydatetime(stops_df,'InTime','OutTime',
-    ...                        datetime(2014, 3, 1),datetime(2014, 6, 30),'PatientType',60)
+    bydt_dfs = make_bydatetime(stops_df, 'InTime', 'OutTime',
+    ...                        datetime(2014, 3, 1), datetime(2014, 6, 30), 'PatientType', 60)
+
+    bydt_dfs = make_bydatetime(stops_df, 'InTime', 'OutTime',
+    ...           datetime(2014, 3, 1), datetime(2014, 6, 30), ['PatientType','Severity'], 60, totals=2)
 
 
     TODO
     ----
 
-    - add parameter and code to handle occ frac choice
-    - generalize to handle choice of arr, dep, occ or some combo of
 
      Notes
     -----
@@ -116,15 +117,15 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
-    #max_intime = stops_df[infield].max()
-    # min_outtime = stops_df[outfield].min()
+    max_intime = stops_df[infield].max()
+    min_outtime = stops_df[outfield].min()
     max_outtime = stops_df[outfield].max()
 
     if verbose:
         print("min of intime: {}".format(min_intime))
         print("max of outtime: {}".format(max_outtime))
-        # print("max of intime: {}".format(max_intime))
-        # print("min of outtime: {}".format(min_outtime))
+        print("max of intime: {}".format(max_intime))
+        print("min of outtime: {}".format(min_outtime))
 
     # TODO - Add warnings here related to min and maxes out of whack with analysis range
 
@@ -133,10 +134,10 @@ def make_bydatetime(stops_df, infield, outfield,
     rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
 
     # Handle cases of no catfield, a single fieldname, or a list of fields
-    # If no category, let's add a dummy column populated with the totals str
+    # If no category, add a temporary dummy column populated with a totals str
 
-    CONST_FAKE_CATFIELDNAME = 'FakeCatForTotals'
-    total_str = 'total' # We can likely drop total_str as an input arg
+    CONST_FAKE_CATFIELDNAME = '__FakeCatForTotals__'
+    total_str = 'total'
 
     bTotalsDone = False
     if catfield is not None:
@@ -161,15 +162,6 @@ def make_bydatetime(stops_df, infield, outfield,
 
     for i in range(len(catfield)):
         stops_df = stops_df[stops_df[catfield[i]].isin(categories[i])]
-
-    # Create a list of column names for the by datetime table and then an empty data frame based on these columns.
-    # The column names for the category fields are now the actual field names
-    columns = []
-    for field in catfield:
-        columns.append(field)
-
-    measures = ['datetime', 'arrivals', 'departures', 'occupancy']
-    columns.extend(measures)
 
     # Now we'll build up the seeded by date table a category at a time.
     # Along the way we'll initialize all the measures to 0.
@@ -315,7 +307,6 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # If there was no category field, drop the fake field from the index and dataframe
     if catfield[0] == CONST_FAKE_CATFIELDNAME:
-
         bydt_df.set_index('datetime', inplace=True, drop=False)
         bydt_df = bydt_df[['datetime', 'arrivals', 'departures', 'occupancy']]
 
@@ -351,7 +342,8 @@ def make_bydatetime(stops_df, infield, outfield,
 
         bydt_dfs[totals_key] = tot_df
 
-    if totals == 2:
+    # If desired, compute totals over each category field. Only relevant for > 1 category field.
+    if totals == 2 and len(catfield) > 1:
 
         for cat in catfield:
             midx_fields = [cat]
