@@ -121,7 +121,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         with Hilltimer() as t:
             # TODO - return now needs to be dict of dataframes since we don't know how many bydatetime dfs there are
             #occ_stats_summary, arr_stats_summary, dep_stats_summary = summarize.summarize_bydatetime(bydt_dfs)
-            nonstationary_summaries = summarize.summarize_bydatetime(bydt_dfs)
+            nonstationary_summaries = summarize.summarize_nonstationary(bydt_dfs)
 
         if verbose:
             print("Summaries by datetime created (seconds): {:.4f}".format(t.interval))
@@ -131,7 +131,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
             # TODO - in addition to dict being needed for return, need to generalize summarize_bycategory for
             # multiple categories.
             #occ_stats_summary_cat, arr_stats_summary_cat, dep_stats_summary_cat = summarize.summarize_bycategory(bydt_df)
-            stationary_summaries = summarize.summarize_bycategory(bydt_dfs)
+            stationary_summaries = summarize.summarize_stationary(bydt_dfs)
 
         if verbose:
             print("Summaries by category created (seconds): {:.4f}".format(t.interval))
