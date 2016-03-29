@@ -18,8 +18,59 @@ arrival, and departure statistics by time bin of day and day of week.
 # limitations under the License.
 
 import pandas as pd
+import numpy as np
 
-from numba import jit
+def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
+    """
+    Compute summary statistics. Calls specific procedures for stationary and nonstationary stats.
+
+    Parameters
+    ----------
+    bydt_dfs : Dict of DataFrames
+       Occupancy, arrivals, departures by category by datetime bin. Usually computed by make_bydatetime.
+
+    nonstationary_stats : bool, optional
+       If true, datetime bin stats are computed. Else, they aren't computed. Default is True
+
+    stationary_stats : bool, optional
+       If true, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+
+
+    Returns
+    -------
+    Dict of DataFrames
+       Occupancy, arrival and departure summaries as DataFrames
+
+    Examples
+    --------
+
+    TODO
+    ----
+
+    Notes
+    -----
+
+    References
+    ----------
+
+    See Also
+    --------
+    """
+
+    if nonstationary_stats:
+
+        for bydt in bydt_dfs:
+
+            scenario_name = bydt
+            bydt_df = bydt_dfs[bydt]
+            catfield = bydt_df.index.names
+
+
+            occ, arr, dep = summarize_nonstationary(bydt_df, catfield)
+
+
+
+
 
 def summarize_nonstationary(bydt_df, catfield=None):
     """
@@ -58,7 +109,10 @@ def summarize_nonstationary(bydt_df, catfield=None):
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
-        bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'bin_of_day'])
+        if catfield == ['datetime']:
+            bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
+        else:
+            bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'bin_of_day'])
     else:
         bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
 
@@ -111,7 +165,8 @@ def summarize_stationary(bydt_df, catfield=None):
             catfield = [catfield]
         bydt_dfgrp = bydt_df.groupby([*catfield])
     else:
-        bydt_dfgrp = bydt_df
+        fake_key = np.full(len(bydt_df['datetime']), 1)
+        bydt_dfgrp = bydt_df.groupby(fake_key)
 
     occ_stats = bydt_dfgrp['occupancy'].apply(summary_stats)
     arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats)
@@ -141,11 +196,13 @@ def summary_stats(group, stub=''):
 if __name__ == '__main__':
 
     scenario_name = 'PatType_datetime'
+    #scenario_name = 'datetime'
     file_bydt_csv = 'testing/bydatetime_' + scenario_name + '.csv'
 
     unitocc_bydt = pd.read_csv(file_bydt_csv)
 
     occ, arr, dep = summarize_nonstationary(unitocc_bydt, 'PatType')
+    #occ, arr, dep = summarize_nonstationary(unitocc_bydt)
 
     file_occ_csv = 'testing/occ_stats_summary_' + scenario_name + '_nonstationary.csv'
     file_arr_csv = 'testing/arr_stats_summary_' + scenario_name + '_nonstationary.csv'
@@ -155,7 +212,8 @@ if __name__ == '__main__':
     arr.to_csv(file_arr_csv)
     dep.to_csv(file_dep_csv)
 
-    occ, arr, dep = summarize_stationary(unitocc_bydt)
+    occ, arr, dep = summarize_stationary(unitocc_bydt, 'PatType')
+    #occ, arr, dep = summarize_stationary(unitocc_bydt)
 
     file_occ_csv = 'testing/occ_stats_summary_' + scenario_name + '_stationary.csv'
     file_arr_csv = 'testing/arr_stats_summary_' + scenario_name + '_stationary.csv'

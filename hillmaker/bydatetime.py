@@ -357,9 +357,8 @@ def make_bydatetime(stops_df, infield, outfield,
             tot_arrivals = bydt_group.arrivals.sum()
             tot_departures = bydt_group.departures.sum()
             tot_occ = bydt_group.occupancy.sum()
-
             tot_data = [tot_arrivals, tot_departures, tot_occ]
-            #tot_df = pd.concat(tot_data, axis=1, keys=[s.name for s in tot_data])
+
             tot_df = pd.concat(tot_data, axis=1)
             tot_df['datetime'] = tot_df.index.get_level_values('datetime')
             tot_df[cat] = tot_df.index.get_level_values(cat)
@@ -369,6 +368,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
             col_order = [cat, 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
                          'bin_of_day', 'bin_of_week']
+
             tot_df = tot_df[col_order]
 
             bydt_dfs[totals_key] = tot_df
