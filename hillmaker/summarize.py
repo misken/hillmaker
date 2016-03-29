@@ -69,7 +69,16 @@ def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
             occ, arr, dep = summarize_nonstationary(bydt_df, catfield)
 
 
+    if stationary_stats:
 
+        for bydt in bydt_dfs:
+
+            scenario_name = bydt
+            bydt_df = bydt_dfs[bydt]
+            catfield = bydt_df.index.names
+
+
+            occ, arr, dep = summarize_stationary(bydt_df, catfield)
 
 
 def summarize_nonstationary(bydt_df, catfield=None):
@@ -163,7 +172,11 @@ def summarize_stationary(bydt_df, catfield=None):
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
-        bydt_dfgrp = bydt_df.groupby([*catfield])
+        if catfield == ['datetime']:
+            fake_key = np.full(len(bydt_df['datetime']), 1)
+            bydt_dfgrp = bydt_df.groupby(fake_key)
+        else:
+            bydt_dfgrp = bydt_df.groupby([*catfield])
     else:
         fake_key = np.full(len(bydt_df['datetime']), 1)
         bydt_dfgrp = bydt_df.groupby(fake_key)

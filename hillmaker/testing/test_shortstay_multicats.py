@@ -4,7 +4,7 @@ import pandas as pd
 
 import hillmaker as hm
 
-file_stopdata = '../data/ShortStay2.csv'
+file_stopdata = '../data/ShortStay2-mini.csv'
 
 # Required inputs
 scenario = 'sstest_60'
@@ -14,10 +14,10 @@ out_fld_name = 'OutRoomTS'
 #cat_fld_name = ['PatType']
 cat_fld_name = None
 start = '1/1/1996'
-end = '1/30/1996 23:45'
+end = '1/10/1996 23:45'
 
 # Optional inputs
-tot_fld_name = 'SSU'
+#tot_fld_name = 'SSU'
 bin_mins = 480
 
 

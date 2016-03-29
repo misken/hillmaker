@@ -308,7 +308,8 @@ def make_bydatetime(stops_df, infield, outfield,
     # If there was no category field, drop the fake field from the index and dataframe
     if catfield[0] == CONST_FAKE_CATFIELDNAME:
         bydt_df.set_index('datetime', inplace=True, drop=False)
-        bydt_df = bydt_df[['datetime', 'arrivals', 'departures', 'occupancy']]
+        bydt_df = bydt_df[['datetime', 'arrivals', 'departures', 'occupancy',
+                           'day_of_week', 'bin_of_day', 'bin_of_week' ]]
 
     # Store main results bydatetime DataFrame
 
