@@ -57,29 +57,42 @@ def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
     --------
     """
 
+# Store main results bydatetime DataFrame
+
+    summary_nonstationary_dfs = {}
     if nonstationary_stats:
 
         for bydt in bydt_dfs:
 
-            scenario_name = bydt
+            summary_key = bydt
             bydt_df = bydt_dfs[bydt]
-            catfield = bydt_df.index.names
+            catfieldplus = bydt_df.index.names
+            catfield = [x for x in catfieldplus if x is not 'datetime']
 
+            summaries = summarize_nonstationary(bydt_df, catfield)
 
-            occ, arr, dep = summarize_nonstationary(bydt_df, catfield)
+            summary_nonstationary_dfs[summary_key] = summaries
 
-
+    summary_stationary_dfs = {}
     if stationary_stats:
 
         for bydt in bydt_dfs:
 
-            scenario_name = bydt
+            summary_key = bydt
             bydt_df = bydt_dfs[bydt]
-            catfield = bydt_df.index.names
 
+            catfieldplus = bydt_df.index.names
+            catfield = [x for x in catfieldplus if x is not 'datetime']
 
-            occ, arr, dep = summarize_stationary(bydt_df, catfield)
+            summaries = summarize_stationary(bydt_df, catfield)
 
+            summary_stationary_dfs[summary_key] = summaries
+
+    summaries_all = {}
+    summaries_all['nonstationary'] = summary_nonstationary_dfs
+    summaries_all['stationary'] = summary_stationary_dfs
+
+    return summaries_all
 
 def summarize_nonstationary(bydt_df, catfield=None):
     """
@@ -118,7 +131,7 @@ def summarize_nonstationary(bydt_df, catfield=None):
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
-        if catfield == ['datetime']:
+        if catfield == []:
             bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
         else:
             bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'bin_of_day'])
@@ -133,7 +146,12 @@ def summarize_nonstationary(bydt_df, catfield=None):
     arr_stats_summary = arr_stats.unstack()
     dep_stats_summary = dep_stats.unstack()
 
-    return occ_stats_summary, arr_stats_summary, dep_stats_summary
+    summaries = {}
+    summaries['occupancy'] = occ_stats_summary
+    summaries['arrivals'] = arr_stats_summary
+    summaries['departures'] = dep_stats_summary
+
+    return summaries
 
 
 def summarize_stationary(bydt_df, catfield=None):
@@ -172,7 +190,7 @@ def summarize_stationary(bydt_df, catfield=None):
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
-        if catfield == ['datetime']:
+        if catfield == []:
             fake_key = np.full(len(bydt_df['datetime']), 1)
             bydt_dfgrp = bydt_df.groupby(fake_key)
         else:
@@ -189,7 +207,12 @@ def summarize_stationary(bydt_df, catfield=None):
     arr_stats_summary = arr_stats.unstack()
     dep_stats_summary = dep_stats.unstack()
 
-    return occ_stats_summary, arr_stats_summary, dep_stats_summary
+    summaries = {}
+    summaries['occupancy'] = occ_stats_summary
+    summaries['arrivals'] = arr_stats_summary
+    summaries['departures'] = dep_stats_summary
+
+    return summaries
 
 
 def summary_stats(group, stub=''):
@@ -208,31 +231,5 @@ def summary_stats(group, stub=''):
 
 if __name__ == '__main__':
 
-    scenario_name = 'PatType_datetime'
-    #scenario_name = 'datetime'
-    file_bydt_csv = 'testing/bydatetime_' + scenario_name + '.csv'
-
-    unitocc_bydt = pd.read_csv(file_bydt_csv)
-
-    occ, arr, dep = summarize_nonstationary(unitocc_bydt, 'PatType')
-    #occ, arr, dep = summarize_nonstationary(unitocc_bydt)
-
-    file_occ_csv = 'testing/occ_stats_summary_' + scenario_name + '_nonstationary.csv'
-    file_arr_csv = 'testing/arr_stats_summary_' + scenario_name + '_nonstationary.csv'
-    file_dep_csv = 'testing/dep_stats_summary_' + scenario_name + '_nonstationary.csv'
-
-    occ.to_csv(file_occ_csv)
-    arr.to_csv(file_arr_csv)
-    dep.to_csv(file_dep_csv)
-
-    occ, arr, dep = summarize_stationary(unitocc_bydt, 'PatType')
-    #occ, arr, dep = summarize_stationary(unitocc_bydt)
-
-    file_occ_csv = 'testing/occ_stats_summary_' + scenario_name + '_stationary.csv'
-    file_arr_csv = 'testing/arr_stats_summary_' + scenario_name + '_stationary.csv'
-    file_dep_csv = 'testing/dep_stats_summary_' + scenario_name + '_stationary.csv'
-
-    occ.to_csv(file_occ_csv)
-    arr.to_csv(file_arr_csv)
-    dep.to_csv(file_dep_csv)
+    pass
 
