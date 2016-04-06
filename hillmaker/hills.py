@@ -230,16 +230,28 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
         for metric in ['occupancy', 'arrivals', 'departures']:
 
             df = dfdict[metric]
-            file_summary_csv = scenario_name + '_' + metric +'_' + d + '.csv'
+            file_summary_csv = scenario_name + '_' + metric
+            if len(d) > 0:
+                file_summary_csv = file_summary_csv +'_' + d + '.csv'
+            else:
+                file_summary_csv = file_summary_csv + '.csv'
+
+
+
+
             csv_wpath = os.path.normpath(os.path.join(export_path, file_summary_csv))
 
             catfield = df.index.names
-            summary_cols = [*catfield, 'count', 'mean', 'stdev', 'sem', 'cv',
+#            summary_cols = [*catfield, 'count', 'mean', 'stdev', 'sem', 'cv',
+            summary_cols = ['count', 'mean', 'stdev', 'sem', 'cv',
                     'var', 'skew', 'kurt',
                     'p50', 'p55', 'p60', 'p65', 'p70', 'p75',
                     'p80', 'p85', 'p90', 'p95', 'p975', 'p99']
 
-            df.to_csv(csv_wpath, index=False, float_format='%.6f', columns=summary_cols)
+            if temporal_key == 'nonstationary' or catfield[0] is not None:
+                df.to_csv(csv_wpath, index=True, float_format='%.6f', columns=summary_cols)
+            else:
+                df.to_csv(csv_wpath, index=False, float_format='%.6f', columns=summary_cols)
 
 
 if __name__ == '__main__':

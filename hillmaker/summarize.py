@@ -64,10 +64,16 @@ def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
 
         for bydt in bydt_dfs:
 
-            summary_key = bydt
+
             bydt_df = bydt_dfs[bydt]
             catfieldplus = bydt_df.index.names
             catfield = [x for x in catfieldplus if x is not 'datetime']
+
+            summary_key_list = catfield.copy()
+            summary_key_list.append('dow')
+            summary_key_list.append('binofday')
+
+            summary_key = '_'.join(summary_key_list)
 
             summaries = summarize_nonstationary(bydt_df, catfield)
 
@@ -78,11 +84,12 @@ def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
 
         for bydt in bydt_dfs:
 
-            summary_key = bydt
             bydt_df = bydt_dfs[bydt]
 
             catfieldplus = bydt_df.index.names
             catfield = [x for x in catfieldplus if x is not 'datetime']
+
+            summary_key = '_'.join(catfield)
 
             summaries = summarize_stationary(bydt_df, catfield)
 
@@ -138,13 +145,19 @@ def summarize_nonstationary(bydt_df, catfield=None):
     else:
         bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
 
+    print(bydt_df.head())
+
     occ_stats = bydt_dfgrp['occupancy'].apply(summary_stats)
     arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats)
     dep_stats = bydt_dfgrp['departures'].apply(summary_stats)
 
+    print(occ_stats.head())
+
     occ_stats_summary = occ_stats.unstack()
     arr_stats_summary = arr_stats.unstack()
     dep_stats_summary = dep_stats.unstack()
+
+    print(occ_stats_summary.head())
 
     summaries = {}
     summaries['occupancy'] = occ_stats_summary
@@ -187,17 +200,20 @@ def summarize_stationary(bydt_df, catfield=None):
     --------
     """
 
+
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
         if catfield == []:
             fake_key = np.full(len(bydt_df['datetime']), 1)
             bydt_dfgrp = bydt_df.groupby(fake_key)
+
         else:
             bydt_dfgrp = bydt_df.groupby([*catfield])
     else:
         fake_key = np.full(len(bydt_df['datetime']), 1)
         bydt_dfgrp = bydt_df.groupby(fake_key)
+
 
     occ_stats = bydt_dfgrp['occupancy'].apply(summary_stats)
     arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats)
