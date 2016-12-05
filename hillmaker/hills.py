@@ -17,9 +17,9 @@
 import pandas as pd
 import os
 
-from . import bydatetime
-from . import summarize
-from .hmlib import Hilltimer
+import bydatetime
+import summarize
+from hmlib import Hilltimer
 
 
 def make_hills(scenario_name, stops_df, infield, outfield,
@@ -235,9 +235,6 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
                 file_summary_csv = file_summary_csv +'_' + d + '.csv'
             else:
                 file_summary_csv = file_summary_csv + '.csv'
-
-
-
 
             csv_wpath = os.path.normpath(os.path.join(export_path, file_summary_csv))
 

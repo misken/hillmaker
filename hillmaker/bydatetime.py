@@ -28,10 +28,7 @@ import itertools
 from timeit import default_timer as timer
 
 
-from . import hmlib
-
-
-
+import hmlib
 
 
 def make_bydatetime(stops_df, infield, outfield,

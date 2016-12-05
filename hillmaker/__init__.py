@@ -1,5 +1,5 @@
-from . import hmlib
-from . import bydatetime
-from . import summarize
+import hmlib
+import bydatetime
+import summarize
 
-from .hills import make_hills
+from hills import make_hills
