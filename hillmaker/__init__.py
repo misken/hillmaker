@@ -1,5 +1,5 @@
-import hmlib
-import bydatetime
-import summarize
+import hillmaker.hmlib
+import hillmaker.bydatetime
+import hillmaker.summarize
 
-from hills import make_hills
+from hillmaker.hills import make_hills
