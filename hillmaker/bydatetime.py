@@ -28,7 +28,7 @@ import itertools
 from timeit import default_timer as timer
 
 
-import hmlib
+from hillmaker.hmlib import *
 
 
 def make_bydatetime(stops_df, infield, outfield,
@@ -193,8 +193,8 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Compute various day and time bin related fields
     bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
-    bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
-    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
+    bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: bin_of_day(x, bin_size_minutes))
+    bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: bin_of_week(x, bin_size_minutes))
 
     # Now create a hierarchical multiindex to replace the default index (since it
     # has dups from the concatenation). We keep the columns used in the index as
@@ -222,22 +222,22 @@ def make_bydatetime(stops_df, infield, outfield,
         catseries = row[1][catfield]
         cat = tuple(catseries)
 
-        intime = hmlib.to_the_second(intime_raw)
-        outtime = hmlib.to_the_second(outtime_raw)
+        intime = to_the_second(intime_raw)
+        outtime = to_the_second(outtime_raw)
         good_rec = True
-        rectype = hmlib.stoprec_analysis_rltnshp([intime, outtime], analysis_range)
+        rectype = stoprec_analysis_rltnshp([intime, outtime], analysis_range)
     
         if rectype in ['backwards']:
             good_rec = False
             rectype_counts['backwards'] = rectype_counts.get('backwards', 0) + 1
     
         if good_rec and rectype != 'none':
-            indtbin = hmlib.dt_floor(intime, bin_size_minutes)
-            outdtbin = hmlib.dt_floor(outtime, bin_size_minutes)
+            indtbin = dt_floor(intime, bin_size_minutes)
+            outdtbin = dt_floor(outtime, bin_size_minutes)
 
-            inout_occ_frac = hmlib.occ_frac([intime, outtime], bin_size_minutes, edge_bins)
+            inout_occ_frac = occ_frac([intime, outtime], bin_size_minutes, edge_bins)
 
-            numbins = hmlib.numbins(indtbin, outdtbin, bin_size_minutes)
+            nbins = numbins(indtbin, outdtbin, bin_size_minutes)
             dtbin = indtbin
 
             if verbose == 2:
@@ -253,12 +253,12 @@ def make_bydatetime(stops_df, infield, outfield,
                 bydt_df.at[(*cat, outdtbin), 'departures'] += 1.0
 
                 current_bin = 2
-                while current_bin < numbins:
+                while current_bin < nbins:
                     dtbin += timedelta(minutes=bin_size_minutes)
                     bydt_df.at[(*cat, dtbin), 'occupancy'] += 1.0
                     current_bin += 1
 
-                if numbins > 1:
+                if nbins > 1:
                     bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
     
             elif rectype == 'right':
@@ -267,7 +267,7 @@ def make_bydatetime(stops_df, infield, outfield,
                 bydt_df.at[(*cat, indtbin), 'occupancy'] += inout_occ_frac[0]
                 bydt_df.at[(*cat, indtbin), 'arrivals'] += 1.0
     
-                if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                if isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = indtbin + timedelta(minutes=bin_size_minutes)
                     while current_bin <= end_analysis_dt:
                         bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
@@ -279,7 +279,7 @@ def make_bydatetime(stops_df, infield, outfield,
                 bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
                 bydt_df.at[(*cat, outdtbin), 'departures'] += 1.0
     
-                if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                if isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin < outdtbin:
                         bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
@@ -289,7 +289,7 @@ def make_bydatetime(stops_df, infield, outfield,
                 rectype_counts['outer'] = rectype_counts.get('outer', 0) + 1
                 # arrival and departure sandwich analysis window
     
-                if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
+                if isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin <= end_analysis_dt:
                         bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
@@ -329,8 +329,8 @@ def make_bydatetime(stops_df, infield, outfield,
 
         tot_df = pd.concat(tot_data, axis=1)
         tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
-        tot_df['bin_of_day'] = tot_df.index.map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
-        tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
+        tot_df['bin_of_day'] = tot_df.index.map(lambda x: bin_of_day(x, bin_size_minutes))
+        tot_df['bin_of_week'] = tot_df.index.map(lambda x: bin_of_week(x, bin_size_minutes))
 
         tot_df['datetime'] = tot_df.index
 
@@ -361,8 +361,8 @@ def make_bydatetime(stops_df, infield, outfield,
             tot_df['datetime'] = tot_df.index.get_level_values('datetime')
             tot_df[cat] = tot_df.index.get_level_values(cat)
             tot_df['day_of_week'] = tot_df['datetime'].map(lambda x: x.weekday())
-            tot_df['bin_of_day'] = tot_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
-            tot_df['bin_of_week'] = tot_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
+            tot_df['bin_of_day'] = tot_df['datetime'].map(lambda x: bin_of_day(x, bin_size_minutes))
+            tot_df['bin_of_week'] = tot_df['datetime'].map(lambda x: bin_of_week(x, bin_size_minutes))
 
             col_order = [cat, 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
                          'bin_of_day', 'bin_of_week']

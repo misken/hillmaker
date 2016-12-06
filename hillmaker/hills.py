@@ -17,9 +17,9 @@
 import pandas as pd
 import os
 
-import bydatetime
-import summarize
-from hmlib import Hilltimer
+from hillmaker.bydatetime import make_bydatetime
+from  hillmaker.summarize import summarize
+from hillmaker.hmlib import Hilltimer
 
 
 def make_hills(scenario_name, stops_df, infield, outfield,
@@ -102,7 +102,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     # Create the bydatetime DataFrame
     with Hilltimer() as t:
         starttime = t.start
-        bydt_dfs = bydatetime.make_bydatetime(stops_df,
+        bydt_dfs = make_bydatetime(stops_df,
                                               infield,
                                               outfield,
                                               start_analysis,
@@ -124,7 +124,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     if nonstationary_stats or stationary_stats:
         with Hilltimer() as t:
 
-            summary_dfs = summarize.summarize(bydt_dfs,
+            summary_dfs = summarize(bydt_dfs,
                                               nonstationary_stats=nonstationary_stats,
                                               stationary_stats=stationary_stats)
 
