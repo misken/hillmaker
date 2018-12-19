@@ -17,6 +17,7 @@ arrival, and departure statistics by time bin of day and date.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from pandas import Timestamp
@@ -115,15 +116,12 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
-    #max_intime = stops_df[infield].max()
-    # min_outtime = stops_df[outfield].min()
     max_outtime = stops_df[outfield].max()
 
     if verbose:
         print("min of intime: {}".format(min_intime))
         print("max of outtime: {}".format(max_outtime))
-        # print("max of intime: {}".format(max_intime))
-        # print("min of outtime: {}".format(min_outtime))
+
 
     # TODO - Add warnings here related to min and maxes out of whack with analysis range
 
@@ -157,8 +155,8 @@ def make_bydatetime(stops_df, infield, outfield,
 
     len_bydt = len(rng_bydt)
     for cat in categories:
-        bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
-                     'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
+        bydt_data = {'category': [cat] * len_bydt, 'datetime': rng_bydt, 'arrivals': np.zeros(len_bydt),
+                     'departures': np.zeros(len_bydt), 'occupancy': np.zeros(len_bydt)}
 
         bydt_df_cat = DataFrame(bydt_data, columns=['category', 'datetime', 'arrivals', 'departures', 'occupancy'])
 
@@ -174,9 +172,10 @@ def make_bydatetime(stops_df, infield, outfield,
     bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
-    bydt_df.set_index(['category', 'datetime'], inplace=True, drop=False)
+    # Let's try getting rid of column version since it's causing problems in new pandas versions
+    bydt_df.set_index(['category', 'datetime'], inplace=True, drop=True)
 
-    bydt_df.sortlevel(inplace=True)
+    bydt_df.sort_index(inplace=True)
 
     # Main occupancy, arrivals, departures loop. Process each record in `stops_df`.
 
@@ -267,7 +266,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Compute totals
     if totals:
-        bydt_group = bydt_df.groupby(['datetime'])
+        bydt_group = bydt_df.groupby('datetime')
 
         tot_arrivals = bydt_group.arrivals.sum()
         tot_departures = bydt_group.departures.sum()
@@ -280,11 +279,11 @@ def make_bydatetime(stops_df, infield, outfield,
         tot_df['bin_of_week'] = tot_df.index.map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
         tot_df['category'] = total_str
-        tot_df.set_index('category', append=True, inplace=True, drop=False)
+        tot_df.set_index('category', append=True, inplace=True, drop=True)
         tot_df = tot_df.reorder_levels(['category', 'datetime'])
-        tot_df['datetime'] = tot_df.index.levels[1]
+        # tot_df['datetime'] = tot_df.index.levels[1]
 
-        col_order = ['category', 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
+        col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week',
                      'bin_of_day', 'bin_of_week']
         tot_df = tot_df[col_order]
         bydt_df = bydt_df.append(tot_df)

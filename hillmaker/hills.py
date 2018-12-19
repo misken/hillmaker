@@ -201,7 +201,7 @@ def export_hills(summaries, scenario_name, export_path, nonstationary_stats, sta
         file_dep_cat_csv = export_path + '/dep_stats_summary_cat_' + scenario_name + '.csv'
 
     # Set column output order
-    dt_cols = ['category', 'datetime', 'arrivals', 'departures', 'occupancy']
+    dt_cols = ['arrivals', 'departures', 'occupancy']
 
     summary_cols = ['count', 'mean', 'stdev', 'sem', 'cv',
                     'var', 'skew', 'kurt',
@@ -209,7 +209,7 @@ def export_hills(summaries, scenario_name, export_path, nonstationary_stats, sta
                     'p80', 'p85', 'p90', 'p95', 'p975', 'p99']
 
     # Export to csv
-    summaries['bydatetime'].to_csv(file_bydt_csv, index=False, float_format='%.6f', columns=dt_cols)
+    summaries['bydatetime'].to_csv(file_bydt_csv, index=True, float_format='%.6f', columns=dt_cols)
 
     if nonstationary_stats:
         summaries['occupancy'].to_csv(file_occ_csv, float_format='%.6f', columns=summary_cols, index=True)
