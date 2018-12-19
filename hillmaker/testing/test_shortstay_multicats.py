@@ -7,11 +7,11 @@ import hillmaker as hm
 file_stopdata = '../data/ShortStay2_10pct.csv'
 
 # Required inputs
-scenario = 'ShortStay2_10pct_120'
+scenario = 'ShortStay2_10pct_120_PatTypeSeverity'
 in_fld_name = 'InRoomTS'
 out_fld_name = 'OutRoomTS'
-#cat_fld_name = ['PatType','Severity']
-cat_fld_name = ['PatType']
+cat_fld_name = ['PatType','Severity']
+#cat_fld_name = ['PatType']
 #cat_fld_name = None
 start = '1/1/1996'
 end = '3/30/1996 23:45'

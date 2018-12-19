@@ -181,11 +181,14 @@ def make_bydatetime(stops_df, infield, outfield,
             all_cat_df.append(cat_df)
             i+=1
 
+    # Create the datetime and data columns
     bydt_df = DataFrame()
     bydt_data = {'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
                              'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
 
     bydt_data_df = DataFrame(bydt_data, columns=['datetime', 'arrivals', 'departures', 'occupancy'])
+
+
 
     for cat_df in all_cat_df:
         bydt_df_cat = pd.concat([cat_df, bydt_data_df],axis=1)
