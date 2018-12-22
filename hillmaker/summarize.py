@@ -205,13 +205,13 @@ def summarize_stationary(bydt_df, catfield=None):
         if isinstance(catfield, str):
             catfield = [catfield]
         if catfield == []:
-            fake_key = np.full(len(bydt_df['datetime']), 1)
+            fake_key = np.full(len(bydt_df.index), 1)
             bydt_dfgrp = bydt_df.groupby(fake_key)
 
         else:
             bydt_dfgrp = bydt_df.groupby([*catfield])
     else:
-        fake_key = np.full(len(bydt_df['datetime']), 1)
+        fake_key = np.full(len(bydt_df.index), 1)
         bydt_dfgrp = bydt_df.groupby(fake_key)
 
 

@@ -196,9 +196,9 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
         csv_wpath = os.path.normpath(os.path.join(export_path, file_bydt_csv))
 
         catfield = bydt_dfs[d].index.names
-        dt_cols = [*catfield, 'arrivals', 'departures', 'occupancy',
+        dt_cols = ['arrivals', 'departures', 'occupancy',
                        'day_of_week', 'bin_of_day', 'bin_of_week']
-        bydt_dfs[d].to_csv(csv_wpath, index=False, float_format='%.6f', columns=dt_cols)
+        bydt_dfs[d].to_csv(csv_wpath, index=True, float_format='%.6f', columns=dt_cols)
 
 
 

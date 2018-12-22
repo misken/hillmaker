@@ -207,9 +207,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
     midx_fields = catfield.copy()
     midx_fields.append('datetime')
-    bydt_df.set_index(midx_fields, inplace=True, drop=False)
+    bydt_df.set_index(midx_fields, inplace=True, drop=True)
 
-    bydt_df.sortlevel(inplace=True)
+    bydt_df.sort_index(inplace=True)
 
     # Main occupancy, arrivals, departures loop. Process each record in `stops_df`.
 
@@ -307,8 +307,8 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # If there was no category field, drop the fake field from the index and dataframe
     if catfield[0] == CONST_FAKE_CATFIELDNAME:
-        bydt_df.set_index('datetime', inplace=True, drop=False)
-        bydt_df = bydt_df[['datetime', 'arrivals', 'departures', 'occupancy',
+        bydt_df.set_index('datetime', inplace=True, drop=True)
+        bydt_df = bydt_df[['arrivals', 'departures', 'occupancy',
                            'day_of_week', 'bin_of_day', 'bin_of_week' ]]
 
     # Store main results bydatetime DataFrame
@@ -335,9 +335,9 @@ def make_bydatetime(stops_df, infield, outfield,
         tot_df['bin_of_day'] = tot_df.index.map(lambda x: bin_of_day(x, bin_size_minutes))
         tot_df['bin_of_week'] = tot_df.index.map(lambda x: bin_of_week(x, bin_size_minutes))
 
-        tot_df['datetime'] = tot_df.index
+        #tot_df['datetime'] = tot_df.index
 
-        col_order = ['datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
+        col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week',
                      'bin_of_day', 'bin_of_week']
         tot_df = tot_df[col_order]
 

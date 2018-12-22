@@ -1,3 +1,12 @@
+Best practices for Python development
+--------------------------------------
+
+https://gist.github.com/sloria/7001839
+
+
+
+
+
 Originally the 'develop' branch was going to be for the OO design version. However, after thinking about it
 and talking with JW, I think this branch will now focus on creating a solid guts version, non OO, that can
 be used from a python script or interactively. It will just focus on the base computations, a text in and text out IO
@@ -7,11 +16,10 @@ version that will come next.
 Development environment
 -----------------------
 
-Created a conda environment called hilltest (and one called hilldev)
+Created a conda environment called `datascicore`. It does NOT
+contain the hillmaker package. 
 
-Add hillmaker.pth file to site-packages in the conda env
 
-/home/mark/Documents/development/hillmaker
 
 Git workflows
 -------------
