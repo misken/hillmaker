@@ -210,9 +210,16 @@ def make_bydatetime(stops_df, infield, outfield,
                 num_inner += 1
                 rectype_counts['inner'] = rectype_counts.get('inner', 0) + 1
 
-                bydt_df.at[(cat, indtbin), 'occupancy'] += inout_occ_frac[0]
-                bydt_df.at[(cat, indtbin), 'arrivals'] += 1.0
+                # Increment arrivals and departures
+                bydt_df.loc[(cat, indtbin), 'arrivals'] += 1.0
                 bydt_df.at[(cat, outdtbin), 'departures'] += 1.0
+
+                # Increment occupancy - I've tried to find a faster approach but
+                # use of at appears to be fastest.
+
+                # bydt_df.at[(cat, indtbin), 'occupancy'] += inout_occ_frac[0]
+                # if numbins > 1:
+                #     bydt_df.at[(cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
 
                 current_bin = 2
                 while current_bin < numbins:
@@ -220,8 +227,19 @@ def make_bydatetime(stops_df, infield, outfield,
                     bydt_df.at[(cat, dtbin), 'occupancy'] += 1.0
                     current_bin += 1
 
-                if numbins > 1:
-                    bydt_df.at[(cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
+                # The following is much slower. Slicing is expensive.
+                # Create array of ones as initial occupancy increment
+                # occinc = np.ones(int(numbins))
+
+                # Update array for inbin fraction
+                #occinc[0] = inout_occ_frac[0]
+
+                # Update array for outbin fraction
+                #if numbins > 1:
+                #    occinc[-1] += inout_occ_frac[1]
+
+                # Add the occ increment array to appropriate slice in dataframe
+                #bydt_df.loc[(cat, slice(indtbin, outdtbin)), 'occupancy'] += occinc
     
             elif rectype == 'right':
                 rectype_counts['right'] = rectype_counts.get('right', 0) + 1
