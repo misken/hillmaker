@@ -138,6 +138,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     bTotalsDone = False
     if catfield is not None:
+        # If it's a string, it's a single cat field --> convert to list
         if isinstance(catfield, str):
             catfield = [catfield]
     else:
