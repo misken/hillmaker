@@ -36,6 +36,8 @@ def make_bydatetime(stops_df, infield, outfield,
                     bin_size_minutes=60,
                     cat_to_exclude=None,
                     totals=True,
+                    occ_weight_field='',
+                    occ_weight_val=1.0,
                     edge_bins=1,
                     verbose=0):
     """
@@ -54,10 +56,10 @@ def make_bydatetime(stops_df, infield, outfield,
     outfield: string
         Name of column in stops_df to use as departure datetime
 
-    start_analysis: datetime
+    start_analysis: datetime-like, str
         Start date for the analysis
 
-    end_analysis: datetime
+    end_analysis: datetime-like, str
         End date for the analysis
 
     catfield: string, default=''
@@ -182,8 +184,15 @@ def make_bydatetime(stops_df, infield, outfield,
     num_processed = 0
     num_inner = 0
     rectype_counts = {}
+    num_rows = len(stops_df)
 
-    for intime_raw, outtime_raw, cat in zip(stops_df[infield], stops_df[outfield], stops_df[catfield]):
+    if len(occ_weight_field) > 0:
+        occ_inc_vec = stops_df[occ_weight_field]
+    else:
+        occ_inc_vec = np.full(num_rows, occ_weight_val)
+
+    for intime_raw, outtime_raw, cat, occ_inc in zip(stops_df[infield], stops_df[outfield],
+                                                     stops_df[catfield], occ_inc_vec):
         intime = hmlib.to_the_second(intime_raw)
         outtime = hmlib.to_the_second(outtime_raw)
         good_rec = True
@@ -203,8 +212,8 @@ def make_bydatetime(stops_df, infield, outfield,
             dtbin = indtbin
 
             if verbose == 2:
-                print("{} {} {} {} {:.3f} {:.3f} {:.3f}".format(intime, outtime, cat,
-                      rectype, timer(), inout_occ_frac[0], inout_occ_frac[1]))
+                print("{} {} {} {} {:.3f} {:.3f} {:.3f} {}".format(intime, outtime, cat,
+                      rectype, timer(), inout_occ_frac[0], inout_occ_frac[1], occ_inc))
 
             if rectype == 'inner':
                 num_inner += 1
@@ -222,9 +231,10 @@ def make_bydatetime(stops_df, infield, outfield,
                 #     bydt_df.at[(cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
 
                 current_bin = 2
+
                 while current_bin < numbins:
                     dtbin += timedelta(minutes=bin_size_minutes)
-                    bydt_df.at[(cat, dtbin), 'occupancy'] += 1.0
+                    bydt_df.at[(cat, dtbin), 'occupancy'] += occ_inc
                     current_bin += 1
 
                 # The following is much slower. Slicing is expensive.
@@ -244,25 +254,25 @@ def make_bydatetime(stops_df, infield, outfield,
             elif rectype == 'right':
                 rectype_counts['right'] = rectype_counts.get('right', 0) + 1
                 # departure is outside analysis window
-                bydt_df.at[(cat, indtbin), 'occupancy'] += inout_occ_frac[0]
+                bydt_df.at[(cat, indtbin), 'occupancy'] += inout_occ_frac[0] * occ_inc
                 bydt_df.at[(cat, indtbin), 'arrivals'] += 1.0
     
                 if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = indtbin + timedelta(minutes=bin_size_minutes)
                     while current_bin <= end_analysis_dt:
-                        bydt_df.at[(cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(cat, current_bin), 'occupancy'] += occ_inc
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'left':
                 rectype_counts['left'] = rectype_counts.get('left', 0) + 1
                 # arrival is outside analysis window
-                bydt_df.at[(cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
+                bydt_df.at[(cat, outdtbin), 'occupancy'] += inout_occ_frac[1] * occ_inc
                 bydt_df.at[(cat, outdtbin), 'departures'] += 1.0
     
                 if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin < outdtbin:
-                        bydt_df.at[(cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(cat, current_bin), 'occupancy'] += occ_inc
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'outer':
@@ -272,7 +282,7 @@ def make_bydatetime(stops_df, infield, outfield,
                 if hmlib.isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin <= end_analysis_dt:
-                        bydt_df.at[(cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(cat, current_bin), 'occupancy'] += occ_inc
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             else:

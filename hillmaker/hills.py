@@ -27,6 +27,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
                total_str='Total',
                bin_size_minutes=60,
                cat_to_exclude=None,
+               occ_weight_field='',
+               occ_weight_val=1.0,
                totals=True,
                nonstationary_stats=True,
                stationary_stats=True,
@@ -66,6 +68,11 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Number of minutes in each time bin of the day, default is 60
     cat_to_exclude : list, optional
         Categories to ignore, default is None
+    occ_weight_field : string, optional
+        Column name corresponding to the weights to use for occupancy incrementing. If specified, overrides
+        occ_weight_value.
+    occ_weight_val : float, optional
+        Weight to use for occupancy incrementing
     totals : bool, optional
        If true, overall totals are computed. Else, just category specific values computed. Default is True.
     nonstationary_stats : bool, optional
@@ -113,6 +120,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
                                              total_str,
                                              bin_size_minutes,
                                              cat_to_exclude=cat_to_exclude,
+                                             occ_weight_field=occ_weight_field,
+                                             occ_weight_val=occ_weight_val,
                                              totals=totals,
                                              edge_bins=edge_bins,
                                              verbose=verbose)
