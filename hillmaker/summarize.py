@@ -177,6 +177,9 @@ def summarize_nonstationary(bydt_df, catfield=None,
     summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
                  'departures': dep_stats_summary}
 
+    if verbose:
+        print('Created nonstationary summaries.')
+
     return summaries
 
 
@@ -244,6 +247,9 @@ def summarize_stationary(bydt_df, catfield=None,
 
     summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
                  'departures': dep_stats_summary}
+
+    if verbose:
+        print('Created stationary summaries.')
 
     return summaries
 
