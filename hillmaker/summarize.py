@@ -67,9 +67,9 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
     summary_nonstationary_dfs = {}
     if nonstationary_stats:
 
-        for bydt in bydt_dfs:
+        for bydt, bydt_df in bydt_dfs.items():
 
-            bydt_df = bydt_dfs[bydt]
+            #bydt_df = bydt_dfs[bydt]
             midx_fields = bydt_df.index.names
             catfield = [x for x in midx_fields if x is not 'datetime']
 
@@ -82,6 +82,19 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
             summaries = summarize_nonstationary(bydt_df, catfield, percentiles, verbose)
 
             summary_nonstationary_dfs[summary_key] = summaries
+
+            # if totals == 2 and len(catfield) > 1:
+            #     for cat in catfield:
+            #         summary_key_list = cat
+            #         summary_key_list.append('dow')
+            #         summary_key_list.append('binofday')
+            #
+            #         summary_key = '_'.join(summary_key_list)
+            #
+            #         summaries = summarize_nonstationary(bydt_df, cat, percentiles, verbose)
+            #
+            #         summary_nonstationary_dfs[summary_key] = summaries
+
 
     summary_stationary_dfs = {}
     if stationary_stats:
@@ -246,9 +259,10 @@ def summary_stats(group, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), stub=''):
                 stub+'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
                 stub+'skew': group.skew(), 'kurt': group.kurt()}
 
-    for p in percentiles:
-        pctile_name = '{}p{:d}'.format(stub, int(100 * p))
-        stats[pctile_name] = group.quantile(p)
+    if percentiles is not None:
+        for p in percentiles:
+            pctile_name = '{}p{:d}'.format(stub, int(100 * p))
+            stats[pctile_name] = group.quantile(p)
 
     return stats
 

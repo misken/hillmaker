@@ -330,7 +330,7 @@ def make_bydatetime(stops_df, infield, outfield,
     # Store main results bydatetime DataFrame
     bydt_dfs = {}
     totals_key = '_'.join(bydt_df.index.names)
-    bydt_dfs[totals_key] = bydt_df
+    bydt_dfs[totals_key] = bydt_df.copy()
 
     # Compute totals
     if totals >= 1 and do_totals:
@@ -355,14 +355,15 @@ def make_bydatetime(stops_df, infield, outfield,
                      'bin_of_day', 'bin_of_week']
         tot_df = tot_df[col_order]
 
-        bydt_dfs[totals_key] = tot_df
+        bydt_dfs[totals_key] = tot_df.copy()
 
     # If desired, compute totals over each category field. Only relevant for > 1 category field.
     if totals == 2 and len(catfield) > 1:
 
         for cat in catfield:
             midx_fields = [cat, 'datetime']
-            bydt_df.set_index(midx_fields, inplace=True, drop=False)
+            bydt_df.reset_index(drop=False, inplace=True)
+            bydt_df.set_index(midx_fields, inplace=True, drop=True)
 
             totals_key = '_'.join(bydt_df.index.names)
 
@@ -380,12 +381,12 @@ def make_bydatetime(stops_df, infield, outfield,
             tot_df['bin_of_day'] = tot_df['datetime'].map(lambda x: bin_of_day(x, bin_size_minutes))
             tot_df['bin_of_week'] = tot_df['datetime'].map(lambda x: bin_of_week(x, bin_size_minutes))
 
-            col_order = [cat, 'datetime', 'arrivals', 'departures', 'occupancy', 'day_of_week',
+            col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week',
                          'bin_of_day', 'bin_of_week']
 
             tot_df = tot_df[col_order]
 
-            bydt_dfs[totals_key] = tot_df
+            bydt_dfs[totals_key] = tot_df.copy()
 
     return bydt_dfs
 

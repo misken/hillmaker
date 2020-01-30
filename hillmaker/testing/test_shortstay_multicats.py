@@ -19,7 +19,7 @@ end = '3/30/1996 23:45'
 # Optional inputs
 #tot_fld_name = 'SSU'
 bin_mins = 60
-#totals=2
+totals=2
 nonstationary_stats = True
 stationary_stats = True
 
@@ -32,6 +32,7 @@ hills = hm.make_hills(scenario, stops_df, in_fld_name, out_fld_name,
                       cat_to_exclude=None,
                       nonstationary_stats=nonstationary_stats,
                       stationary_stats=stationary_stats,
+                      totals=totals,
                       export_bydatetime_csv=True,
                       export_summaries_csv=True,
                       export_path='./output', verbose=1)
