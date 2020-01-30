@@ -20,20 +20,25 @@ arrival, and departure statistics by time bin of day and day of week.
 import pandas as pd
 import numpy as np
 
-def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
+
+def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
+              nonstationary_stats=True, stationary_stats=True, totals=1, verbose=0):
     """
     Compute summary statistics. Calls specific procedures for stationary and nonstationary stats.
 
     Parameters
     ----------
     bydt_dfs : Dict of DataFrames
-       Occupancy, arrivals, departures by category by datetime bin. Usually computed by make_bydatetime.
+        Occupancy, arrivals, departures by category by datetime bin. Usually computed by make_bydatetime.
 
     nonstationary_stats : bool, optional
-       If true, datetime bin stats are computed. Else, they aren't computed. Default is True
+        If true, datetime bin stats are computed. Else, they aren't computed. Default is True
 
     stationary_stats : bool, optional
-       If true, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+        If true, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+
+    verbose : int, optional
+        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
 
 
     Returns
@@ -64,10 +69,9 @@ def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
 
         for bydt in bydt_dfs:
 
-
             bydt_df = bydt_dfs[bydt]
-            catfieldplus = bydt_df.index.names
-            catfield = [x for x in catfieldplus if x is not 'datetime']
+            midx_fields = bydt_df.index.names
+            catfield = [x for x in midx_fields if x is not 'datetime']
 
             summary_key_list = catfield.copy()
             summary_key_list.append('dow')
@@ -75,7 +79,7 @@ def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
 
             summary_key = '_'.join(summary_key_list)
 
-            summaries = summarize_nonstationary(bydt_df, catfield)
+            summaries = summarize_nonstationary(bydt_df, catfield, percentiles, verbose)
 
             summary_nonstationary_dfs[summary_key] = summaries
 
@@ -86,22 +90,22 @@ def summarize(bydt_dfs, nonstationary_stats=True, stationary_stats=True):
 
             bydt_df = bydt_dfs[bydt]
 
-            catfieldplus = bydt_df.index.names
-            catfield = [x for x in catfieldplus if x is not 'datetime']
+            midx_fields = bydt_df.index.names
+            catfield = [x for x in midx_fields if x is not 'datetime']
 
             summary_key = '_'.join(catfield)
 
-            summaries = summarize_stationary(bydt_df, catfield)
+            summaries = summarize_stationary(bydt_df, catfield, percentiles, verbose)
 
             summary_stationary_dfs[summary_key] = summaries
 
-    summaries_all = {}
-    summaries_all['nonstationary'] = summary_nonstationary_dfs
-    summaries_all['stationary'] = summary_stationary_dfs
+    summaries_all = {'nonstationary': summary_nonstationary_dfs, 'stationary': summary_stationary_dfs}
 
     return summaries_all
 
-def summarize_nonstationary(bydt_df, catfield=None):
+
+def summarize_nonstationary(bydt_df, catfield=None,
+                            percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), verbose=0):
     """
     Compute summary statistics by category by time bin of day by day of week
 
@@ -113,6 +117,8 @@ def summarize_nonstationary(bydt_df, catfield=None):
     catfield : string or List of strings, optional
         Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
 
+    verbose : int, optional
+        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
 
     Returns
     -------
@@ -138,26 +144,29 @@ def summarize_nonstationary(bydt_df, catfield=None):
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
-        if catfield == []:
+        if not catfield:
             bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
         else:
             bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'bin_of_day'])
     else:
         bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
 
-    print(bydt_df.head())
+    if verbose > 1:
+        print(bydt_df.head())
 
-    occ_stats = bydt_dfgrp['occupancy'].apply(summary_stats)
-    arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats)
-    dep_stats = bydt_dfgrp['departures'].apply(summary_stats)
+    occ_stats = bydt_dfgrp['occupancy'].apply(summary_stats, percentiles)
+    arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats, percentiles)
+    dep_stats = bydt_dfgrp['departures'].apply(summary_stats, percentiles)
 
-    print(occ_stats.head())
+    if verbose > 1:
+        print(occ_stats.head())
 
     occ_stats_summary = occ_stats.unstack()
     arr_stats_summary = arr_stats.unstack()
     dep_stats_summary = dep_stats.unstack()
 
-    print(occ_stats_summary.head())
+    if verbose > 1:
+        print(occ_stats_summary.head())
 
     summaries = {}
     summaries['occupancy'] = occ_stats_summary
@@ -167,7 +176,8 @@ def summarize_nonstationary(bydt_df, catfield=None):
     return summaries
 
 
-def summarize_stationary(bydt_df, catfield=None):
+def summarize_stationary(bydt_df, catfield=None,
+                         percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), verbose=0):
     """
     Compute summary statistics by category (no time of day or day of week)
 
@@ -179,6 +189,9 @@ def summarize_stationary(bydt_df, catfield=None):
     catfield : string or List of strings, optional
        Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
 
+    verbose : int, optional
+        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
+
     Returns
     -------
     tuple of DataFrames
@@ -200,50 +213,45 @@ def summarize_stationary(bydt_df, catfield=None):
     --------
     """
 
-
     if catfield is not None:
         if isinstance(catfield, str):
             catfield = [catfield]
-        if catfield == []:
+        if not catfield:
             fake_key = np.full(len(bydt_df.index), 1)
             bydt_dfgrp = bydt_df.groupby(fake_key)
-
         else:
             bydt_dfgrp = bydt_df.groupby([*catfield])
     else:
         fake_key = np.full(len(bydt_df.index), 1)
         bydt_dfgrp = bydt_df.groupby(fake_key)
 
-
-    occ_stats = bydt_dfgrp['occupancy'].apply(summary_stats)
-    arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats)
-    dep_stats = bydt_dfgrp['departures'].apply(summary_stats)
+    occ_stats = bydt_dfgrp['occupancy'].apply(summary_stats, percentiles)
+    arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats, percentiles)
+    dep_stats = bydt_dfgrp['departures'].apply(summary_stats, percentiles)
 
     occ_stats_summary = occ_stats.unstack()
     arr_stats_summary = arr_stats.unstack()
     dep_stats_summary = dep_stats.unstack()
 
-    summaries = {}
-    summaries['occupancy'] = occ_stats_summary
-    summaries['arrivals'] = arr_stats_summary
-    summaries['departures'] = dep_stats_summary
+    summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
+                 'departures': dep_stats_summary}
 
     return summaries
 
 
-def summary_stats(group, stub=''):
-        return {stub+'count': group.count(), stub+'mean': group.mean(),
+def summary_stats(group, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), stub=''):
+    stats = {stub+'count': group.count(), stub+'mean': group.mean(),
                 stub+'min': group.min(),
                 stub+'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
                 stub+'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
-                stub+'skew': group.skew(), 'kurt': group.kurt(),
-                stub+'p50': group.quantile(0.5), stub+'p55': group.quantile(0.55),
-                stub+'p60': group.quantile(0.6), stub+'p65': group.quantile(0.65),
-                stub+'p70': group.quantile(0.7), stub+'p75': group.quantile(0.75),
-                stub+'p80': group.quantile(0.8), stub+'p85': group.quantile(0.85),
-                stub+'p90': group.quantile(0.9), stub+'p95': group.quantile(0.95),
-                stub+'p975': group.quantile(0.975),
-                stub+'p99': group.quantile(0.99)}
+                stub+'skew': group.skew(), 'kurt': group.kurt()}
+
+    for p in percentiles:
+        pctile_name = '{}p{:d}'.format(stub, int(100 * p))
+        stats[pctile_name] = group.quantile(p)
+
+    return stats
+
 
 if __name__ == '__main__':
 

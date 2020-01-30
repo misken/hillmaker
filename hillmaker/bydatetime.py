@@ -36,6 +36,7 @@ def make_bydatetime(stops_df, infield, outfield,
                     bin_size_minutes=60,
                     cat_to_exclude=None,
                     totals=1,
+                    occ_weight_field=None,
                     edge_bins=1,
                     verbose=0):
     """
@@ -75,6 +76,9 @@ def make_bydatetime(stops_df, infield, outfield,
     totals: int, default 1
         0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
         catfields (only relevant for > 1 category field)
+
+    occ_weight_field : string, optional (default=1.0)
+        Column name corresponding to the weights to use for occupancy incrementing.
 
     verbose : int, default 0
         The verbosity level. The default, zero, means silent mode.
@@ -120,9 +124,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
     if verbose:
         print("min of intime: {}".format(min_intime))
-        print("max of outtime: {}".format(max_outtime))
         print("max of intime: {}".format(max_intime))
         print("min of outtime: {}".format(min_outtime))
+        print("max of outtime: {}".format(max_outtime))
 
     # TODO - Add warnings here related to min and maxes out of whack with analysis range
 
@@ -133,21 +137,21 @@ def make_bydatetime(stops_df, infield, outfield,
     # Handle cases of no catfield, a single fieldname, or a list of fields
     # If no category, add a temporary dummy column populated with a totals str
 
-    CONST_FAKE_CATFIELDNAME = '__FakeCatForTotals__'
+    CONST_FAKE_CATFIELD_NAME = '__FakeCatForTotals__'
     total_str = 'total'
 
-    bTotalsDone = False
+    do_totals = True
     if catfield is not None:
         # If it's a string, it's a single cat field --> convert to list
         if isinstance(catfield, str):
             catfield = [catfield]
     else:
-        totlist = [total_str]*len(stops_df)
-        totseries = Series(totlist,dtype=str,name=[CONST_FAKE_CATFIELDNAME])
-        totfield_df = DataFrame({CONST_FAKE_CATFIELDNAME: totseries})
-        stops_df = pd.concat([stops_df, totfield_df],axis=1)
-        catfield = [CONST_FAKE_CATFIELDNAME]
-        bTotalsDone = True
+        totlist = [total_str] * len(stops_df)
+        totseries = Series(totlist, dtype=str, name=[CONST_FAKE_CATFIELD_NAME])
+        totfield_df = DataFrame({CONST_FAKE_CATFIELD_NAME: totseries})
+        stops_df = pd.concat([stops_df, totfield_df], axis=1)
+        catfield = [CONST_FAKE_CATFIELD_NAME]
+        do_totals = False
 
     # Get the unique category values and exclude any specified to exclude
     categories = []
@@ -189,8 +193,6 @@ def make_bydatetime(stops_df, infield, outfield,
 
     bydt_data_df = DataFrame(bydt_data, columns=['datetime', 'arrivals', 'departures', 'occupancy'])
 
-
-
     for cat_df in all_cat_df:
         bydt_df_cat = pd.concat([cat_df, bydt_data_df],axis=1)
         bydt_df = pd.concat([bydt_df, bydt_df_cat])
@@ -214,17 +216,29 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Main occupancy, arrivals, departures loop. Process each record in `stops_df`.
 
+    # totlist = [total_str] * len(stops_df)
+
+    CONST_FAKE_OCCWEIGHT_FIELDNAME = 'FakeOccWeightField'
+    if occ_weight_field is None:
+        occ_weight_vec = np.ones(len(stops_df.index))
+        #occ_weight_series = Series(occ_weight_vec, name=[CONST_FAKE_OCCWEIGHT_FIELDNAME])
+        occ_weight_df = DataFrame({CONST_FAKE_OCCWEIGHT_FIELDNAME: occ_weight_vec})
+        stops_df = pd.concat([stops_df, occ_weight_df], axis=1)
+        occ_weight_field = CONST_FAKE_OCCWEIGHT_FIELDNAME
+
     num_processed = 0
     num_inner = 0
     rectype_counts = {}
 
-    for row in stops_df.iterrows():
+    for row in stops_df.itertuples():
 
-        intime_raw = row[1][infield]
-        outtime_raw = row[1][outfield]
+        intime_raw = getattr(row, infield)
+        outtime_raw = getattr(row, outfield)
 
-        catseries = row[1][catfield]
-        cat = tuple(catseries)
+        catlist = [getattr(row, cf) for cf in catfield]
+        cat = tuple(catlist)
+
+        occ_weight = getattr(row, occ_weight_field)
 
         intime = to_the_second(intime_raw)
         outtime = to_the_second(outtime_raw)
@@ -252,41 +266,41 @@ def make_bydatetime(stops_df, infield, outfield,
                 num_inner += 1
                 rectype_counts['inner'] = rectype_counts.get('inner', 0) + 1
 
-                bydt_df.at[(*cat, indtbin), 'occupancy'] += inout_occ_frac[0]
+                bydt_df.at[(*cat, indtbin), 'occupancy'] += inout_occ_frac[0] * occ_weight
                 bydt_df.at[(*cat, indtbin), 'arrivals'] += 1.0
                 bydt_df.at[(*cat, outdtbin), 'departures'] += 1.0
 
                 current_bin = 2
                 while current_bin < nbins:
                     dtbin += timedelta(minutes=bin_size_minutes)
-                    bydt_df.at[(*cat, dtbin), 'occupancy'] += 1.0
+                    bydt_df.at[(*cat, dtbin), 'occupancy'] += occ_weight
                     current_bin += 1
 
                 if nbins > 1:
-                    bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
+                    bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1] * occ_weight
     
             elif rectype == 'right':
                 rectype_counts['right'] = rectype_counts.get('right', 0) + 1
                 # departure is outside analysis window
-                bydt_df.at[(*cat, indtbin), 'occupancy'] += inout_occ_frac[0]
+                bydt_df.at[(*cat, indtbin), 'occupancy'] += inout_occ_frac[0] * occ_weight
                 bydt_df.at[(*cat, indtbin), 'arrivals'] += 1.0
     
                 if isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = indtbin + timedelta(minutes=bin_size_minutes)
                     while current_bin <= end_analysis_dt:
-                        bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(*cat, current_bin), 'occupancy'] += occ_weight
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'left':
                 rectype_counts['left'] = rectype_counts.get('left', 0) + 1
                 # arrival is outside analysis window
-                bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1]
+                bydt_df.at[(*cat, outdtbin), 'occupancy'] += inout_occ_frac[1] * occ_weight
                 bydt_df.at[(*cat, outdtbin), 'departures'] += 1.0
     
                 if isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin < outdtbin:
-                        bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(*cat, current_bin), 'occupancy'] += occ_weight
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             elif rectype == 'outer':
@@ -296,31 +310,30 @@ def make_bydatetime(stops_df, infield, outfield,
                 if isgt2bins(indtbin, outdtbin, bin_size_minutes):
                     current_bin = start_analysis_dt
                     while current_bin <= end_analysis_dt:
-                        bydt_df.at[(*cat, current_bin), 'occupancy'] += 1.0
+                        bydt_df.at[(*cat, current_bin), 'occupancy'] += occ_weight
                         current_bin += timedelta(minutes=bin_size_minutes)
     
             else:
                 pass
     
             num_processed += 1
-            if verbose == 2:
-                print(num_processed)
+
+    if verbose >= 1:
+        print('{} stop records processed.'.format(num_processed))
 
     # If there was no category field, drop the fake field from the index and dataframe
-    if catfield[0] == CONST_FAKE_CATFIELDNAME:
+    if catfield[0] == CONST_FAKE_CATFIELD_NAME:
         bydt_df.set_index('datetime', inplace=True, drop=True)
         bydt_df = bydt_df[['arrivals', 'departures', 'occupancy',
-                           'day_of_week', 'bin_of_day', 'bin_of_week' ]]
+                           'day_of_week', 'bin_of_day', 'bin_of_week']]
 
     # Store main results bydatetime DataFrame
-
     bydt_dfs = {}
     totals_key = '_'.join(bydt_df.index.names)
     bydt_dfs[totals_key] = bydt_df
 
     # Compute totals
-
-    if totals >= 1 and not bTotalsDone:
+    if totals >= 1 and do_totals:
 
         bydt_group = bydt_df.groupby(['datetime'])
         totals_key = 'datetime'
@@ -348,8 +361,7 @@ def make_bydatetime(stops_df, infield, outfield,
     if totals == 2 and len(catfield) > 1:
 
         for cat in catfield:
-            midx_fields = [cat]
-            midx_fields.append('datetime')
+            midx_fields = [cat, 'datetime']
             bydt_df.set_index(midx_fields, inplace=True, drop=False)
 
             totals_key = '_'.join(bydt_df.index.names)
@@ -377,6 +389,6 @@ def make_bydatetime(stops_df, infield, outfield,
 
     return bydt_dfs
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     pass

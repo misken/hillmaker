@@ -24,13 +24,14 @@ from hillmaker.hmlib import Hilltimer
 
 def make_hills(scenario_name, stops_df, infield, outfield,
                start_analysis, end_analysis,
-               catfield='',
+               catfield=None,
                bin_size_minutes=60,
                cat_to_exclude=None,
+               occ_weight_field=None,
                totals=1,
                nonstationary_stats=True,
                stationary_stats=True,
-               export_bydatetimes_csv=True,
+               export_bydatetime_csv=True,
                export_summaries_csv=True,
                export_path='.',
                edge_bins=1,
@@ -45,6 +46,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
 
     Parameters
     ----------
+
     scenario_name : string
         Used in output filenames
     stops_df : DataFrame
@@ -64,6 +66,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Number of minutes in each time bin of the day, default is 60
     cat_to_exclude : list, optional
         Categories to ignore, default is None
+    occ_weight_field : string, optional
+        Column name corresponding to the weights to use for occupancy incrementing.
     edge_bins: int, default 1
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     totals: int, default 1
@@ -73,7 +77,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
        If true, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
        If true, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    export_bydatetimes_csv : bool, optional
+    export_bydatetime_csv : bool, optional
        If true, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
        If true, summary DataFrames are exported to csv files. Default is True.
@@ -103,18 +107,17 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     with Hilltimer() as t:
         starttime = t.start
         bydt_dfs = make_bydatetime(stops_df,
-                                              infield,
-                                              outfield,
-                                              start_analysis,
-                                              end_analysis,
-                                              catfield,
-                                              bin_size_minutes,
-                                              cat_to_exclude=cat_to_exclude,
-                                              edge_bins=edge_bins,
-                                              totals=totals,
-                                              verbose=verbose)
-
-
+                                   infield,
+                                   outfield,
+                                   start_analysis,
+                                   end_analysis,
+                                   catfield,
+                                   bin_size_minutes,
+                                   cat_to_exclude=cat_to_exclude,
+                                   occ_weight_field=occ_weight_field,
+                                   edge_bins=edge_bins,
+                                   totals=totals,
+                                   verbose=verbose)
 
     if verbose:
         print("Datetime DataFrame created (seconds): {:.4f}".format(t.interval))
@@ -125,15 +128,17 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         with Hilltimer() as t:
 
             summary_dfs = summarize(bydt_dfs,
-                                              nonstationary_stats=nonstationary_stats,
-                                              stationary_stats=stationary_stats)
+                                    nonstationary_stats=nonstationary_stats,
+                                    stationary_stats=stationary_stats,
+                                    percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
+                                    totals=totals,
+                                    verbose=verbose)
 
         if verbose:
             print("Summaries by datetime created (seconds): {:.4f}".format(t.interval))
 
-
     # Export results to csv if requested
-    if export_bydatetimes_csv:
+    if export_bydatetime_csv:
         with Hilltimer() as t:
 
             export_bydatetimes(bydt_dfs, scenario_name, export_path)
@@ -155,9 +160,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
 
     # All done
 
-    hills = {}
-    hills['bydatetime'] = bydt_dfs
-    hills['summaries'] = summary_dfs
+    hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
 
     endtime = t.end
 
@@ -165,7 +168,6 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         print("Total time (seconds): {:.4f}".format(endtime - starttime))
 
     return hills
-
 
 
 def export_bydatetimes(bydt_dfs, scenario_name, export_path):
@@ -189,7 +191,6 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
         'nonstationary' or 'stationary'
 
     """
-
 
     for d in bydt_dfs:
         file_bydt_csv = scenario_name + '_bydatetime_' + d + '.csv'
@@ -246,9 +247,9 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
                     'p80', 'p85', 'p90', 'p95', 'p975', 'p99']
 
             if temporal_key == 'nonstationary' or catfield[0] is not None:
-                df.to_csv(csv_wpath, index=True, float_format='%.6f', columns=summary_cols)
+                df.to_csv(csv_wpath, index=True, float_format='%.6f')
             else:
-                df.to_csv(csv_wpath, index=False, float_format='%.6f', columns=summary_cols)
+                df.to_csv(csv_wpath, index=False, float_format='%.6f')
 
 
 if __name__ == '__main__':
