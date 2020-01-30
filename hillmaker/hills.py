@@ -65,6 +65,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Default is None
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
     cat_to_exclude : list, optional
         Categories to ignore, default is None
     occ_weight_field : string, optional
@@ -197,11 +199,10 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
         file_bydt_csv = scenario_name + '_bydatetime_' + d + '.csv'
         csv_wpath = os.path.normpath(os.path.join(export_path, file_bydt_csv))
 
-        catfield = bydt_dfs[d].index.names
+        #catfield = bydt_dfs[d].index.names
         dt_cols = ['arrivals', 'departures', 'occupancy',
-                       'day_of_week', 'bin_of_day', 'bin_of_week']
+                   'day_of_week', 'dow_name', 'bin_of_day', 'bin_of_week']
         bydt_dfs[d].to_csv(csv_wpath, index=True, float_format='%.6f', columns=dt_cols)
-
 
 
 def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
@@ -212,7 +213,7 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
 
     Parameters
     ----------
-    summaries: dict of DataFrames
+    summary_all_dfs: dict of DataFrames
         Output from make_hills to be exported
 
     scenario_name: string
@@ -234,18 +235,13 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
             df = dfdict[metric]
             file_summary_csv = scenario_name + '_' + metric
             if len(d) > 0:
-                file_summary_csv = file_summary_csv +'_' + d + '.csv'
+                file_summary_csv = file_summary_csv + '_' + d + '.csv'
             else:
                 file_summary_csv = file_summary_csv + '.csv'
 
             csv_wpath = os.path.normpath(os.path.join(export_path, file_summary_csv))
 
             catfield = df.index.names
-#            summary_cols = [*catfield, 'count', 'mean', 'stdev', 'sem', 'cv',
-            summary_cols = ['count', 'mean', 'stdev', 'sem', 'cv',
-                    'var', 'skew', 'kurt',
-                    'p50', 'p55', 'p60', 'p65', 'p70', 'p75',
-                    'p80', 'p85', 'p90', 'p95', 'p975', 'p99']
 
             if temporal_key == 'nonstationary' or catfield[0] is not None:
                 df.to_csv(csv_wpath, index=True, float_format='%.6f')

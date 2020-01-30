@@ -1,9 +1,10 @@
 """
 The :mod:`hillmaker.summarize` module includes functions for computing occupancy,
-arrival, and departure statistics by time bin of day and day of week.
+arrival, and departure statistics by time bin of day, day of week and one
+or more category fields.
 """
 
-# Copyright 2015 Mark Isken
+# Copyright 2015, 2020 Mark Isken
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +31,9 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
     ----------
     bydt_dfs : Dict of DataFrames
         Occupancy, arrivals, departures by category by datetime bin. Usually computed by make_bydatetime.
+
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
 
     nonstationary_stats : bool, optional
         If true, datetime bin stats are computed. Else, they aren't computed. Default is True
@@ -69,7 +73,6 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
 
         for bydt, bydt_df in bydt_dfs.items():
 
-            #bydt_df = bydt_dfs[bydt]
             midx_fields = bydt_df.index.names
             catfield = [x for x in midx_fields if x is not 'datetime']
 
@@ -78,25 +81,11 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
             summary_key_list.append('binofday')
 
             summary_key = '_'.join(summary_key_list)
-
             summaries = summarize_nonstationary(bydt_df, catfield, percentiles, verbose)
-
             summary_nonstationary_dfs[summary_key] = summaries
 
-            # if totals == 2 and len(catfield) > 1:
-            #     for cat in catfield:
-            #         summary_key_list = cat
-            #         summary_key_list.append('dow')
-            #         summary_key_list.append('binofday')
-            #
-            #         summary_key = '_'.join(summary_key_list)
-            #
-            #         summaries = summarize_nonstationary(bydt_df, cat, percentiles, verbose)
-            #
-            #         summary_nonstationary_dfs[summary_key] = summaries
-
-
     summary_stationary_dfs = {}
+
     if stationary_stats:
 
         for bydt in bydt_dfs:
@@ -124,11 +113,15 @@ def summarize_nonstationary(bydt_df, catfield=None,
 
     Parameters
     ----------
+
     bydt_df : DataFrame
        Occupancy, arrivals, departures by category (optional) and by datetime bin
 
     catfield : string or List of strings, optional
         Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
+
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
 
     verbose : int, optional
         The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
@@ -158,11 +151,11 @@ def summarize_nonstationary(bydt_df, catfield=None,
         if isinstance(catfield, str):
             catfield = [catfield]
         if not catfield:
-            bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
+            bydt_dfgrp = bydt_df.groupby(['day_of_week', 'dow_name', 'bin_of_day'])
         else:
-            bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'bin_of_day'])
+            bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'dow_name', 'bin_of_day'])
     else:
-        bydt_dfgrp = bydt_df.groupby(['day_of_week', 'bin_of_day'])
+        bydt_dfgrp = bydt_df.groupby(['day_of_week', 'dow_name', 'bin_of_day'])
 
     if verbose > 1:
         print(bydt_df.head())
@@ -181,10 +174,8 @@ def summarize_nonstationary(bydt_df, catfield=None,
     if verbose > 1:
         print(occ_stats_summary.head())
 
-    summaries = {}
-    summaries['occupancy'] = occ_stats_summary
-    summaries['arrivals'] = arr_stats_summary
-    summaries['departures'] = dep_stats_summary
+    summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
+                 'departures': dep_stats_summary}
 
     return summaries
 
@@ -200,10 +191,15 @@ def summarize_stationary(bydt_df, catfield=None,
        Occupancy, arrivals, departures by category(ies) by datetime bin
 
     catfield : string or List of strings, optional
-       Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
+       Column name(s) corresponding to the categories. If none is specified,
+       then only overall occupancy is analyzed.
+
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
 
     verbose : int, optional
-        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
+        The verbosity level. The default, zero, means silent mode.
+        Higher numbers mean more output messages.
 
     Returns
     -------

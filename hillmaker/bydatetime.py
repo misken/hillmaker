@@ -131,13 +131,11 @@ def make_bydatetime(stops_df, infield, outfield,
     # TODO - Add warnings here related to min and maxes out of whack with analysis range
 
     analysis_range = [start_analysis_dt, end_analysis_dt]
-
     rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
 
     # Handle cases of no catfield, a single fieldname, or a list of fields
     # If no category, add a temporary dummy column populated with a totals str
-
-    CONST_FAKE_CATFIELD_NAME = '__FakeCatForTotals__'
+    CONST_FAKE_CATFIELD_NAME = 'FakeCatForTotals'
     total_str = 'total'
 
     do_totals = True
@@ -168,23 +166,23 @@ def make_bydatetime(stops_df, infield, outfield,
     # Now we'll build up the seeded by date table a category at a time.
     # Along the way we'll initialize all the measures to 0.
 
-    # The following doesn't feel very Pythonic, but just trying to get it working for now
+    # The following doesn't feel very Pythonic, but just trying to get it working for now.
+    # After the following loops, all_cat_df will be a list of dataframes of just the category
+    # field columns
     len_bydt = len(rng_bydt)
     all_cat_df = []
 
-    # After the following loops, all_cat_df will be a list of dataframes of just the category
-    # field columns
     for p in itertools.product(*categories):
-            i=0
-            cat_df = DataFrame()
-            j=0
-            for c in [*p]:
-                bydt_catdata = {catfield[j]: [c] * len_bydt}
-                cat_df_cat = DataFrame(bydt_catdata, columns=[catfield[j]])
-                j+=1
-                cat_df = pd.concat([cat_df, cat_df_cat],axis=1)
-            all_cat_df.append(cat_df)
-            i+=1
+        i = 0
+        cat_df = DataFrame()
+        j = 0
+        for c in [*p]:
+            bydt_catdata = {catfield[j]: [c] * len_bydt}
+            cat_df_cat = DataFrame(bydt_catdata, columns=[catfield[j]])
+            j += 1
+            cat_df = pd.concat([cat_df, cat_df_cat], axis=1)
+        all_cat_df.append(cat_df)
+        i += 1
 
     # Create the datetime and data columns
     bydt_df = DataFrame()
@@ -199,6 +197,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Compute various day and time bin related fields
     bydt_df['day_of_week'] = bydt_df['datetime'].map(lambda x: x.weekday())
+    bydt_df['dow_name'] = bydt_df['datetime'].map(lambda x: x.day_name())
     bydt_df['bin_of_day'] = bydt_df['datetime'].map(lambda x: bin_of_day(x, bin_size_minutes))
     bydt_df['bin_of_week'] = bydt_df['datetime'].map(lambda x: bin_of_week(x, bin_size_minutes))
 
@@ -207,24 +206,22 @@ def make_bydatetime(stops_df, infield, outfield,
     # regular columns as well since it's hard
     # to do a column transformation using a specific level of a multiindex.
     # http://stackoverflow.com/questions/13703720/converting-between-datetime-timestamp-and-datetime64?rq=1
-
     midx_fields = catfield.copy()
     midx_fields.append('datetime')
     bydt_df.set_index(midx_fields, inplace=True, drop=True)
-
     bydt_df.sort_index(inplace=True)
 
-    # Main occupancy, arrivals, departures loop. Process each record in `stops_df`.
-
-    # totlist = [total_str] * len(stops_df)
-
+    # If no occ weight field specified, create fake one containing 1.0 as values.
+    # Avoids having to check during dataframe iteration whether or not to use
+    # default occupancy weight.
     CONST_FAKE_OCCWEIGHT_FIELDNAME = 'FakeOccWeightField'
     if occ_weight_field is None:
         occ_weight_vec = np.ones(len(stops_df.index))
-        #occ_weight_series = Series(occ_weight_vec, name=[CONST_FAKE_OCCWEIGHT_FIELDNAME])
         occ_weight_df = DataFrame({CONST_FAKE_OCCWEIGHT_FIELDNAME: occ_weight_vec})
         stops_df = pd.concat([stops_df, occ_weight_df], axis=1)
         occ_weight_field = CONST_FAKE_OCCWEIGHT_FIELDNAME
+
+    # Main occupancy, arrivals, departures loop. Process each record in `stops_df`.
 
     num_processed = 0
     num_inner = 0
@@ -325,7 +322,7 @@ def make_bydatetime(stops_df, infield, outfield,
     if catfield[0] == CONST_FAKE_CATFIELD_NAME:
         bydt_df.set_index('datetime', inplace=True, drop=True)
         bydt_df = bydt_df[['arrivals', 'departures', 'occupancy',
-                           'day_of_week', 'bin_of_day', 'bin_of_week']]
+                           'day_of_week', 'dow_name', 'bin_of_day', 'bin_of_week']]
 
     # Store main results bydatetime DataFrame
     bydt_dfs = {}
@@ -346,13 +343,13 @@ def make_bydatetime(stops_df, infield, outfield,
 
         tot_df = pd.concat(tot_data, axis=1)
         tot_df['day_of_week'] = tot_df.index.map(lambda x: x.weekday())
+        tot_df['dow_name'] = tot_df.index.map(lambda x: x.day_name())
         tot_df['bin_of_day'] = tot_df.index.map(lambda x: bin_of_day(x, bin_size_minutes))
         tot_df['bin_of_week'] = tot_df.index.map(lambda x: bin_of_week(x, bin_size_minutes))
 
-        #tot_df['datetime'] = tot_df.index
-
-        col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week',
+        col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week', 'dow_name',
                      'bin_of_day', 'bin_of_week']
+
         tot_df = tot_df[col_order]
 
         bydt_dfs[totals_key] = tot_df.copy()
@@ -378,10 +375,11 @@ def make_bydatetime(stops_df, infield, outfield,
             tot_df['datetime'] = tot_df.index.get_level_values('datetime')
             tot_df[cat] = tot_df.index.get_level_values(cat)
             tot_df['day_of_week'] = tot_df['datetime'].map(lambda x: x.weekday())
+            tot_df['dow_name'] = tot_df['datetime'].map(lambda x: x.day_name())
             tot_df['bin_of_day'] = tot_df['datetime'].map(lambda x: bin_of_day(x, bin_size_minutes))
             tot_df['bin_of_week'] = tot_df['datetime'].map(lambda x: bin_of_week(x, bin_size_minutes))
 
-            col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week',
+            col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week', 'dow_name', 
                          'bin_of_day', 'bin_of_week']
 
             tot_df = tot_df[col_order]
