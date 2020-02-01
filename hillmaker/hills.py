@@ -18,8 +18,8 @@ import pandas as pd
 import os
 
 from hillmaker.bydatetime import make_bydatetime
-from  hillmaker.summarize import summarize
-from hillmaker.hmlib import Hilltimer
+from hillmaker.summarize import summarize
+from hillmaker.hmlib import HillTimer
 
 
 def make_hills(scenario_name, stops_df, infield, outfield,
@@ -107,7 +107,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     """
 
     # Create the bydatetime DataFrame
-    with Hilltimer() as t:
+    with HillTimer() as t:
         starttime = t.start
         bydt_dfs = make_bydatetime(stops_df,
                                    infield,
@@ -128,7 +128,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     # Create the summary stats DataFrames
     summary_dfs = {}
     if nonstationary_stats or stationary_stats:
-        with Hilltimer() as t:
+        with HillTimer() as t:
 
             summary_dfs = summarize(bydt_dfs,
                                     nonstationary_stats=nonstationary_stats,
@@ -142,7 +142,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
 
     # Export results to csv if requested
     if export_bydatetime_csv:
-        with Hilltimer() as t:
+        with HillTimer() as t:
 
             export_bydatetimes(bydt_dfs, scenario_name, export_path)
 
@@ -150,7 +150,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
             print("By datetime exported to csv (seconds): {:.4f}".format(t.interval))
 
     if export_summaries_csv:
-        with Hilltimer() as t:
+        with HillTimer() as t:
 
             if nonstationary_stats:
                 export_summaries(summary_dfs, scenario_name, export_path, 'nonstationary')

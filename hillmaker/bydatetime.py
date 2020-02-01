@@ -17,6 +17,10 @@ arrival, and departure statistics by time bin of day and date.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+from timeit import default_timer as timer
+
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from pandas import Series
@@ -24,9 +28,6 @@ from pandas import Timestamp
 from datetime import datetime
 from datetime import timedelta
 from pandas.tseries.offsets import Minute
-import itertools
-from timeit import default_timer as timer
-
 
 from hillmaker.hmlib import *
 
@@ -113,8 +114,8 @@ def make_bydatetime(stops_df, infield, outfield,
     --------
     """
 
-    start_analysis_dt = pd.Timestamp(start_analysis)
-    end_analysis_dt = pd.Timestamp(end_analysis)
+    start_analysis_dt = Timestamp(start_analysis)
+    end_analysis_dt = Timestamp(end_analysis)
 
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
@@ -132,6 +133,8 @@ def make_bydatetime(stops_df, infield, outfield,
 
     analysis_range = [start_analysis_dt, end_analysis_dt]
     rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
+
+    bin_freq_str = '{}T'.format(int(bin_size_minutes))
 
     # Handle cases of no catfield, a single fieldname, or a list of fields
     # If no category, add a temporary dummy column populated with a totals str
@@ -237,8 +240,11 @@ def make_bydatetime(stops_df, infield, outfield,
 
         occ_weight = getattr(row, occ_weight_field)
 
-        intime = to_the_second(intime_raw)
-        outtime = to_the_second(outtime_raw)
+        # For now, finest allowable precision is seconds. Avoids dealing
+        # with subsecond components of timestamps.
+        #intime = to_the_second(intime_raw)
+        intime = intime_raw.floor('S')
+        outtime = outtime_raw.floor('S')
         good_rec = True
         rectype = stoprec_analysis_rltnshp([intime, outtime], analysis_range)
     
@@ -247,8 +253,9 @@ def make_bydatetime(stops_df, infield, outfield,
             rectype_counts['backwards'] = rectype_counts.get('backwards', 0) + 1
     
         if good_rec and rectype != 'none':
-            indtbin = dt_floor(intime, bin_size_minutes)
-            outdtbin = dt_floor(outtime, bin_size_minutes)
+
+            indtbin = intime.floor(bin_freq_str)
+            outdtbin = outtime.floor(bin_freq_str)
 
             inout_occ_frac = occ_frac([intime, outtime], bin_size_minutes, edge_bins)
 
