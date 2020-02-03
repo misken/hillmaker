@@ -242,9 +242,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
         # For now, finest allowable precision is seconds. Avoids dealing
         # with subsecond components of timestamps.
-        #intime = to_the_second(intime_raw)
         intime = intime_raw.floor('S')
         outtime = outtime_raw.floor('S')
+
         good_rec = True
         rectype = stoprec_analysis_rltnshp([intime, outtime], analysis_range)
     
