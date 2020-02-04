@@ -37,5 +37,5 @@ setup(name='hillmaker',
         'License :: OSI Approved',
         'Operating System :: OS Independent',
         'Topic :: Scientific/Engineering :: Information Analysis',
-        ]
-     )
+        ], install_requires=['pandas', 'numpy']
+      )

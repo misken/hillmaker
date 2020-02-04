@@ -5,7 +5,6 @@ hillmaker/testing/output/
 hillmaker/examples/*.csv
 docs/hm_*.rst
 docs/*.hmscn
-docs/devnotes/
 
 
 
