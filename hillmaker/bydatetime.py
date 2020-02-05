@@ -102,7 +102,7 @@ def make_bydatetime(stops_df, infield, outfield,
     ----
 
 
-     Notes
+    Notes
     -----
 
 
@@ -113,7 +113,6 @@ def make_bydatetime(stops_df, infield, outfield,
     See Also
     --------
     """
-
     start_analysis_dt = Timestamp(start_analysis)
     end_analysis_dt = Timestamp(end_analysis)
 
@@ -148,7 +147,7 @@ def make_bydatetime(stops_df, infield, outfield,
             catfield = [catfield]
     else:
         totlist = [total_str] * len(stops_df)
-        totseries = Series(totlist, dtype=str, name=[CONST_FAKE_CATFIELD_NAME])
+        totseries = Series(totlist, dtype=str, name=CONST_FAKE_CATFIELD_NAME)
         totfield_df = DataFrame({CONST_FAKE_CATFIELD_NAME: totseries})
         stops_df = pd.concat([stops_df, totfield_df], axis=1)
         catfield = [CONST_FAKE_CATFIELD_NAME]
@@ -190,7 +189,7 @@ def make_bydatetime(stops_df, infield, outfield,
     # Create the datetime and data columns
     bydt_df = DataFrame()
     bydt_data = {'datetime': rng_bydt, 'arrivals': [0.0] * len_bydt,
-                             'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
+                 'departures': [0.0] * len_bydt, 'occupancy': [0.0] * len_bydt}
 
     bydt_data_df = DataFrame(bydt_data, columns=['datetime', 'arrivals', 'departures', 'occupancy'])
 
@@ -259,7 +258,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
             inout_occ_frac = occ_frac([intime, outtime], bin_size_minutes, edge_bins)
 
-            nbins = numbins(indtbin, outdtbin, bin_size_minutes)
+            nbins = num_bins(indtbin, outdtbin, bin_size_minutes)
             dtbin = indtbin
 
             if verbose == 2:
@@ -327,6 +326,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # If there was no category field, drop the fake field from the index and dataframe
     if catfield[0] == CONST_FAKE_CATFIELD_NAME:
+        bydt_df.reset_index(drop=False, inplace=True)
         bydt_df.set_index('datetime', inplace=True, drop=True)
         bydt_df = bydt_df[['arrivals', 'departures', 'occupancy',
                            'day_of_week', 'dow_name', 'bin_of_day', 'bin_of_week']]

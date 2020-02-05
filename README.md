@@ -37,16 +37,12 @@ Quick Start
 -----------
 
 A companion repo, https://github.com/misken/hillmaker-examples/ contains
-IPython notebooks and Python scripts illustrating the use of hillmaker.
+Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 
-In particular, the following Jupyter notebooks explains how to get and
+In particular, the following Jupyter notebook explains how to get and
 use hillmaker.
 
-**For Windows**
-https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
-
-**For others**
-https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit.ipynb
+https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit_multicats.ipynb
 
 Both Win-64 and Linux-64 versions are available. ::
 

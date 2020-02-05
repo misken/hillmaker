@@ -178,7 +178,7 @@ def summarize_nonstationary(bydt_df, catfield=None,
                  'departures': dep_stats_summary}
 
     if verbose:
-        print('Created nonstationary summaries.')
+        print('Created nonstationary summaries - {}'.format(catfield))
 
     return summaries
 
@@ -249,7 +249,7 @@ def summarize_stationary(bydt_df, catfield=None,
                  'departures': dep_stats_summary}
 
     if verbose:
-        print('Created stationary summaries.')
+        print('Created stationary summaries - {}'.format(catfield))
 
     return summaries
 

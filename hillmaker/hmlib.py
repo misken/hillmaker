@@ -22,18 +22,9 @@ import pandas as pd
 from pandas import Timestamp
 
 
-# def td_to_mins(x):
-#     """
-#     Converts a timedelta object to minutes.
-#     """
-#
-#     num_mins = x.total_seconds() / 60.0
-#     return int(num_mins)
-
-
 def bin_of_day(dt, bin_size_mins=30):
     """
-    Computes bin of day based on bin size for a datetime.
+    Compute bin of day based on bin size for a datetime.
     
     Parameters
     ----------
@@ -51,7 +42,7 @@ def bin_of_day(dt, bin_size_mins=30):
     # bin = 3
 
     """
-    if dt is None: 
+    if dt is None:
         dt = datetime.now()
 
     # Number of minutes from beginning of day
@@ -63,7 +54,7 @@ def bin_of_day(dt, bin_size_mins=30):
 
 def bin_of_week(dt, bin_size_mins=30):
     """
-    Computes bin of week based on bin size for a pandas Timestamp object
+    Compute bin of week based on bin size for a pandas Timestamp object
     or a Python datetime object.
     
     Based on .weekday() convention of 0=Monday.
@@ -82,7 +73,6 @@ def bin_of_week(dt, bin_size_mins=30):
     dt = datetime(2020, 2, 4, 1, 45)
     bin = bin_of_week(dt, 30)
     # bin = 51
-
     """
     if dt is None:
         dt = datetime.now()
@@ -94,58 +84,10 @@ def bin_of_week(dt, bin_size_mins=30):
     return time_bin
 
 
-# def dt_floor(dt, minutes):
-#     """
-#     Finds floor of a datetime to specified number of minutes.
-#
-#     Parameters
-#     ----------
-#     dt : Pandas Timestamp object
-#     minutes : Closest number of minutes to find floor for.
-#
-#     Returns
-#     -------
-#     pandas Timestamp
-#
-#     """
-#
-#     # Convert nearest floor minutes to nearest floor seconds
-#     floor_seconds = minutes * 60
-#     # Get date and compute timedelta between datetime and date in seconds
-#     dt_date = Timestamp(dt.date())
-#     delta = dt - dt_date
-#     tot_seconds = delta.total_seconds()
-#
-#     # Compute floor in seconds from midnight
-#     floor_time = (tot_seconds // floor_seconds) * floor_seconds
-#
-#     # Add the floor seconds to the date to get floor datetime
-#     return dt_date + pd.DateOffset(seconds=floor_time)
-
-
-# def dt_ceiling(dt, minutes):
-#     """
-#    Finds ceiling of a datetime to specified number of minutes.
-#
-#     Parameters
-#     ----------
-#     dt : Pandas Timestamp object
-#     minutes : Closest number of minutes to find floor for.
-#
-#     Returns
-#     -------
-#     pandas Timestamp
-#    """
-#     ceiling_seconds = minutes * 60.0
-#     seconds = (dt - dt.min).total_seconds()
-#
-#     ceiling_time = math.ceil(seconds / ceiling_seconds) * ceiling_seconds
-#     return dt + timedelta(0, ceiling_time - seconds, -dt.microsecond)
-
-
 def isgt2bins(indtbin, outdtbin, bin_size_minutes):
     """
-    Returns True if (outdtbin-indtbin) > binsize_mins
+    Returns True if occupancy spans more than 2 bins.
+
     Parameters
     ----------
     indtbin
@@ -155,17 +97,14 @@ def isgt2bins(indtbin, outdtbin, bin_size_minutes):
     Returns
     -------
     bool
-        True
-
-
     """
 
     return (outdtbin - indtbin) > timedelta(minutes=bin_size_minutes)
 
 
-def numbins(indtbin, outdtbin, bin_size_minutes):
+def num_bins(indtbin, outdtbin, bin_size_minutes):
     """
-    Computes number of bins for which partial or full occupancy contributions exist.
+    Compute number of bins for which partial or full occupancy contributions exist.
 
     Parameters
     ----------
@@ -175,18 +114,13 @@ def numbins(indtbin, outdtbin, bin_size_minutes):
 
     Returns
     -------
-
+    Number of bins
     """
     tot_seconds = (outdtbin - indtbin).total_seconds()
-    return 1 + (tot_seconds/60.0) / bin_size_minutes
-
-
-# def to_the_second(ts):
-#     return Timestamp(round(ts.value, -9))
+    return 1 + (tot_seconds / 60.0) / bin_size_minutes
 
 
 def occ_frac(stop_rec_range, bin_size_minutes, edge_bins=1):
-
     """
     Computes fractional occupancy in inbin and outbin.
 
@@ -201,7 +135,6 @@ def occ_frac(stop_rec_range, bin_size_minutes, edge_bins=1):
     [inbin frac, outbin frac] where each is a real number in [0.0,1.0]
 
     """
-
     intime = stop_rec_range[0]
     outtime = stop_rec_range[1]
 
@@ -217,12 +150,11 @@ def occ_frac(stop_rec_range, bin_size_minutes, edge_bins=1):
     else:
         inbin_occ_frac = 1.0
 
-
     # outbin occupancy
     if indtbin == outdtbin:
         outbin_occ_frac = 0.0  # Use inbin_occ_frac
     else:
-        if edge_bins==1:
+        if edge_bins == 1:
             left_edge = max(outdtbin, intime)
             outbin_occ_secs = (outtime - left_edge).total_seconds()
             outbin_occ_frac = outbin_occ_secs / (bin_size_minutes * 60.0)
@@ -240,14 +172,14 @@ def occ_frac(stop_rec_range, bin_size_minutes, edge_bins=1):
     return [inbin_occ_frac, outbin_occ_frac]
 
 
-def stoprec_analysis_rltnshp(stoprecrange, analysisrange):
+def stoprec_analysis_rltnshp(stoprec_range, analysis_range):
     """
     Determines relationship type of stop record to analysis date range.
     
     Parameters
     ----------
-    stoprecrange: list consisting of [rec_in, rec_out]
-    analysisrange: list consisting of [a_start, a_end]
+    stoprec_range: list consisting of [rec_in, rec_out]
+    analysis_range: list consisting of [a_start, a_end]
 
     Returns
     -------   
@@ -291,10 +223,10 @@ def stoprec_analysis_rltnshp(stoprecrange, analysisrange):
     Type 'none':
         Ranges do not overlap
     """
-    rec_in = stoprecrange[0]
-    rec_out = stoprecrange[1]
-    a_start = analysisrange[0]
-    a_end = analysisrange[1]
+    rec_in = stoprec_range[0]
+    rec_out = stoprec_range[1]
+    a_start = analysis_range[0]
+    a_end = analysis_range[1]
 
     if rec_in > rec_out:
         return 'backwards'
