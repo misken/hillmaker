@@ -92,23 +92,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     Returns
     -------
     dict of DataFrames
-       The bydatetime DataFrames and all summary DataFrames. The hierarchy of keys in the
-       dictionary is:
-
-
-
-       Example:
-
-       {'bydatetime': bydt_df,
-        'occupancy': occ_stats_summary,
-        'arrivals': arr_stats_summary,
-        'departures': dep_stats_summary,
-        'tot_occ': occ_stats_summary_cat,
-        'tot_arr': arr_stats_summary_cat,
-        'tot_dep': dep_stats_summary_cat}
-
+       The bydatetime DataFrames and all summary DataFrames.
     """
-
     # Create the bydatetime DataFrame
     with HillTimer() as t:
         starttime = t.start
