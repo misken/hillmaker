@@ -12,19 +12,17 @@ statistics.
 
 - Takes a pandas DataFrame as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
-  by time of day, day of week, and entity category based on a pandas DataFrame containing one
+  by time of day, day of week, and entity category(s) based on a pandas DataFrame containing one
   record per visit.
 - Functions for computing arrival, departure and occupancy for each datetime
-  bin in the analysis period, by category.
+  bin in the analysis period, by zero or more category fields.
 - Select any time bin size (minutes) that divides evenly into a day.
-- Optionally specify one or more categories to ignore in the analysis.
 - Output statistics includes sample size, mean, min, max, standard deviation,
-  coefficient of variation, standard error, skew, kurtosis, and a whole slew
-  of percentiles (50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 97.5, 99).
+  coefficient of variation, standard error, skew, kurtosis, and percentiles.
 - Output CSV files are written by default but can be supressed.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
-- Requires Python 3 and pandas
+- Requires Python 3.7+ and pandas 1.0.0+
 - Apache 2.0 licensed
 
 Where to get it
@@ -41,7 +39,7 @@ Quick Start
 A companion repo, https://github.com/misken/hillmaker-examples/ contains
 IPython notebooks and Python scripts illustrating the use of hillmaker.
 
-In particular, the following IPython notebooks explains how to get and
+In particular, the following Jupyter notebooks explains how to get and
 use hillmaker.
 
 **For Windows**
