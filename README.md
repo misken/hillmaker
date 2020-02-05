@@ -17,14 +17,12 @@ statistics.
 - Functions for computing arrival, departure and occupancy for each datetime
   bin in the analysis period, by category.
 - Select any time bin size (minutes) that divides evenly into a day.
-- Optionally specify one or more categories to ignore in the analysis.
 - Output statistics includes sample size, mean, min, max, standard deviation,
-  coefficient of variation, standard error, skew, kurtosis, and a whole slew
-  of percentiles (50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 97.5, 99).
+  coefficient of variation, standard error, skew, kurtosis, and percentiles.
 - Output CSV files are written by default but can be supressed.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
-- Requires Python 3 and pandas
+- Requires Python 3.7+ and pandas 1.0.0+
 - Apache 2.0 licensed
 
 Where to get it
@@ -39,16 +37,12 @@ Quick Start
 -----------
 
 A companion repo, https://github.com/misken/hillmaker-examples/ contains
-IPython notebooks and Python scripts illustrating the use of hillmaker.
+Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 
-In particular, the following IPython notebooks explains how to get and
+In particular, the following Jupyter notebook explains how to get and
 use hillmaker.
 
-**For Windows**
-https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_win_usage_shortstay_unit.ipynb
-
-**For others**
-https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit.ipynb
+https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit_multicats.ipynb
 
 Both Win-64 and Linux-64 versions are available. ::
 
