@@ -77,13 +77,13 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
         catfields (only relevant for > 1 category field)
     nonstationary_stats : bool, optional
-       If true, datetime bin stats are computed. Else, they aren't computed. Default is True
+       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
-       If true, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
     export_bydatetime_csv : bool, optional
-       If true, bydatetime DataFrames are exported to csv files. Default is True.
+       If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
-       If true, summary DataFrames are exported to csv files. Default is True.
+       If True, summary DataFrames are exported to csv files. Default is True.
     export_path : string, optional
         Destination path for exported csv files, default is current directory
     verbose : int, optional
@@ -92,7 +92,10 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     Returns
     -------
     dict of DataFrames
-       The bydatetime DataFrames and all summary DataFrames.
+       The bydatetime DataFrames and all summary DataFrames. The hierarchy of keys in the
+       dictionary is:
+
+
 
        Example:
 
@@ -181,7 +184,7 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
 
     Parameters
     ----------
-    summaries: dict of DataFrames
+    bydt_dfs: dict of DataFrames
         Output from make_hills to be exported
 
     scenario_name: string
@@ -189,17 +192,12 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
 
     export_path: string
         Destination path for exported csv files
-
-    temporal_key: string
-        'nonstationary' or 'stationary'
-
     """
 
     for d in bydt_dfs:
         file_bydt_csv = scenario_name + '_bydatetime_' + d + '.csv'
         csv_wpath = os.path.normpath(os.path.join(export_path, file_bydt_csv))
 
-        #catfield = bydt_dfs[d].index.names
         dt_cols = ['arrivals', 'departures', 'occupancy',
                    'day_of_week', 'dow_name', 'bin_of_day', 'bin_of_week']
         bydt_dfs[d].to_csv(csv_wpath, index=True, float_format='%.6f', columns=dt_cols)

@@ -10,18 +10,17 @@ file_stopdata = '../data/ShortStay2.csv'
 scenario = 'ShortStay2_PatTypeSeverity'
 in_fld_name = 'InRoomTS'
 out_fld_name = 'OutRoomTS'
-cat_fld_name = ['PatType', 'Severity']
-#cat_fld_name = ['PatType']
-#cat_fld_name = None
+#cat_fld_name = ['PatType', 'Severity']
+cat_fld_name = None
 start = '1/1/1996'
 end = '3/30/1996 23:45'
 
 # Optional inputs
-#tot_fld_name = 'SSU'
 bin_mins = 60
 totals=2
 nonstationary_stats = True
 stationary_stats = True
+verbose = 1
 
 
 stops_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
