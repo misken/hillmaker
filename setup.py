@@ -16,20 +16,17 @@
 from setuptools import setup
 
 setup(name='hillmaker',
-      version='0.1.1',
+      version='0.2.0',
       description='Occupancy analysis tool for systems having time of day and day of week effects',
       author='Mark Isken',
       author_email='isken@oakland.edu',
       url='http://github.com/misken/hillmaker/',
-      #include_package_data = True,
       packages=['hillmaker'],
-      #package_data={'hillmaker': ['data/*.csv']},
-      #data_files=[('hillmaker', ['data/*.csv'])],
       platforms='any',
       classifiers = [
         'Programming Language :: Python :: 3 ',
-          'Programming Language :: Python :: 3.5 ',
-        'Development Status :: 3 - Alpha',
+        'Programming Language :: Python :: 3.7 ',
+        'Development Status :: 4 - Beta',
         'Natural Language :: English',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
@@ -37,5 +34,10 @@ setup(name='hillmaker',
         'License :: OSI Approved',
         'Operating System :: OS Independent',
         'Topic :: Scientific/Engineering :: Information Analysis',
-        ], install_requires=['pandas', 'numpy']
+        ], 
+     project_urls={
+    'Source': 'http://github.com/misken/hillmaker',
+    'Examples': 'https://github.com/misken/hillmaker-examples',
+    },install_requires=['pandas>=1.0.0'],
+    python_requires='>=3.7'
       )
