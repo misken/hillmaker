@@ -74,8 +74,8 @@ def bin_of_week(dt, bin_size_mins=30):
     bin = bin_of_week(dt, 30)
     # bin = 51
     """
-    if dt is None:
-        dt = datetime.now()
+    # if dt is None:
+    #     dt = datetime.now()
 
     # Number of minutes from beginning of week (Monday is 0)
     minutes = (dt.weekday() * 1440) + (dt.hour * 60) + dt.minute
