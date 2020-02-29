@@ -61,7 +61,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     end_analysis : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
     catfield : string or List of strings, optional
-        Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
+        Column name(s) corresponding to the categories. If none is specified, then
+        only overall occupancy is analyzed.
         Default is None
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60
