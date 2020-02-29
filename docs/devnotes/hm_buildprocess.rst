@@ -6,27 +6,35 @@ Source
 
 Update setup.py with new version number
 
-Make sure all changes committed and pushed to GitHub
+Make sure all changes  on develop branch committed and pushed to GitHub
+
+	$ git checkout master
+	$ git merge develop
+	$ git push
 
 Tag release on GitHub
+
+	$ git tag -a v0.2.1 -m 'Removed some testing code in bin_of_week but really doing this to get noarch version to conda-forge'
+	
+	git push origin v0.2.1
 
 PyPi
 ----
 
 https://python-packaging-user-guide.readthedocs.org/en/latest/
 
-**Source distribution** ::
+**Source and wheel distribution** ::
 
-  python setup.py sdist
-  python setup.py sdist --formats=zip
-
-**Wheel distribution** ::
-
-  python setup.py bdist_wheel
+  python3 setup.py sdist bdist_wheel
 
 **Upload via twine** ::
 
-  twine upload dist/hillmaker-x.x.x* -p password
+hillmaker$ which twine
+/home/mark/anaconda3/envs/datasci/bin/twine
+(datasci) mark@quercus:~/Documents/development/hillmaker
+hillmaker$ twine upload dist/hillmaker-0.2.1*
+
+username is hselab and pw is teddy
 
 Anaconda.org
 ------------
