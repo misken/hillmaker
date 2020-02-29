@@ -25,7 +25,7 @@ https://python-packaging-user-guide.readthedocs.org/en/latest/
 
 **Source and wheel distribution** ::
 
-  python3 setup.py sdist bdist_wheel
+  python setup.py sdist bdist_wheel
 
 **Upload via twine** ::
 
