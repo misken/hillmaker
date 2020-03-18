@@ -74,7 +74,7 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
         for bydt, bydt_df in bydt_dfs.items():
 
             midx_fields = bydt_df.index.names
-            catfield = [x for x in midx_fields if x is not 'datetime']
+            catfield = [x for x in midx_fields if x != 'datetime']
 
             summary_key_list = catfield.copy()
             summary_key_list.append('dow')
@@ -93,7 +93,7 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
             bydt_df = bydt_dfs[bydt]
 
             midx_fields = bydt_df.index.names
-            catfield = [x for x in midx_fields if x is not 'datetime']
+            catfield = [x for x in midx_fields if x != 'datetime']
 
             summary_key = '_'.join(catfield)
 
