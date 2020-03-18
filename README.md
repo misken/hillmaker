@@ -44,10 +44,6 @@ use hillmaker.
 
 https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit_multicats.ipynb
 
-Both Win-64 and Linux-64 versions are available. ::
-
-    conda install -c https://conda.anaconda.org/hselab hillmaker
-
 The source and a binary wheel are available from PyPi. You can install using pip: ::
 
     pip install hillmaker
