@@ -22,9 +22,17 @@ Where to get it
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Binary on Anaconda.org: http://anaconda.org/hselab/hillmaker
 * Documentation: Coming soon
 
+
+hillmaker 0.2.1
+===============
+
+**Release date:** 2020-03-18
+
+**Bug Fixes**
+
+- replaced call to deprecated time.clock() with time.process_time()
 
 hillmaker 0.2.0
 ===============
