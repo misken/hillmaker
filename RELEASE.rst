@@ -25,7 +25,7 @@ Where to get it
 * Documentation: Coming soon
 
 
-hillmaker 0.2.2
+hillmaker 0.2.3
 ===============
 
 **Release date:** 2020-03-18
