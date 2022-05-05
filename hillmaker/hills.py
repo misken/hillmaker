@@ -14,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pandas as pd
 import os
+from pathlib import Path
 
-from hillmaker.bydatetime import make_bydatetime
-from hillmaker.summarize import summarize
-from hillmaker.hmlib import HillTimer
+import pandas as pd
+
+from bydatetime import make_bydatetime
+from summarize import summarize
+from hmlib import HillTimer
 
 
 def make_hills(scenario_name, stops_df, infield, outfield,
@@ -34,10 +36,9 @@ def make_hills(scenario_name, stops_df, infield, outfield,
                stationary_stats=True,
                export_bydatetime_csv=True,
                export_summaries_csv=True,
-               export_path='.',
+               export_path=Path('.'),
                edge_bins=1,
                verbose=0):
-
     """
     Compute occupancy, arrival, and departure statistics by time bin of day and day of week.
 
@@ -95,14 +96,21 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     dict of DataFrames
        The bydatetime DataFrames and all summary DataFrames.
     """
+
+    start_analysis_dt = pd.Timestamp(start_analysis)
+    end_analysis_dt = pd.Timestamp(end_analysis)
+
+    # Filter out records that don't overlap the analysis span
+    stops_df = stops_df.loc[(stops_df[infield] <= end_analysis_dt) & (stops_df[outfield] >= start_analysis_dt)]
+
     # Create the bydatetime DataFrame
     with HillTimer() as t:
         starttime = t.start
         bydt_dfs = make_bydatetime(stops_df,
                                    infield,
                                    outfield,
-                                   start_analysis,
-                                   end_analysis,
+                                   start_analysis_dt,
+                                   end_analysis_dt,
                                    catfield,
                                    bin_size_minutes,
                                    cat_to_exclude=cat_to_exclude,
@@ -163,7 +171,6 @@ def make_hills(scenario_name, stops_df, infield, outfield,
 
 
 def export_bydatetimes(bydt_dfs, scenario_name, export_path):
-
     """
     Export bydatetime DataFrames to csv files.
 
@@ -190,7 +197,6 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
 
 
 def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
-
     """
     Export occupancy, arrival, and departure summary DataFrames to csv files.
 
@@ -234,5 +240,24 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
 
 
 if __name__ == '__main__':
+    # Required inputs
+    scenario = 'ss_ex01'
+    in_fld_name = 'InRoomTS'
+    out_fld_name = 'OutRoomTS'
+    cat_fld_name = 'PatType'
+    start_a = '1/1/1996'
+    end_a = '3/30/1996 23:45'
 
-    pass
+    # Optional inputs
+    verbose = 1
+    output_path = Path('./output/')
+
+    # Create dfs
+    file_stopdata = './data/ShortStay.csv'
+    ss_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
+
+    dfs = make_hills(scenario, ss_df, in_fld_name, out_fld_name,
+                     start_a, end_a, catfield=cat_fld_name,
+                     export_path=verbose)
+
+    print(dfs.keys())

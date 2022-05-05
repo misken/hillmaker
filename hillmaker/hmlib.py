@@ -172,14 +172,13 @@ def occ_frac(stop_rec_range, bin_size_minutes, edge_bins=1):
     return [inbin_occ_frac, outbin_occ_frac]
 
 
-def stoprec_analysis_rltnshp(stoprec_range, analysis_range):
+def stoprec_analysis_rltnshp(in_dt, out_dt, start_span, end_span):
     """
     Determines relationship type of stop record to analysis date range.
     
     Parameters
     ----------
-    stoprec_range: list consisting of [rec_in, rec_out]
-    analysis_range: list consisting of [a_start, a_end]
+
 
     Returns
     -------   
@@ -191,30 +190,30 @@ def stoprec_analysis_rltnshp(stoprec_range, analysis_range):
     Type 'inner':
         
          |-------------------------|
-     a_start                     a_end
+     start_span                  end_span
               |--------------|
-             rec_in         rec_out
+             in_dt         out_dt
              
     Type 'left':
         
                     |-------------------------|
-                  a_start                     a_end
+                  start_span                end_span
               |--------------|
-             rec_in         rec_out
+             in_dt         out_dt
              
     Type 'right':
         
                     |-------------------------|
-                  a_start                     a_end
+                  start_span                end_span
                                        |--------------|
-                                     rec_in         rec_out
+                                     in_dt         out_dt
              
     Type 'outer':
         
               |-------------------------|
-            a_start                     a_end
+            start_span                end_span
        |-------------------------------------|
-     rec_in                              rec_out   
+     in_dt                              out_dt   
      
     
     Type 'backwards':
@@ -223,23 +222,49 @@ def stoprec_analysis_rltnshp(stoprec_range, analysis_range):
     Type 'none':
         Ranges do not overlap
     """
-    rec_in = stoprec_range[0]
-    rec_out = stoprec_range[1]
-    a_start = analysis_range[0]
-    a_end = analysis_range[1]
 
-    if rec_in > rec_out:
+    if in_dt > out_dt:
         return 'backwards'
-    elif (a_start <= rec_in < a_end) and (a_start <= rec_out < a_end):
+    elif (start_span <= in_dt < end_span) and (start_span <= out_dt < end_span):
         return 'inner'
-    elif (a_start <= rec_in < a_end) and (rec_out >= a_end):
+    elif (start_span <= in_dt < end_span) and (out_dt >= end_span):
         return 'right'
-    elif (rec_in < a_start) and (a_start <= rec_out < a_end):
+    elif (in_dt < start_span) and (start_span <= out_dt < end_span):
         return 'left'
-    elif (rec_in < a_start) and (rec_out >= a_end):
+    elif (in_dt < start_span) and (out_dt >= end_span):
         return 'outer'
     else:
         return 'none'
+
+def bin_of_span(dt, start_span, bin_size_mins=60):
+    """
+    Compute bin of span of analysis based on bin size for a datetime.
+
+    Bins are closed on the left boundary.
+    
+    Parameters
+    ----------
+    dt : pandas Timestamp object or a Python datetime object, default now.
+    bin_size_mins : Size of bin in minutes; default 30 minutes.
+    
+    Returns
+    -------
+    integer <= (n-1) where n is number of bins in span of analysis.
+    
+    Examples
+    --------
+    start = datetime(1996, 1, 1, 1, 0)
+    dt = datetime(1996, 3, 1, 14, 30)
+    bin = bin_of_span(dt, 600)
+    # bin = TODO
+
+    """
+
+    # Number of minutes from beginning of span
+    minutes = (dt - start_span).total_seconds() / 60.0
+    # Convert minutes to bin
+    time_bin = math.trunc(minutes / bin_size_mins)
+    return time_bin
 
 
 class HillTimer:
