@@ -131,9 +131,9 @@ def make_bydatetime(stops_df, infield, outfield,
         totfield_df = DataFrame({CONST_FAKE_CATFIELD_NAME: totseries})
         stops_df = pd.concat([stops_df, totfield_df], axis=1)
         catfield = [CONST_FAKE_CATFIELD_NAME]
-        do_totals = False   
+        do_totals = False
 
-    # Get the unique category values and exclude any specified to exclude
+        # Get the unique category values and exclude any specified to exclude
     categories = []
     if cat_to_exclude is not None:
         for i in range(len(catfield)):
@@ -185,24 +185,34 @@ def make_bydatetime(stops_df, infield, outfield,
 
         # Combine arr, dep, occ (in that order) into matrix
         occ_arr_dep = np.column_stack((arr, dep, occ))
-        
+
         # Store results
         results[cat] = occ_arr_dep
 
+    # Convert stacked arrays to a Dataframe
+    bydt_df_cat = arrays_to_df(results, start_analysis, end_analysis, bin_size_minutes, catfield)
+
+    # Store main results bydatetime DataFrame
+    bydt_dfs = {}
+    totals_key = '_'.join(bydt_df_cat.index.names)
+    bydt_dfs[totals_key] = bydt_df_cat.copy()
+
     # Do totals if there was at least one category field
     if do_totals:
-
+        results_totals = {}
         totals_key = 'datetime'
         total_occ_arr_dep = np.zeros((num_bins, 3), dtype=np.float32)
         for cat, oad_array in results.items():
             total_occ_arr_dep += oad_array
-        
-        results[totals_key] = total_occ_arr_dep
 
-    return results
+        results_totals[totals_key] = total_occ_arr_dep
+        bydt_df_total = arrays_to_df(results_totals, start_analysis, end_analysis, bin_size_minutes)
+        bydt_dfs[totals_key] = bydt_df_total
+
+    return bydt_dfs
 
 
-def arrays_to_dfs(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_minutes, catfield):
+def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_minutes, catfield=None):
     """
     Converts results dict from ndarrays to Dataframes
 
@@ -211,36 +221,48 @@ def arrays_to_dfs(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_m
 
     bydt_dfs = {}
     rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
+
+    dfs = []
     for cat, oad_array in results_arrays.items():
         # Create Dataframe from ndarray
         df = pd.DataFrame(oad_array, columns=['arrivals', 'departures', 'occupancy'])
 
         # Add datetime column and category column (still assuming just one category field)
         df['datetime'] = rng_bydt
-        for c in catfield:
-            df[c] = cat
+        if catfield:
+            for c in catfield:
+                df[c] = cat
 
         df['day_of_week'] = df['datetime'].map(lambda x: x.weekday())
         df['dow_name'] = df['datetime'].map(lambda x: x.day_name())
         df['bin_of_day'] = df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
         df['bin_of_week'] = df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
-        # Create multi-index based on datetime and catfield
+        dfs.append(df)  # Add category specific dataframe to list
+
+    # Concatenate the dfs in cat_dfs
+    if len(dfs) > 1:
+        bydt_df = pd.concat(dfs)
+    else:
+        bydt_df = dfs[0]
+
+    # Create multi-index based on datetime and catfield
+    if catfield is not None:
         midx_fields = catfield.copy()
-        midx_fields.append('datetime')
-        df.set_index(midx_fields, inplace=True, drop=True)
-        df.sort_index(inplace=True)
+    else:
+        midx_fields = []
 
-        # Reorder the columns
-        col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week', 'dow_name', 
-                         'bin_of_day', 'bin_of_week']
-        df = df[col_order]
+    midx_fields.append('datetime')
+    bydt_df.set_index(midx_fields, inplace=True, drop=True)
+    bydt_df.sort_index(inplace=True)
 
-        bydt_dfs[cat] = df
-    
-    return bydt_dfs
+    # Reorder the columns
+    col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week', 'dow_name',
+                 'bin_of_day', 'bin_of_week']
 
+    bydt_df = bydt_df[col_order]
 
+    return bydt_df
 
 
 def update_occ(occ, entry_bin, rec_type, list_of_inc_arrays):
@@ -278,6 +300,7 @@ def in_bin_occ_frac(in_ts, bin_size_minutes, edge_bins=1):
 
     return inbin_occ_frac
 
+
 def out_bin_occ_frac(out_ts, bin_size_minutes, edge_bins=1):
     """
     Computes fractional occupancy in inbin and outbin.
@@ -302,7 +325,6 @@ def out_bin_occ_frac(out_ts, bin_size_minutes, edge_bins=1):
 
 
 def make_occ_incs(in_bin, out_bin, in_frac, out_frac):
-
     n_bins = out_bin - in_bin + 1
     if n_bins > 2:
         ones = np.ones(n_bins - 2)
@@ -311,18 +333,19 @@ def make_occ_incs(in_bin, out_bin, in_frac, out_frac):
         occ_incs = np.concatenate((np.array([in_frac]), np.array([out_frac])))
     else:
         occ_incs = np.array([in_frac])
-        
+
     return occ_incs
+
 
 def update_occ_incs(in_bins, out_bins, list_of_inc_arrays, rec_types, num_bins):
     num_stop_recs = len(in_bins)
     rectype_counts = {}
-    
+
     for i in range(num_stop_recs):
         if rec_types[i] == 'inner':
-            rectype_counts['inner'] = rectype_counts.get('inner', 0) + 1 
+            rectype_counts['inner'] = rectype_counts.get('inner', 0) + 1
         elif rec_types[i] == 'left':
-             # arrival is outside analysis window (in_bin < 0)
+            # arrival is outside analysis window (in_bin < 0)
             rectype_counts['left'] = rectype_counts.get('left', 0) + 1
             new_in_bin = 0
             bin_shift = -1 * in_bins[i]
@@ -358,7 +381,7 @@ def update_occ_incs(in_bins, out_bins, list_of_inc_arrays, rec_types, num_bins):
             rectype_counts['none'] = rectype_counts.get('none', 0) + 1
         else:
             rectype_counts['unknown'] = rectype_counts.get('unknown', 0) + 1
-        
+
     return rectype_counts
 
 
@@ -367,7 +390,7 @@ if __name__ == '__main__':
     scenario = 'sslittle_ex01'
     in_fld_name = 'InRoomTS'
     out_fld_name = 'OutRoomTS'
-    #cat_fld_name = 'PatType'
+    # cat_fld_name = 'PatType'
     start_analysis = '1/1/1996'
     end_analysis = '1/3/1996 23:45'
 
@@ -382,4 +405,3 @@ if __name__ == '__main__':
     dfs = make_bydatetime(ss_df, in_fld_name, out_fld_name, Timestamp(start_analysis), Timestamp(end_analysis))
 
     print(dfs.keys())
-

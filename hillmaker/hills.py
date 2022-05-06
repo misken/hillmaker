@@ -188,11 +188,12 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
     """
 
     for d in bydt_dfs:
-        file_bydt_csv = scenario_name + '_bydatetime_' + d + '.csv'
-        csv_wpath = os.path.normpath(os.path.join(export_path, file_bydt_csv))
+        file_bydt_csv = f'{scenario_name}_bydatetime_{d}.csv'
+        csv_wpath = Path(export_path, file_bydt_csv)
 
         dt_cols = ['arrivals', 'departures', 'occupancy',
                    'day_of_week', 'dow_name', 'bin_of_day', 'bin_of_week']
+
         bydt_dfs[d].to_csv(csv_wpath, index=True, float_format='%.6f', columns=dt_cols)
 
 
@@ -229,7 +230,7 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
             else:
                 file_summary_csv = file_summary_csv + '.csv'
 
-            csv_wpath = os.path.normpath(os.path.join(export_path, file_summary_csv))
+            csv_wpath = Path(export_path, file_summary_csv)
 
             catfield = df.index.names
 
@@ -246,11 +247,11 @@ if __name__ == '__main__':
     out_fld_name = 'OutRoomTS'
     cat_fld_name = 'PatType'
     start_a = '1/1/1996'
-    end_a = '3/30/1996 23:45'
+    end_a = '9/30/1996 23:45'
 
     # Optional inputs
     verbose = 1
-    output_path = Path('./output/')
+    output_path = Path('./output')
 
     # Create dfs
     file_stopdata = './data/ShortStay.csv'
@@ -258,6 +259,6 @@ if __name__ == '__main__':
 
     dfs = make_hills(scenario, ss_df, in_fld_name, out_fld_name,
                      start_a, end_a, catfield=cat_fld_name,
-                     export_path=verbose)
+                     export_path=output_path, verbose=verbose)
 
     print(dfs.keys())
