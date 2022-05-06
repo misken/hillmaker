@@ -262,9 +262,11 @@ def summary_stats(group, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), stub=''):
                 stub+'skew': group.skew(), 'kurt': group.kurt()}
 
     if percentiles is not None:
+        pctile_vals = group.quantile(percentiles)
+
         for p in percentiles:
             pctile_name = '{}p{:d}'.format(stub, int(100 * p))
-            stats[pctile_name] = group.quantile(p)
+            stats[pctile_name] = pctile_vals[p]
 
     return stats
 
