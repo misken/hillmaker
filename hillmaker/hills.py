@@ -25,7 +25,7 @@ from hmlib import HillTimer
 
 
 def make_hills(scenario_name, stops_df, infield, outfield,
-               start_analysis, end_analysis,
+               start_analysis_dt_ts, end_analysis_dt_ts,
                catfield=None,
                bin_size_minutes=60,
                percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
@@ -57,9 +57,9 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Column name corresponding to the arrival times
     outfield : string
         Column name corresponding to the departure times
-    start_analysis : datetime-like, str
+    start_analysis_dt_ts : datetime-like, str
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis : datetime-like, str
+    end_analysis_dt_ts : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
     catfield : string or List of strings, optional
         Column name(s) corresponding to the categories. If none is specified, then
@@ -97,14 +97,14 @@ def make_hills(scenario_name, stops_df, infield, outfield,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    start_analysis_dt = pd.Timestamp(start_analysis)
-    end_analysis_dt = pd.Timestamp(end_analysis)
+    start_analysis_dt_ts = pd.Timestamp(start_analysis_dt_ts)
+    end_analysis_dt_ts = pd.Timestamp(end_analysis_dt_ts)
 
-    start_analysis_np = start_analysis_dt.to_datetime64()
-    end_analysis_np = end_analysis_dt.to_datetime64()
+    start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
+    end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
 
     # Filter out records that don't overlap the analysis span
-    stops_df = stops_df.loc[(stops_df[infield] <= end_analysis_dt) & (stops_df[outfield] >= start_analysis_dt)]
+    stops_df = stops_df.loc[(stops_df[infield] <= end_analysis_dt_ts) & (stops_df[outfield] >= start_analysis_dt_ts)]
 
     # Create the bydatetime DataFrame
     with HillTimer() as t:
@@ -112,8 +112,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         bydt_dfs = make_bydatetime(stops_df,
                                    infield,
                                    outfield,
-                                   start_analysis_np,
-                                   end_analysis_np,
+                                   start_analysis_dt_np,
+                                   end_analysis_dt_np,
                                    catfield,
                                    bin_size_minutes,
                                    cat_to_exclude=cat_to_exclude,
@@ -123,7 +123,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
                                    verbose=verbose)
 
     if verbose:
-        print("Datetime DataFrame created (seconds): {:.4f}".format(t.interval))
+        print("Datetime matrix created (seconds): {:.4f}".format(t.interval))
 
     # Create the summary stats DataFrames
     summary_dfs = {}
@@ -223,10 +223,10 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
 
     summary_dfs = summary_all_dfs[temporal_key]
     for d in summary_dfs:
-        dfdict = summary_dfs[d]
+        df_dict = summary_dfs[d]
         for metric in ['occupancy', 'arrivals', 'departures']:
 
-            df = dfdict[metric]
+            df = df_dict[metric]
             file_summary_csv = scenario_name + '_' + metric
             if len(d) > 0:
                 file_summary_csv = file_summary_csv + '_' + d + '.csv'
@@ -243,39 +243,196 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
                 df.to_csv(csv_wpath, index=False, float_format='%.6f')
 
 
-if __name__ == '__main__':
-    # Required inputs
-    rectypes = False
+def process_command_line(argv=None):
+    """
+    Parse command line arguments
+    Parameters
+    ----------
+    argv : list of arguments, or `None` for ``sys.argv[1:]``.
+    Returns
+    ----------
+    Namespace representing the argument list.
+    """
 
-    if rectypes:
-        scenario = 'rectypes'
-        in_fld_name = 'InRoomTS'
-        out_fld_name = 'OutRoomTS'
-        #cat_fld_name = 'PatType'
-        cat_fld_name = None
-        start_a = '1/1/1996'
-        end_a = '1/3/1996 23:45'
-        file_stopdata = './data/rectypes.csv'
-        # Optional inputs
-        verbose = 2
-        output_path = Path('./output')
-    else:
-        scenario = 'ss_ex05'
-        in_fld_name = 'InRoomTS'
-        out_fld_name = 'OutRoomTS'
-        cat_fld_name = 'PatType'
-        start_a = '1/1/1996'
-        end_a = '3/30/1996 23:45'
-        file_stopdata = './data/ShortStay.csv'
-        # Optional inputs
-        verbose = 1
-        output_path = Path('./output')
+    # Create the parser
+    parser = argparse.ArgumentParser(prog='simerlang',
+                                     description='Generate erlang random variates')
 
-    # Create dfs
-    ss_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name], comment='#')
+    # Add arguments
+    parser.add_argument(
+        '-k', type=int, default=1,
+        help="Number of stages in erlang distribution (default is 1)"
+    )
+
+    parser.add_argument(
+        '-b', type=float, default=1.0,
+        help="Overall mean of erlang distribution (i.e., each stage has mean b/k). (default is 1.0)"
+    )
+
+    parser.add_argument(
+        '-n', type=int, default=1,
+        help="Number of random variates to generate (default is 1)"
+    )
+
+    parser.add_argument(
+        '--scenario', type=str, default=f'scen{datetime.now():%Y%m%d%H%M}',
+        help="String used in output filenames"
+    )
+
+    parser.add_argument(
+        '-o', '--output', type=str, default=sys.stdout,
+        help="Path to directory in which to output files"
+    )
+
+    parser.add_argument(
+        '-s', type=int, default=None,
+        help="Random number generator seed (default is None)"
+    )
+
+    parser.add_argument(
+        '--config', type=str, default=None,
+        help="Configuration file containing input parameter arguments and values"
+    )
+
+    parser.add_argument("--loglevel", default='WARNING',
+                        help="Use valid values for logging package (default is 'WARNING")
+
+    # Do the parsing and return the populated namespace with the input arg values
+    # If argv == None, then ``parse_args`` will use ``sys.argv[1:]``.
+    # By including ``argv=None`` as input to ``main``, our program can be
+    # imported and ``main`` called with arguments. This will be useful for
+    # testing via pytest.
+    args = parser.parse_args(argv)
+    return args
+
+
+def update_args(args, config):
+    """
+    Update args namespace values from config dictionary
+    Parameters
+    ----------
+    args : namespace
+    config : dict
+    Returns
+    -------
+    Updated args namespace
+    """
+
+    # Convert args namespace to a dict
+    args_dict = vars(args)
+
+    # Update args dict from config dict
+    for key in config.keys():
+        args_dict[key] = config[key]
+
+    # Convert dict to updated namespace
+    args = argparse.Namespace(**args_dict)
+    return args
+
+
+def generate_rvs(k=1, b=1, n=1, seed=None):
+    """
+    Parameters
+    ----------
+    k : int, number of stages (default is 1)
+    b : float, overall mean of erlang distribution (default is 1)
+    n : int, number of erlang variates to generate (default is 1)
+    seed : int, seed for random number generator (default is None)
+    Returns
+    -------
+    samples : ndarray
+    """
+    if seed is None:
+        logging.warning("No random number generator seed specified.")
+
+    rng = default_rng(seed)
+    logging.info(f'k={k}, b={b}, n={n}')
+    rvs = rng.gamma(shape=k, scale=b / k, size=n)
+
+    return rvs
+
+
+def main(argv=None):
+    """
+    :param argv:
+    :return:
+    """
+    # Set logging level
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        stream=sys.stdout,
+    )
+
+    # Get input arguments
+    args = process_command_line(argv)
+
+    logger = logging.getLogger()
+    logger.setLevel(args.loglevel)
+
+    # Update input args if config file passed
+    if args.config is not None:
+        # Read inputs from config file
+        with open(args.config, 'rt') as yaml_file:
+            yaml_config = yaml.safe_load(yaml_file)
+            args = update_args(args, yaml_config)
+
+    logger.info(args)
 
     dfs = make_hills(scenario, ss_df, in_fld_name, out_fld_name,
-                     start_a, end_a, catfield=cat_fld_name,
-                     export_path=output_path, verbose=verbose)
+                      start_a, end_a, catfield=cat_fld_name,
+                      export_path=output_path, verbose=verbose)
 
-    print(dfs.keys())
+    # Handle output
+    if args.output is not None:
+        simio.rvs_tocsv(erlang_variates, args)
+        print(erlang_variates)
+    else:
+        print(erlang_variates)
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
+
+
+
+
+
+    #
+    #
+    # # Required inputs
+    # rectypes = False
+    #
+    # if rectypes:
+    #     scenario = 'rectypes'
+    #     in_fld_name = 'InRoomTS'
+    #     out_fld_name = 'OutRoomTS'
+    #     #cat_fld_name = 'PatType'
+    #     cat_fld_name = None
+    #     start_a = '1/1/1996'
+    #     end_a = '1/3/1996 23:45'
+    #     file_stopdata = './data/rectypes.csv'
+    #     # Optional inputs
+    #     verbose = 2
+    #     output_path = Path('./output')
+    # else:
+    #     scenario = 'ss_ex05'
+    #     in_fld_name = 'InRoomTS'
+    #     out_fld_name = 'OutRoomTS'
+    #     cat_fld_name = 'PatType'
+    #     start_a = '1/1/1996'
+    #     end_a = '3/30/1996 23:45'
+    #     file_stopdata = './data/ShortStay.csv'
+    #     # Optional inputs
+    #     verbose = 1
+    #     output_path = Path('./output')
+    #
+    # # Create dfs
+    # ss_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name], comment='#')
+    #
+    # dfs = make_hills(scenario, ss_df, in_fld_name, out_fld_name,
+    #                  start_a, end_a, catfield=cat_fld_name,
+    #                  export_path=output_path, verbose=verbose)
+    #
+    # print(dfs.keys())
