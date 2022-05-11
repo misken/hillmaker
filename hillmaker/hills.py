@@ -242,20 +242,34 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
 
 if __name__ == '__main__':
     # Required inputs
-    scenario = 'ss_ex01'
-    in_fld_name = 'InRoomTS'
-    out_fld_name = 'OutRoomTS'
-    cat_fld_name = 'PatType'
-    start_a = '1/1/1996'
-    end_a = '9/30/1996 23:45'
+    rectypes = True
 
-    # Optional inputs
-    verbose = 1
-    output_path = Path('./output')
+    if rectypes:
+        scenario = 'rectypes'
+        in_fld_name = 'InRoomTS'
+        out_fld_name = 'OutRoomTS'
+        #cat_fld_name = 'PatType'
+        cat_fld_name = None
+        start_a = '1/1/1996'
+        end_a = '1/3/1996 23:45'
+        file_stopdata = './data/rectypes.csv'
+        # Optional inputs
+        verbose = 2
+        output_path = Path('./output')
+    else:
+        scenario = 'ss_ex05'
+        in_fld_name = 'InRoomTS'
+        out_fld_name = 'OutRoomTS'
+        cat_fld_name = 'PatType'
+        start_a = '1/1/1996'
+        end_a = '3/30/1996 23:45'
+        file_stopdata = './data/ShortStay.csv'
+        # Optional inputs
+        verbose = 1
+        output_path = Path('./output')
 
     # Create dfs
-    file_stopdata = './data/ShortStay.csv'
-    ss_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
+    ss_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name], comment='#')
 
     dfs = make_hills(scenario, ss_df, in_fld_name, out_fld_name,
                      start_a, end_a, catfield=cat_fld_name,

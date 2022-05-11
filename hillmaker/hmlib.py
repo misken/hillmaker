@@ -236,21 +236,22 @@ def stoprec_analysis_rltnshp(in_dt, out_dt, start_span, end_span):
     else:
         return 'none'
 
+
 def bin_of_span(dt, start_span, bin_size_mins=60):
     """
     Compute bin of span of analysis based on bin size for a datetime.
 
     Bins are closed on the left boundary.
-    
+
     Parameters
     ----------
-    dt : pandas Timestamp object or a Python datetime object, default now.
+    dt : array of numpy timedelta64
     bin_size_mins : Size of bin in minutes; default 30 minutes.
-    
+
     Returns
     -------
-    integer <= (n-1) where n is number of bins in span of analysis.
-    
+    array of integer <= (n-1) where n is number of bins in span of analysis.
+
     Examples
     --------
     start = datetime(1996, 1, 1, 1, 0)
@@ -261,9 +262,10 @@ def bin_of_span(dt, start_span, bin_size_mins=60):
     """
 
     # Number of minutes from beginning of span
-    minutes = (dt - start_span).total_seconds() / 60.0
+    minutes = (dt - start_span).astype('timedelta64[s]') / 60.0
+    minutes = minutes.astype(np.int64)
     # Convert minutes to bin
-    time_bin = math.trunc(minutes / bin_size_mins)
+    time_bin = np.floor(minutes / bin_size_mins)
     return time_bin
 
 

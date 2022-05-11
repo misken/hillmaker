@@ -5,6 +5,7 @@ arrival, and departure statistics by time bin of day and date.
 
 # Copyright 2022 Mark Isken
 #
+import csv
 
 import numpy as np
 import pandas as pd
@@ -101,6 +102,9 @@ def make_bydatetime(stops_df, infield, outfield,
     # Number of bins in analysis span
     num_bins = hmlib.bin_of_span(end_analysis, start_analysis, bin_size_minutes) + 1
 
+    start_analysis_np = start_analysis.to_datetime64()
+    end_analysis_np = end_analysis.to_datetime64()
+
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
     max_intime = stops_df[infield].max()
@@ -154,8 +158,11 @@ def make_bydatetime(stops_df, infield, outfield,
         num_stop_recs = len(cat_df)
 
         # Create entry and exit bin arrays
-        entry_bin = cat_df[infield].map(lambda x: hmlib.bin_of_span(x, start_analysis, bin_size_minutes)).to_numpy()
-        exit_bin = cat_df[outfield].map(lambda x: hmlib.bin_of_span(x, start_analysis, bin_size_minutes)).to_numpy()
+        in_ts = cat_df[infield].to_numpy()
+        out_ts = cat_df[outfield].to_numpy()
+        entry_bin = hmlib.bin_of_span(in_ts, start_analysis_np, bin_size_minutes)
+        exit_bin = hmlib.bin_of_span(out_ts, start_analysis_np, bin_size_minutes)
+        
 
         # Compute inbin and outbin fractions - this part is SLOW
         entry_bin_frac = stops_df.apply(lambda x: in_bin_occ_frac(x[infield],
@@ -166,6 +173,12 @@ def make_bydatetime(stops_df, infield, outfield,
         # Create list of occupancy incrementor arrays
         list_of_inc_arrays = [make_occ_incs(entry_bin[i], exit_bin[i],
                                             entry_bin_frac[i], exit_bin_frac[i]) for i in range(num_stop_recs)]
+        if verbose == 2:
+            with open(f'./output/{cat}_occ_incs.csv', 'w') as fout:
+
+                # using csv.writer method from CSV package
+                write = csv.writer(fout, lineterminator='\n')
+                write.writerows(list_of_inc_arrays)
 
         # Create array of stop record types
         rec_type = cat_df.apply(lambda x:
@@ -176,12 +189,12 @@ def make_bydatetime(stops_df, infield, outfield,
         rec_counts = update_occ_incs(entry_bin, exit_bin, list_of_inc_arrays, rec_type, num_bins)
         print(rec_counts)
 
-        occ = np.zeros(num_bins, dtype=np.float32)
+        occ = np.zeros(num_bins, dtype=np.float64)
         update_occ(occ, entry_bin, rec_type, list_of_inc_arrays)
 
         # Count arrivals and departures by bin
-        arr = np.bincount(entry_bin, minlength=num_bins).astype(np.float32)
-        dep = np.bincount(exit_bin, minlength=num_bins).astype(np.float32)
+        arr = np.bincount(entry_bin, minlength=num_bins).astype(np.float64)
+        dep = np.bincount(exit_bin, minlength=num_bins).astype(np.float64)
 
         # Combine arr, dep, occ (in that order) into matrix
         occ_arr_dep = np.column_stack((arr, dep, occ))
@@ -201,7 +214,7 @@ def make_bydatetime(stops_df, infield, outfield,
     if do_totals:
         results_totals = {}
         totals_key = 'datetime'
-        total_occ_arr_dep = np.zeros((num_bins, 3), dtype=np.float32)
+        total_occ_arr_dep = np.zeros((num_bins, 3), dtype=np.float64)
         for cat, oad_array in results.items():
             total_occ_arr_dep += oad_array
 
@@ -276,7 +289,57 @@ def update_occ(occ, entry_bin, rec_type, list_of_inc_arrays):
             except (IndexError, TypeError) as error:
                 raise Exception(f'pos {pos} occ_inc {occ_inc}\n{error}')
 
+# The following is the original correct version of a function
+# for computing both the in and out bin occupancy fractions.
+def occ_frac(stop_rec_range, bin_size_minutes, edge_bins=1):
+    """
+    Computes fractional occupancy in inbin and outbin.
+    Parameters
+    ----------
+    stop_rec_range: list consisting of [intime, outtime]
+    bin_size_minutes: bin size in minutes
+    edge_bins: 1=fractional, 2=whole bin
+    Returns
+    -------
+    [inbin frac, outbin frac] where each is a real number in [0.0,1.0]
+    """
+    intime = stop_rec_range[0]
+    outtime = stop_rec_range[1]
 
+    bin_freq_str = '{}T'.format(int(bin_size_minutes))
+    indtbin = intime.floor(bin_freq_str)
+    outdtbin = outtime.floor(bin_freq_str)
+
+    # inbin occupancy
+    if edge_bins == 1:
+        right_edge = min(indtbin + timedelta(minutes=bin_size_minutes), outtime)
+        inbin_occ_secs = (right_edge - intime).total_seconds()
+        inbin_occ_frac = inbin_occ_secs / (bin_size_minutes * 60.0)
+    else:
+        inbin_occ_frac = 1.0
+
+    # outbin occupancy
+    if indtbin == outdtbin:
+        outbin_occ_frac = 0.0  # Use inbin_occ_frac
+    else:
+        if edge_bins == 1:
+            left_edge = max(outdtbin, intime)
+            outbin_occ_secs = (outtime - left_edge).total_seconds()
+            outbin_occ_frac = outbin_occ_secs / (bin_size_minutes * 60.0)
+        else:
+            outbin_occ_frac = 1.0
+
+    assert 1.0 >= inbin_occ_frac >= 0.0, \
+        "bad inbin_occ_frac={:.3f} in={} out={}".format(inbin_occ_frac,
+                                                        intime, outtime)
+
+    assert 1.0 >= outbin_occ_frac >= 0.0, \
+        "bad outbin_occ_frac={:.3f} in={} out={}".format(outbin_occ_frac,
+                                                         intime, outtime)
+
+    return [inbin_occ_frac, outbin_occ_frac]
+
+# This is new and wrong.
 def in_bin_occ_frac(in_ts, bin_size_minutes, edge_bins=1):
     """
     Computes fractional occupancy in inbin and outbin.
@@ -294,13 +357,13 @@ def in_bin_occ_frac(in_ts, bin_size_minutes, edge_bins=1):
     """
 
     if edge_bins == 1:
-        inbin_occ_frac = (in_ts.minute * 60.0 + in_ts.second) / (bin_size_minutes * 60.0)
+        inbin_occ_frac = (bin_size_minutes * 60.0 - (in_ts.minute * 60.0 + in_ts.second)) / (bin_size_minutes * 60.0)
     else:
         inbin_occ_frac = 1.0
 
     return inbin_occ_frac
 
-
+# This is new and wrong.
 def out_bin_occ_frac(out_ts, bin_size_minutes, edge_bins=1):
     """
     Computes fractional occupancy in inbin and outbin.
@@ -317,7 +380,7 @@ def out_bin_occ_frac(out_ts, bin_size_minutes, edge_bins=1):
 
     """
     if edge_bins == 1:
-        outbin_occ_frac = (bin_size_minutes * 60.0 - (out_ts.minute * 60.0 + out_ts.second)) / (bin_size_minutes * 60.0)
+        outbin_occ_frac = (out_ts.minute * 60.0 + out_ts.second) / (bin_size_minutes * 60.0)
     else:
         outbin_occ_frac = 1.0
 
@@ -327,7 +390,7 @@ def out_bin_occ_frac(out_ts, bin_size_minutes, edge_bins=1):
 def make_occ_incs(in_bin, out_bin, in_frac, out_frac):
     n_bins = out_bin - in_bin + 1
     if n_bins > 2:
-        ones = np.ones(n_bins - 2)
+        ones = np.ones(n_bins - 2, dtype=np.float64)
         occ_incs = np.concatenate((np.array([in_frac]), ones, np.array([out_frac])))
     elif n_bins == 2:
         occ_incs = np.concatenate((np.array([in_frac]), np.array([out_frac])))
