@@ -18,7 +18,7 @@ from datetime import datetime
 from datetime import timedelta
 import time
 
-import pandas as pd
+import numpy as np
 from pandas import Timestamp
 
 
@@ -265,7 +265,7 @@ def bin_of_span(dt, start_span, bin_size_mins=60):
     minutes = (dt - start_span).astype('timedelta64[s]') / 60.0
     minutes = minutes.astype(np.int64)
     # Convert minutes to bin
-    time_bin = np.floor(minutes / bin_size_mins)
+    time_bin = np.floor(minutes / bin_size_mins).astype(np.int64)
     return time_bin
 
 

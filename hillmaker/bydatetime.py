@@ -19,7 +19,7 @@ import hmlib
 
 
 def make_bydatetime(stops_df, infield, outfield,
-                    start_analysis, end_analysis, catfield=None,
+                    start_analysis_np, end_analysis_np, catfield=None,
                     bin_size_minutes=60,
                     cat_to_exclude=None,
                     totals=1,
@@ -42,10 +42,10 @@ def make_bydatetime(stops_df, infield, outfield,
     outfield: string
         Name of column in stops_df to use as departure datetime
 
-    start_analysis: datetime
+    start_analysis_np: numpy datetime64[ns]
         Start date for the analysis
 
-    end_analysis: datetime
+    end_analysis_np: numpy datetime64[ns]
         End date for the analysis
 
     catfield : string or List of strings, optional
@@ -100,10 +100,7 @@ def make_bydatetime(stops_df, infield, outfield,
     --------
     """
     # Number of bins in analysis span
-    num_bins = hmlib.bin_of_span(end_analysis, start_analysis, bin_size_minutes) + 1
-
-    start_analysis_np = start_analysis.to_datetime64()
-    end_analysis_np = end_analysis.to_datetime64()
+    num_bins = hmlib.bin_of_span(end_analysis_np, start_analysis_np, bin_size_minutes) + 1
 
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
@@ -158,17 +155,18 @@ def make_bydatetime(stops_df, infield, outfield,
         num_stop_recs = len(cat_df)
 
         # Create entry and exit bin arrays
-        in_ts = cat_df[infield].to_numpy()
-        out_ts = cat_df[outfield].to_numpy()
-        entry_bin = hmlib.bin_of_span(in_ts, start_analysis_np, bin_size_minutes)
-        exit_bin = hmlib.bin_of_span(out_ts, start_analysis_np, bin_size_minutes)
-        
+        in_ts_np = cat_df[infield].to_numpy()
+        out_ts_np = cat_df[outfield].to_numpy()
+        entry_bin = hmlib.bin_of_span(in_ts_np, start_analysis_np, bin_size_minutes)
+        exit_bin = hmlib.bin_of_span(out_ts_np, start_analysis_np, bin_size_minutes)
+
 
         # Compute inbin and outbin fractions - this part is SLOW
-        entry_bin_frac = stops_df.apply(lambda x: in_bin_occ_frac(x[infield],
-                                                                  bin_size_minutes, edge_bins=1), axis=1).to_numpy()
-        exit_bin_frac = stops_df.apply(lambda x: out_bin_occ_frac(x[outfield],
-                                                                  bin_size_minutes, edge_bins=1), axis=1).to_numpy()
+        entry_bin_frac = in_bin_occ_frac(entry_bin, in_ts_np, out_ts_np,
+                                         start_analysis_np, bin_size_minutes, edge_bins=1)
+        exit_bin_frac = out_bin_occ_frac(exit_bin, in_ts_np, out_ts_np,
+                                         start_analysis_np, bin_size_minutes, edge_bins=1)
+
 
         # Create list of occupancy incrementor arrays
         list_of_inc_arrays = [make_occ_incs(entry_bin[i], exit_bin[i],
@@ -183,7 +181,7 @@ def make_bydatetime(stops_df, infield, outfield,
         # Create array of stop record types
         rec_type = cat_df.apply(lambda x:
                                 hmlib.stoprec_analysis_rltnshp(x[infield], x[outfield],
-                                                               start_analysis, end_analysis), axis=1).to_numpy()
+                                                               start_analysis_np, end_analysis_np), axis=1).to_numpy()
 
         # Do the occupancy incrementing
         rec_counts = update_occ_incs(entry_bin, exit_bin, list_of_inc_arrays, rec_type, num_bins)
@@ -203,7 +201,7 @@ def make_bydatetime(stops_df, infield, outfield,
         results[cat] = occ_arr_dep
 
     # Convert stacked arrays to a Dataframe
-    bydt_df_cat = arrays_to_df(results, start_analysis, end_analysis, bin_size_minutes, catfield)
+    bydt_df_cat = arrays_to_df(results, start_analysis_np, end_analysis_np, bin_size_minutes, catfield)
 
     # Store main results bydatetime DataFrame
     bydt_dfs = {}
@@ -219,7 +217,7 @@ def make_bydatetime(stops_df, infield, outfield,
             total_occ_arr_dep += oad_array
 
         results_totals[totals_key] = total_occ_arr_dep
-        bydt_df_total = arrays_to_df(results_totals, start_analysis, end_analysis, bin_size_minutes)
+        bydt_df_total = arrays_to_df(results_totals, start_analysis_np, end_analysis_np, bin_size_minutes)
         bydt_dfs[totals_key] = bydt_df_total
 
     return bydt_dfs
@@ -339,48 +337,62 @@ def occ_frac(stop_rec_range, bin_size_minutes, edge_bins=1):
 
     return [inbin_occ_frac, outbin_occ_frac]
 
-# This is new and wrong.
-def in_bin_occ_frac(in_ts, bin_size_minutes, edge_bins=1):
+
+# This is new and untested.
+def in_bin_occ_frac(entry_bin, in_ts, out_ts, start_analysis_np, bin_size_minutes, edge_bins=1):
     """
     Computes fractional occupancy in inbin and outbin.
 
     Parameters
     ----------
-    in_ts: Timestamp corresponding to entry time
+    in_ts: entry time (Timestamp)
     bin_size_minutes: bin size in minutes
     edge_bins: 1=fractional, 2=whole bin
 
     Returns
     -------
-    inbin_occ_frac - Fraction of entry bin occupied - a real number in [0.0,1.0]
+    [inbin frac, outbin frac] where each is a real number in [0.0,1.0]
 
     """
 
+    # inbin occupancy
     if edge_bins == 1:
-        inbin_occ_frac = (bin_size_minutes * 60.0 - (in_ts.minute * 60.0 + in_ts.second)) / (bin_size_minutes * 60.0)
+        rel_in_time_secs = (in_ts - start_analysis_np).astype('timedelta64[s]').astype(np.float64)
+        rel_out_time_secs = (out_ts - start_analysis_np).astype('timedelta64[s]').astype(np.float64)
+        rel_right_bin_edge_secs = (entry_bin + 1) * bin_size_minutes * 60
+        rel_right_edge_secs = np.minimum(rel_out_time_secs, rel_right_bin_edge_secs)
+        in_bin_seconds = (rel_right_edge_secs - rel_in_time_secs)
+        inbin_occ_frac = in_bin_seconds / (bin_size_minutes * 60.0)
     else:
         inbin_occ_frac = 1.0
 
     return inbin_occ_frac
 
-# This is new and wrong.
-def out_bin_occ_frac(out_ts, bin_size_minutes, edge_bins=1):
+# This is new and untested.
+def out_bin_occ_frac(exit_bin, in_ts, out_ts, start_analysis_np, bin_size_minutes, edge_bins=1):
     """
     Computes fractional occupancy in inbin and outbin.
 
     Parameters
     ----------
-    out_ts: Timestamp corresponding to exit time
+    in_ts: entry time (Timestamp)
     bin_size_minutes: bin size in minutes
     edge_bins: 1=fractional, 2=whole bin
 
     Returns
     -------
-    outbin_occ_frac - Fraction of entry bin occupied - a real number in [0.0,1.0]
+    [inbin frac, outbin frac] where each is a real number in [0.0,1.0]
 
     """
+
+    # inbin occupancy
     if edge_bins == 1:
-        outbin_occ_frac = (out_ts.minute * 60.0 + out_ts.second) / (bin_size_minutes * 60.0)
+        rel_in_time_secs = (in_ts - start_analysis_np).astype('timedelta64[s]').astype(np.float64)
+        rel_out_time_secs = (out_ts - start_analysis_np).astype('timedelta64[s]').astype(np.float64)
+        rel_left_bin_edge_secs = exit_bin * bin_size_minutes * 60
+        rel_left_edge_secs = np.maximum(rel_in_time_secs, rel_left_bin_edge_secs)
+        out_bin_seconds = (rel_out_time_secs - rel_left_edge_secs)
+        outbin_occ_frac = out_bin_seconds / (bin_size_minutes * 60.0)
     else:
         outbin_occ_frac = 1.0
 

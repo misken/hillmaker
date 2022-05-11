@@ -100,6 +100,9 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     start_analysis_dt = pd.Timestamp(start_analysis)
     end_analysis_dt = pd.Timestamp(end_analysis)
 
+    start_analysis_np = start_analysis_dt.to_datetime64()
+    end_analysis_np = end_analysis_dt.to_datetime64()
+
     # Filter out records that don't overlap the analysis span
     stops_df = stops_df.loc[(stops_df[infield] <= end_analysis_dt) & (stops_df[outfield] >= start_analysis_dt)]
 
@@ -109,8 +112,8 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         bydt_dfs = make_bydatetime(stops_df,
                                    infield,
                                    outfield,
-                                   start_analysis_dt,
-                                   end_analysis_dt,
+                                   start_analysis_np,
+                                   end_analysis_np,
                                    catfield,
                                    bin_size_minutes,
                                    cat_to_exclude=cat_to_exclude,
@@ -242,7 +245,7 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
 
 if __name__ == '__main__':
     # Required inputs
-    rectypes = True
+    rectypes = False
 
     if rectypes:
         scenario = 'rectypes'
