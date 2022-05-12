@@ -1,6 +1,6 @@
 """Hillmaker"""
 
-# Copyright 2015 Mark Isken
+# Copyright 2015, 2022 Mark Isken
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import sys
 from pathlib import Path
+import argparse
+import logging
 
 import pandas as pd
 
@@ -24,9 +26,9 @@ from summarize import summarize
 from hmlib import HillTimer
 
 
-def make_hills(scenario_name, stops_df, infield, outfield,
-               start_analysis_dt_ts, end_analysis_dt_ts,
-               catfield=None,
+def make_hills(scenario_name, stops_df, in_field, out_field,
+               start_analysis_dt, end_analysis_dt,
+               cat_field=None,
                bin_size_minutes=60,
                percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
                cat_to_exclude=None,
@@ -40,7 +42,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
                edge_bins=1,
                verbose=0):
     """
-    Compute occupancy, arrival, and departure statistics by time bin of day and day of week.
+    Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
     Main function that first calls `bydatetime.make_bydatetime` to calculate occupancy, arrival
     and departure values by date by time bin and then calls `summarize.summarize`
@@ -53,15 +55,15 @@ def make_hills(scenario_name, stops_df, infield, outfield,
         Used in output filenames
     stops_df : DataFrame
         Base data containing one row per visit
-    infield : string
+    in_field : string
         Column name corresponding to the arrival times
-    outfield : string
+    out_field : string
         Column name corresponding to the departure times
-    start_analysis_dt_ts : datetime-like, str
+    start_analysis_dt : datetime-like, str
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis_dt_ts : datetime-like, str
+    end_analysis_dt : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    catfield : string or List of strings, optional
+    cat_field : string or List of strings, optional
         Column name(s) corresponding to the categories. If none is specified, then
         only overall occupancy is analyzed.
         Default is None
@@ -76,8 +78,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     edge_bins: int, default 1
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     totals: int, default 1
-        0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
-        catfields (only relevant for > 1 category field)
+        0=no totals, 1=totals by datetime
     nonstationary_stats : bool, optional
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
@@ -86,7 +87,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is True.
-    export_path : string, optional
+    export_path : str or Path, optional
         Destination path for exported csv files, default is current directory
     verbose : int, optional
         The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
@@ -97,24 +98,26 @@ def make_hills(scenario_name, stops_df, infield, outfield,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    start_analysis_dt_ts = pd.Timestamp(start_analysis_dt_ts)
-    end_analysis_dt_ts = pd.Timestamp(end_analysis_dt_ts)
+    # pandas Timestamp versions of analysis span end points
+    start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
+    end_analysis_dt_ts = pd.Timestamp(end_analysis_dt)
 
+    # numpy datetime64 versions of analysis span end points
     start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
     end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
 
     # Filter out records that don't overlap the analysis span
-    stops_df = stops_df.loc[(stops_df[infield] <= end_analysis_dt_ts) & (stops_df[outfield] >= start_analysis_dt_ts)]
+    stops_df = stops_df.loc[(stops_df[in_field] <= end_analysis_dt_ts) & (stops_df[out_field] >= start_analysis_dt_ts)]
 
     # Create the bydatetime DataFrame
     with HillTimer() as t:
         starttime = t.start
         bydt_dfs = make_bydatetime(stops_df,
-                                   infield,
-                                   outfield,
+                                   in_field,
+                                   out_field,
                                    start_analysis_dt_np,
                                    end_analysis_dt_np,
-                                   catfield,
+                                   cat_field,
                                    bin_size_minutes,
                                    cat_to_exclude=cat_to_exclude,
                                    occ_weight_field=occ_weight_field,
@@ -143,18 +146,14 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     # Export results to csv if requested
     if export_bydatetime_csv:
         with HillTimer() as t:
-
-            export_bydatetimes(bydt_dfs, scenario_name, export_path)
-
+            export_bydatetime(bydt_dfs, scenario_name, export_path)
         if verbose:
             print("By datetime exported to csv (seconds): {:.4f}".format(t.interval))
 
     if export_summaries_csv:
         with HillTimer() as t:
-
             if nonstationary_stats:
                 export_summaries(summary_dfs, scenario_name, export_path, 'nonstationary')
-
             if stationary_stats:
                 export_summaries(summary_dfs, scenario_name, export_path, 'stationary')
 
@@ -173,7 +172,7 @@ def make_hills(scenario_name, stops_df, infield, outfield,
     return hills
 
 
-def export_bydatetimes(bydt_dfs, scenario_name, export_path):
+def export_bydatetime(bydt_dfs, scenario_name, export_path):
     """
     Export bydatetime DataFrames to csv files.
 
@@ -183,10 +182,10 @@ def export_bydatetimes(bydt_dfs, scenario_name, export_path):
     bydt_dfs: dict of DataFrames
         Output from make_hills to be exported
 
-    scenario_name: string
+    scenario_name: str
         Used in output filenames
 
-    export_path: string
+    export_path: str or Path
         Destination path for exported csv files
     """
 
@@ -246,6 +245,7 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
 def process_command_line(argv=None):
     """
     Parse command line arguments
+
     Parameters
     ----------
     argv : list of arguments, or `None` for ``sys.argv[1:]``.
@@ -254,44 +254,118 @@ def process_command_line(argv=None):
     Namespace representing the argument list.
     """
 
+    """
+        scenario_name : string
+        Used in output filenames
+    stops_df : DataFrame
+        Base data containing one row per visit
+    infield : string
+        Column name corresponding to the arrival times
+    outfield : string
+        Column name corresponding to the departure times
+    start_analysis_dt : datetime-like, str
+        Starting datetime for the analysis (must be convertible to pandas Timestamp)
+    end_analysis_dt : datetime-like, str
+        Ending datetime for the analysis (must be convertible to pandas Timestamp)
+    catfield : str, optional
+        Column name(s) corresponding to the categories. If none is specified, then
+        only overall occupancy is analyzed.
+        Default is None
+    bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day, default is 60
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
+    cat_to_exclude : list, optional
+        Categories to ignore, default is None
+    occ_weight_field : string, optional
+        Column name corresponding to the weights to use for occupancy incrementing.
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
+    totals: int, default 1
+        0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
+        catfields (only relevant for > 1 category field)
+    nonstationary_stats : bool, optional
+       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
+    stationary_stats : bool, optional
+       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+    export_bydatetime_csv : bool, optional
+       If True, bydatetime DataFrames are exported to csv files. Default is True.
+    export_summaries_csv : bool, optional
+       If True, summary DataFrames are exported to csv files. Default is True.
+    export_path : str or Path, optional
+        Destination path for exported csv files, default is current directory
+    verbose : int, optional
+        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
+    """
+
     # Create the parser
-    parser = argparse.ArgumentParser(prog='simerlang',
-                                     description='Generate erlang random variates')
+    parser = argparse.ArgumentParser(prog='hillmaker',
+                                     description='Occupancy analysis by time of day and day of week')
 
     # Add arguments
     parser.add_argument(
-        '-k', type=int, default=1,
-        help="Number of stages in erlang distribution (default is 1)"
+        'scenario', type=str,
+        help="Used in output filenames"
     )
 
     parser.add_argument(
-        '-b', type=float, default=1.0,
-        help="Overall mean of erlang distribution (i.e., each stage has mean b/k). (default is 1.0)"
+        'stop_data_csv', type=str,
+        help="Path to csv file containing the stop data to be processed"
     )
 
     parser.add_argument(
-        '-n', type=int, default=1,
-        help="Number of random variates to generate (default is 1)"
+        'in_field', type=str,
+        help="Column name corresponding to the arrival times"
     )
 
     parser.add_argument(
-        '--scenario', type=str, default=f'scen{datetime.now():%Y%m%d%H%M}',
-        help="String used in output filenames"
+        'out_field', type=str,
+        help="Column name corresponding to the departure times"
     )
 
     parser.add_argument(
-        '-o', '--output', type=str, default=sys.stdout,
-        help="Path to directory in which to output files"
+        'start_analysis_dt', type=str,
+        help="Starting datetime for the analysis (must be convertible to pandas Timestamp)"
     )
 
     parser.add_argument(
-        '-s', type=int, default=None,
-        help="Random number generator seed (default is None)"
+        'end_analysis_dt', type=str,
+        help="Ending datetime for the analysis (must be convertible to pandas Timestamp)"
     )
 
     parser.add_argument(
-        '--config', type=str, default=None,
-        help="Configuration file containing input parameter arguments and values"
+        '--cat_field', type=str, default=None,
+        help="Column name corresponding to the categories. If None, then only overall occupancy is analyzed"
+    )
+
+    parser.add_argument(
+        '--bin_size_mins', type=int, default=60,
+        help="Number of minutes in each time bin of the day"
+    )
+
+    parser.add_argument(
+        '--occ_weight_field', type=str, default=None,
+        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used"
+    )
+
+    parser.add_argument(
+        '--edge_bins', type=int, default=1,
+        help="Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin"
+    )
+
+    parser.add_argument(
+        '--no_totals', action='store_true',
+        help="Use to suppress totals (default is False)"
+    )
+
+    parser.add_argument(
+        '--output_path', type=str, default='.',
+        help="Destination path for exported csv files, default is current directory."
+    )
+
+    parser.add_argument(
+        '--verbose', type=int, default=1,
+        help="The default, zero, means silent mode. Higher numbers mean more output messages."
     )
 
     parser.add_argument("--loglevel", default='WARNING',
@@ -304,52 +378,6 @@ def process_command_line(argv=None):
     # testing via pytest.
     args = parser.parse_args(argv)
     return args
-
-
-def update_args(args, config):
-    """
-    Update args namespace values from config dictionary
-    Parameters
-    ----------
-    args : namespace
-    config : dict
-    Returns
-    -------
-    Updated args namespace
-    """
-
-    # Convert args namespace to a dict
-    args_dict = vars(args)
-
-    # Update args dict from config dict
-    for key in config.keys():
-        args_dict[key] = config[key]
-
-    # Convert dict to updated namespace
-    args = argparse.Namespace(**args_dict)
-    return args
-
-
-def generate_rvs(k=1, b=1, n=1, seed=None):
-    """
-    Parameters
-    ----------
-    k : int, number of stages (default is 1)
-    b : float, overall mean of erlang distribution (default is 1)
-    n : int, number of erlang variates to generate (default is 1)
-    seed : int, seed for random number generator (default is None)
-    Returns
-    -------
-    samples : ndarray
-    """
-    if seed is None:
-        logging.warning("No random number generator seed specified.")
-
-    rng = default_rng(seed)
-    logging.info(f'k={k}, b={b}, n={n}')
-    rvs = rng.gamma(shape=k, scale=b / k, size=n)
-
-    return rvs
 
 
 def main(argv=None):
@@ -366,73 +394,21 @@ def main(argv=None):
     # Get input arguments
     args = process_command_line(argv)
 
+    # Set up logging
     logger = logging.getLogger()
     logger.setLevel(args.loglevel)
-
-    # Update input args if config file passed
-    if args.config is not None:
-        # Read inputs from config file
-        with open(args.config, 'rt') as yaml_file:
-            yaml_config = yaml.safe_load(yaml_file)
-            args = update_args(args, yaml_config)
-
     logger.info(args)
 
-    dfs = make_hills(scenario, ss_df, in_fld_name, out_fld_name,
-                      start_a, end_a, catfield=cat_fld_name,
-                      export_path=output_path, verbose=verbose)
+    # Read in stop data to DataFrame
+    stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
-    # Handle output
-    if args.output is not None:
-        simio.rvs_tocsv(erlang_variates, args)
-        print(erlang_variates)
-    else:
-        print(erlang_variates)
-
-    return 0
+    # Make hills
+    dfs = make_hills(args.scenario, stops_df, args.in_field,  args.out_field,
+                     args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
+                     export_path=args.output_path, verbose=args.verbose)
 
 
 if __name__ == '__main__':
     sys.exit(main())
 
 
-
-
-
-    #
-    #
-    # # Required inputs
-    # rectypes = False
-    #
-    # if rectypes:
-    #     scenario = 'rectypes'
-    #     in_fld_name = 'InRoomTS'
-    #     out_fld_name = 'OutRoomTS'
-    #     #cat_fld_name = 'PatType'
-    #     cat_fld_name = None
-    #     start_a = '1/1/1996'
-    #     end_a = '1/3/1996 23:45'
-    #     file_stopdata = './data/rectypes.csv'
-    #     # Optional inputs
-    #     verbose = 2
-    #     output_path = Path('./output')
-    # else:
-    #     scenario = 'ss_ex05'
-    #     in_fld_name = 'InRoomTS'
-    #     out_fld_name = 'OutRoomTS'
-    #     cat_fld_name = 'PatType'
-    #     start_a = '1/1/1996'
-    #     end_a = '3/30/1996 23:45'
-    #     file_stopdata = './data/ShortStay.csv'
-    #     # Optional inputs
-    #     verbose = 1
-    #     output_path = Path('./output')
-    #
-    # # Create dfs
-    # ss_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name], comment='#')
-    #
-    # dfs = make_hills(scenario, ss_df, in_fld_name, out_fld_name,
-    #                  start_a, end_a, catfield=cat_fld_name,
-    #                  export_path=output_path, verbose=verbose)
-    #
-    # print(dfs.keys())

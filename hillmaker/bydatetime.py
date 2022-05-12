@@ -90,6 +90,7 @@ def make_bydatetime(stops_df, infield, outfield,
     ----
     * Sanity checks on date ranges
     * Formal test using short stay data
+    * Flow conservation checks
 
 
     Notes
