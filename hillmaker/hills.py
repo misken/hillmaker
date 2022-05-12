@@ -21,9 +21,9 @@ import logging
 
 import pandas as pd
 
-from bydatetime import make_bydatetime
-from summarize import summarize
-from hmlib import HillTimer
+from hillmaker.bydatetime import make_bydatetime
+from hillmaker.summarize import summarize
+from hillmaker.hmlib import HillTimer
 
 
 def make_hills(scenario_name, stops_df, in_field, out_field,
@@ -98,6 +98,15 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
+    # Create root logger
+    logger = logging.getLogger()
+
+    # Confgure root logger
+    if verbose:
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.WARNING)
+
     # pandas Timestamp versions of analysis span end points
     start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
     end_analysis_dt_ts = pd.Timestamp(end_analysis_dt)
@@ -125,8 +134,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                                    totals=totals,
                                    verbose=verbose)
 
-    if verbose:
-        print("Datetime matrix created (seconds): {:.4f}".format(t.interval))
+    logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
     # Create the summary stats DataFrames
     summary_dfs = {}
@@ -140,15 +148,14 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                                     totals=totals,
                                     verbose=verbose)
 
-        if verbose:
-            print("Summaries by datetime created (seconds): {:.4f}".format(t.interval))
+        logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
 
     # Export results to csv if requested
     if export_bydatetime_csv:
         with HillTimer() as t:
             export_bydatetime(bydt_dfs, scenario_name, export_path)
-        if verbose:
-            print("By datetime exported to csv (seconds): {:.4f}".format(t.interval))
+
+        logger.info(f"By datetime exported to csv (seconds): {t.interval:.4f}")
 
     if export_summaries_csv:
         with HillTimer() as t:
@@ -157,8 +164,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
             if stationary_stats:
                 export_summaries(summary_dfs, scenario_name, export_path, 'stationary')
 
-        if verbose:
-            print("Summaries exported to csv (seconds): {:.4f}".format(t.interval))
+        logger.info(f"Summaries exported to csv (seconds): {t.interval:.4f}")
 
     # All done
 
@@ -166,8 +172,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
 
     endtime = t.end
 
-    if verbose:
-        print("Total time (seconds): {:.4f}".format(endtime - starttime))
+    logger.info(f"Total time (seconds): {t.interval:.4f}")
 
     return hills
 

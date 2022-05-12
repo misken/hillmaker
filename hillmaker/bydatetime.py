@@ -5,7 +5,7 @@ arrival, and departure statistics by time bin of day and date.
 
 # Copyright 2022 Mark Isken
 #
-import csv
+import logging
 
 import numpy as np
 import pandas as pd
@@ -15,10 +15,13 @@ from pandas import Timestamp
 from datetime import datetime
 from pandas.tseries.offsets import Minute
 
-import hmlib
+import hillmaker.hmlib as hmlib
 
 CONST_FAKE_OCCWEIGHT_FIELDNAME = 'FakeOccWeightField'
 CONST_FAKE_CATFIELD_NAME = 'FakeCatForTotals'
+
+# This should inherit level from root logger
+logger = logging.getLogger(__name__)
 
 
 def make_bydatetime(stops_df, infield, outfield,
@@ -113,11 +116,10 @@ def make_bydatetime(stops_df, infield, outfield,
     min_outtime = stops_df[outfield].min()
     max_outtime = stops_df[outfield].max()
 
-    if verbose:
-        print(f"min of intime: {min_intime}")
-        print(f"max of intime: {max_intime}")
-        print(f"min of outtime: {min_outtime}")
-        print(f"max of outtime: {max_outtime}")
+    logger.info(f"min of intime: {min_intime}")
+    logger.info(f"max of intime: {max_intime}")
+    logger.info(f"min of outtime: {min_outtime}")
+    logger.info(f"max of outtime: {max_outtime}")
 
     # TODO - Add warnings here related to min and maxes out of whack with analysis range
 
@@ -204,8 +206,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
         # Do the occupancy incrementing
         rec_counts = update_occ_incs(entry_bin, exit_bin, list_of_inc_arrays, rec_type, num_bins)
-        if verbose:
-            print(rec_counts)
+        logger.info(f'cat {cat} {rec_counts}')
 
         occ = np.zeros(num_bins, dtype=np.float64)
         update_occ(occ, entry_bin, rec_type, list_of_inc_arrays)

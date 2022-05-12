@@ -18,8 +18,13 @@ or more category fields.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pandas as pd
+import logging
+
 import numpy as np
+import pandas as pd
+
+# This should inherit level from root logger
+logger = logging.getLogger(__name__)
 
 
 def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
@@ -177,8 +182,7 @@ def summarize_nonstationary(bydt_df, catfield=None,
     summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
                  'departures': dep_stats_summary}
 
-    if verbose:
-        print('Created nonstationary summaries - {}'.format(catfield))
+    logger.info(f'Created nonstationary summaries - {catfield}')
 
     return summaries
 
@@ -248,8 +252,7 @@ def summarize_stationary(bydt_df, catfield=None,
     summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
                  'departures': dep_stats_summary}
 
-    if verbose:
-        print('Created stationary summaries - {}'.format(catfield))
+    logger.info(f'Created stationary summaries - {catfield}')
 
     return summaries
 
