@@ -26,8 +26,6 @@ from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 
 
-
-
 def make_hills(scenario_name, stops_df, in_field, out_field,
                start_analysis_dt, end_analysis_dt,
                cat_field=None,
@@ -42,7 +40,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                export_summaries_csv=True,
                export_path=Path('.'),
                edge_bins=1,
-               verbose=0):
+               verbose=1):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -92,7 +90,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     export_path : str or Path, optional
         Destination path for exported csv files, default is current directory
     verbose : int, optional
-        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
+        Used to set level in loggers. 1=logging.INFO, 0=logging.WARNING (default=1)
 
     Returns
     -------
@@ -167,15 +165,11 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
 
         logger.info(f"Summaries exported to csv (seconds): {t.interval:.4f}")
 
-    # All done
-
     hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
 
+    # All done
     endtime = t.end
-
     logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
-
-    logger.warning('fake warning')
 
     return hills
 
@@ -373,39 +367,26 @@ def process_command_line(argv=None):
 
     parser.add_argument(
         '--verbose', type=int, default=1,
-        help="The default, zero, means silent mode. Higher numbers mean more output messages."
+        help="Used to set level in loggers. 1=logging.INFO, 0=logging.WARNING (default=1)"
     )
-
-    parser.add_argument("--loglevel", default='WARNING',
-                        help="Use valid values for logging package (default is 'WARNING")
 
     # Do the parsing and return the populated namespace with the input arg values
     # If argv == None, then ``parse_args`` will use ``sys.argv[1:]``.
-    # By including ``argv=None`` as input to ``main``, our program can be
-    # imported and ``main`` called with arguments. This will be useful for
-    # testing via pytest.
     args = parser.parse_args(argv)
     return args
 
 
 def main(argv=None):
     """
-    :param argv:
-    :return:
+    :param argv: Input arguments
+    :return: No return value
     """
-    # Set logging level
-    # logging.basicConfig(
-    #     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    #     stream=sys.stdout,
-    # )
 
+    # By including ``argv=None`` as input to ``main``, our program can be
+    # imported and ``main`` called with arguments. This will be useful for
+    # testing via pytest.
     # Get input arguments
     args = process_command_line(argv)
-
-    # Set up logging
-    # logger = logging.getLogger()
-    # logger.setLevel(args.loglevel)
-    # logger.info(args)
 
     # Read in stop data to DataFrame
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
