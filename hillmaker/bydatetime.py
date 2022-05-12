@@ -19,6 +19,7 @@ import hillmaker.hmlib as hmlib
 
 CONST_FAKE_OCCWEIGHT_FIELDNAME = 'FakeOccWeightField'
 CONST_FAKE_CATFIELD_NAME = 'FakeCatForTotals'
+OCC_TOLERANCE = 0.02
 
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
@@ -217,6 +218,40 @@ def make_bydatetime(stops_df, infield, outfield,
 
         # Combine arr, dep, occ (in that order) into matrix
         occ_arr_dep = np.column_stack((arr, dep, occ))
+
+        # Conservation of flow checks for num arrivals and departures
+        num_arrivals_hm = arr.sum()
+        num_departures_hm = dep.sum()
+
+        num_arrivals_stops = cat_df.loc[(cat_df['InRoomTS'] >= start_analysis_np) &
+                                        (cat_df['InRoomTS'] <= end_analysis_np)].index.size
+
+        num_departures_stops = cat_df.loc[(cat_df['OutRoomTS'] >= start_analysis_np) &
+                                        (cat_df['OutRoomTS'] <= end_analysis_np)].index.size
+
+        logger.info(f'cat {cat} num_arrivals_hm {num_arrivals_hm} num_arrivals_stops {num_arrivals_stops}')
+        logger.info(
+            f'cat {cat} num_departures_hm {num_departures_hm} num_departures_stops {num_departures_stops}')
+
+        if num_arrivals_hm != num_arrivals_stops:
+            logger.warning(
+                f'num_arrivals_hm ({num_arrivals_hm}) not equal to num_arrivals_stops ({num_arrivals_stops})')
+
+        if num_departures_hm != num_departures_stops:
+            logger.warning(
+                f'num_departures_hm ({num_departures_hm}) not equal to departures_stops ({num_departures_stops})')
+
+        # Conservation of flow checks for weighted occupancy
+        tot_occ_him = occ.sum()
+
+        tot_occ_mins_stops = \
+            (cat_df[occ_weight_field] * (cat_df[outfield] - cat_df[infield]).dt.total_seconds()).sum() / 60
+        tot_occ_stops = tot_occ_mins_stops / bin_size_minutes
+
+        logger.info(f'cat {cat} tot_occ_hm {tot_occ_him} tot_occ_stops {tot_occ_stops}')
+        if (tot_occ_him - tot_occ_stops) / tot_occ_stops > OCC_TOLERANCE:
+            logger.warning(
+                f'cat {cat} Weighted occupancy differs by more than {OCC_TOLERANCE})')
 
         # Store results
         results[cat] = occ_arr_dep
