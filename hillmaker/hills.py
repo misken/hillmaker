@@ -26,6 +26,8 @@ from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 
 
+
+
 def make_hills(scenario_name, stops_df, in_field, out_field,
                start_analysis_dt, end_analysis_dt,
                cat_field=None,
@@ -98,14 +100,13 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    # Create root logger
-    logger = logging.getLogger()
+    # Reconfgure root logger if necessary
+    if not verbose:
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.WARNING)
 
-    # Confgure root logger
-    if verbose:
-        logger.setLevel(logging.INFO)
-    else:
-        logger.setLevel(logging.WARNING)
+    # This should inherit level from root logger
+    logger = logging.getLogger(__name__)
 
     # pandas Timestamp versions of analysis span end points
     start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
@@ -172,7 +173,9 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
 
     endtime = t.end
 
-    logger.info(f"Total time (seconds): {t.interval:.4f}")
+    logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
+
+    logger.warning('fake warning')
 
     return hills
 
@@ -391,18 +394,18 @@ def main(argv=None):
     :return:
     """
     # Set logging level
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        stream=sys.stdout,
-    )
+    # logging.basicConfig(
+    #     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    #     stream=sys.stdout,
+    # )
 
     # Get input arguments
     args = process_command_line(argv)
 
     # Set up logging
-    logger = logging.getLogger()
-    logger.setLevel(args.loglevel)
-    logger.info(args)
+    # logger = logging.getLogger()
+    # logger.setLevel(args.loglevel)
+    # logger.info(args)
 
     # Read in stop data to DataFrame
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
