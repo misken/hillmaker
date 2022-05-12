@@ -248,7 +248,7 @@ def make_bydatetime(stops_df, infield, outfield,
             (cat_df[occ_weight_field] * (cat_df[outfield] - cat_df[infield]).dt.total_seconds()).sum() / 60
         tot_occ_stops = tot_occ_mins_stops / bin_size_minutes
 
-        logger.info(f'cat {cat} tot_occ_hm {tot_occ_him} tot_occ_stops {tot_occ_stops}')
+        logger.info(f'cat {cat} tot_occ_hm {tot_occ_him:.2f} tot_occ_stops {tot_occ_stops:.2f}')
         if (tot_occ_him - tot_occ_stops) / tot_occ_stops > OCC_TOLERANCE:
             logger.warning(
                 f'cat {cat} Weighted occupancy differs by more than {OCC_TOLERANCE})')
