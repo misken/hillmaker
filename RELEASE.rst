@@ -22,8 +22,30 @@ Where to get it
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Documentation: Coming soon
+* Documentation: See notebooks and scripts at http://github.com/misken/hillmaker_examples for now
 
+hillmaker 0.3.0
+===============
+
+**Release date:** 2022-05-13
+
+**New features**
+
+- the main new feature is speed
+- added CLI
+- added flow conservation checks
+- added logging
+
+**Improvements to existing features**
+
+- Greatly improved speed by moving many computations into numpy arrays and vectorizing things.
+
+**API Changes**
+
+- deprecated use of multiple category fields and reverted to previous functionallity of a single (optional)
+category field. Multiple categories are best handled with composite keys.
+
+**Bug Fixes**
 
 hillmaker 0.2.3
 ===============

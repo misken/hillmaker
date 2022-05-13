@@ -1,4 +1,3 @@
 setuptools~=58.0.4
 pandas~=1.3.5
-hillmaker~=0.2.3
 numpy~=1.21.5
