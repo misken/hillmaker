@@ -22,7 +22,7 @@ Where to get it
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Documentation: See notebooks and scripts at http://github.com/misken/hillmaker_examples for now
+* Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
 hillmaker 0.3.0
 ===============
