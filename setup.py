@@ -1,5 +1,4 @@
-
-# Copyright 2015 Mark Isken
+# Copyright 2015, 2022 Mark Isken
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,28 +15,31 @@
 from setuptools import setup
 
 setup(name='hillmaker',
-      version='0.2.3',
+      version='0.3.0',
       description='Occupancy analysis tool for systems having time of day and day of week effects',
       author='Mark Isken',
       author_email='isken@oakland.edu',
       url='http://github.com/misken/hillmaker/',
       packages=['hillmaker'],
       platforms='any',
-      classifiers = [
-        'Programming Language :: Python :: 3 ',
-        'Programming Language :: Python :: 3.7 ',
-        'Development Status :: 4 - Beta',
-        'Natural Language :: English',
-        'Environment :: Console',
-        'Intended Audience :: Science/Research',
-        'Intended Audience :: Healthcare Industry',
-        'License :: OSI Approved',
-        'Operating System :: OS Independent',
-        'Topic :: Scientific/Engineering :: Information Analysis',
-        ], 
-     project_urls={
-    'Source': 'http://github.com/misken/hillmaker',
-    'Examples': 'https://github.com/misken/hillmaker-examples',
-    },install_requires=['pandas>=1.0.0'],
-    python_requires='>=3.7'
+      classifiers=[
+          'Programming Language :: Python :: 3 ',
+          'Programming Language :: Python :: 3.7 ',
+          'Development Status :: 4 - Beta',
+          'Natural Language :: English',
+          'Environment :: Console',
+          'Intended Audience :: Science/Research',
+          'Intended Audience :: Healthcare Industry',
+          'License :: OSI Approved',
+          'Operating System :: OS Independent',
+          'Topic :: Scientific/Engineering :: Information Analysis',
+      ],
+      entry_points={
+          'console_scripts': ['hillmaker=hillmaker.hills:main'],
+      },
+      project_urls={
+          'Source': 'http://github.com/misken/hillmaker',
+          'Examples': 'https://github.com/misken/hillmaker-examples',
+      }, install_requires=['pandas>=1.2.0'],
+      python_requires='>=3.7'
       )
