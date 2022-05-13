@@ -1,3 +1,5 @@
+from hillmaker.hills import make_hills
+
 # Create root logger
 import logging
 logger = logging.getLogger()
