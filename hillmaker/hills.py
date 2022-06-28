@@ -117,6 +117,9 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     # Filter out records that don't overlap the analysis span
     stops_df = stops_df.loc[(stops_df[in_field] <= end_analysis_dt_ts) & (stops_df[out_field] >= start_analysis_dt_ts)]
 
+    # reset index of df to ensure sequential numbering
+    stops_df.reset_index(inplace=True, drop=True)
+
     # Create the bydatetime DataFrame
     with HillTimer() as t:
         starttime = t.start
