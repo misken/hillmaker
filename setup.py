@@ -15,7 +15,7 @@
 from setuptools import setup
 
 setup(name='hillmaker',
-      version='0.3.0',
+      version='0.3.1',
       description='Occupancy analysis tool for systems having time of day and day of week effects',
       author='Mark Isken',
       author_email='isken@oakland.edu',
