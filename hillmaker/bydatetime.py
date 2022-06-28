@@ -223,11 +223,11 @@ def make_bydatetime(stops_df, infield, outfield,
         num_arrivals_hm = arr.sum()
         num_departures_hm = dep.sum()
 
-        num_arrivals_stops = cat_df.loc[(cat_df['InRoomTS'] >= start_analysis_np) &
-                                        (cat_df['InRoomTS'] <= end_analysis_np)].index.size
+        num_arrivals_stops = cat_df.loc[(cat_df[infield] >= start_analysis_np) &
+                                        (cat_df[infield] <= end_analysis_np)].index.size
 
-        num_departures_stops = cat_df.loc[(cat_df['OutRoomTS'] >= start_analysis_np) &
-                                        (cat_df['OutRoomTS'] <= end_analysis_np)].index.size
+        num_departures_stops = cat_df.loc[(cat_df[outfield] >= start_analysis_np) &
+                                        (cat_df[outfield] <= end_analysis_np)].index.size
 
         logger.info(f'cat {cat} num_arrivals_hm {num_arrivals_hm} num_arrivals_stops {num_arrivals_stops}')
         logger.info(
