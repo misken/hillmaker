@@ -12,10 +12,10 @@ statistics.
 
 - Takes a pandas DataFrame as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
-  by time of day, day of week, and entity category based on a pandas DataFrame containing one
+  by time of day, day of week, and entity category(s) based on a pandas DataFrame containing one
   record per visit.
 - Functions for computing arrival, departure and occupancy for each datetime
-  bin in the analysis period, by category.
+  bin in the analysis period, by zero or more category fields.
 - Select any time bin size (minutes) that divides evenly into a day.
 - Output statistics includes sample size, mean, min, max, standard deviation,
   coefficient of variation, standard error, skew, kurtosis, and percentiles.

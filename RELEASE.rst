@@ -22,7 +22,7 @@ Where to get it
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Documentation: See notebooks and scripts at http://github.com/misken/hillmaker_examples for now
+* Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
 hillmaker 0.3.0
 ===============
@@ -63,25 +63,29 @@ hillmaker 0.2.0
 
 **New features**
 
-- Added `edge_bins` parameter to control how occupancy contribution is computed
+* Added `edge_bins` parameter to control how occupancy contribution is computed
 for arrival and departure bins. 1=fractional contribution (default), 2=whole bin
 
-- Multiple category fields allowed.
+* Multiple category fields allowed.(GH0017_)
+
+.. _GH0017: https://github.com/misken/hillmaker/issues/17
 
     totals: int, default 1
         0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
         catfields (only relevant for > 1 category field)
         
-- Can specify a field to use as occupancy weights. This can be useful
+* Can specify a field to use as occupancy weights. This can be useful
 for building plots of workload instead of occupancy.
 
 **Improvements to existing features**
 
-- Code updated to reflect deprecations and new functionality of pandas.
-
 **API Changes**
 
 **Bug Fixes**
+
+* Replace deprecated sortlevel() by sort_index() (GH0020_)
+
+.. _GH0017: https://github.com/misken/hillmaker/issues/20
 
 
 
