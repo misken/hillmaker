@@ -4,7 +4,7 @@ import pandas as pd
 
 import hillmaker as hm
 
-file_stopdata = './testing/fixtures/ShortStay2_10pct.csv'
+file_stopdata = './fixtures/ShortStay.csv'
 
 # Required inputs
 scenario = 'sstest_60'
@@ -24,5 +24,5 @@ df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 hm.make_hills(scenario, df, in_fld_name, out_fld_name,
                      start, end, cat_fld_name,
                      bin_mins,
-                     export_path='./testing/output', verbose=1)
+                     export_path='./output', verbose=1)
 
