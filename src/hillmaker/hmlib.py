@@ -257,7 +257,6 @@ def bin_of_span(dt, start_span, bin_size_mins=60):
     start = datetime(1996, 1, 1, 1, 0)
     dt = datetime(1996, 3, 1, 14, 30)
     bin = bin_of_span(dt, 600)
-    # bin = TODO
 
     """
 

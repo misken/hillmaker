@@ -10,7 +10,7 @@ statistics.
 
 ![hillmaker Screenshot](/docs/hillmaker-user-guide/images/ssu_occ_1.png "hillmaker screenshot")
 
-- Takes a pandas DataFrame as the input data type
+- Takes a pandas DataFrame or csv file as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
   by time of day, day of week, and entity category(s) based on a pandas DataFrame containing one
   record per visit.
