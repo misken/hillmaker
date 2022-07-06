@@ -135,6 +135,8 @@ https://github.com/chriskiehl/Gooey
 
 https://github.com/pinterest/thrift-tools
 
+https://testdriven.io/blog/build-spa-with-python-part-1/
+
 Model projects
 ==============
 
