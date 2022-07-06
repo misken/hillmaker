@@ -182,36 +182,35 @@ def stoprec_analysis_rltnshp(in_dt, out_dt, start_span, end_span):
 
     Returns
     -------   
-    Returns a string, either 'inner', 'left', 'right, 'outer', 
-    'backwards', 'none' depending
-    on the relationship between the stop record being analyzed and the
-    analysis date range.
+    Returns a str, either 'inner', 'left', 'right, 'outer',
+    'backwards', or 'none' depending on the relationship between
+    the stop record being analyzed and the analysis date range.
     
     Type 'inner':
         
          |-------------------------|
-     start_span                  end_span
+     start_analysis                  end_analysis
               |--------------|
              in_dt         out_dt
              
     Type 'left':
         
                     |-------------------------|
-                  start_span                end_span
+                  start_analysis                end_analysis
               |--------------|
              in_dt         out_dt
              
     Type 'right':
         
                     |-------------------------|
-                  start_span                end_span
+                  start_analysis                end_analysis
                                        |--------------|
                                      in_dt         out_dt
              
     Type 'outer':
         
               |-------------------------|
-            start_span                end_span
+            start_analysis                end_analysis
        |-------------------------------------|
      in_dt                              out_dt   
      
