@@ -158,7 +158,6 @@ def summarize_nonstationary(bydt_df, catfield=None,
     dep_stats = bydt_dfgrp['departures'].apply(summary_stats, percentiles)
 
     if verbose > 1:
-        print(f'Calling latest version of hm and verbose={verbose}')
         print(occ_stats.head())
 
     occ_stats_summary = occ_stats.unstack()
