@@ -44,8 +44,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
-    Main function that first calls ``bydatetime.make_bydatetime`` to calculate occupancy, arrival
-    and departure values by date by time bin and then calls ``summarize.summarize``
+    Main function that first calls `bydatetime.make_bydatetime` to calculate occupancy, arrival
+    and departure values by date by time bin and then calls `summarize.summarize`
     to compute the summary statistics.
 
     Parameters

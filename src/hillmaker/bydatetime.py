@@ -416,8 +416,19 @@ def out_bin_occ_frac(exit_bin, in_ts, out_ts, start_analysis_np, bin_size_minute
     return outbin_occ_frac
 
 
-def make_occ_inc(in_bin, out_bin, in_frac, out_frac, occ_weight):
-    """Create array of occupancy increments"""
+def make_occ_inc(in_bin: int, out_bin: int,
+                 in_frac: float, out_frac:float, occ_weight:float):
+    """Create array of occupancy increments for a single stop
+
+    Parameters
+    ----------
+    in_bin: int
+    out_bin: int
+    in_frac: float
+    out_frac: float
+    occ_weight: float
+
+    """
     n_bins = out_bin - in_bin + 1
     if n_bins > 2:
         # [in_frac, occ_weight, occ_weight, ..., out_frac]
@@ -441,6 +452,19 @@ def update_occ_incs(in_bins, out_bins, list_of_inc_arrays, rec_types, num_bins):
     Stops that fall entirely within the analysis range (type='inner') are unchanged.
     Stops that arrive (depart) before (after) the start (end) of the analysis range
     are updated to reflect this.
+
+    Parameters
+    ----------
+    in_bins: List[int]
+        Entry bin for each stop
+    out_bins: List[int]
+        Exit bin for each stop
+    list_of_inc_arrays: List[ndarray]
+        Occupancy incrementor array for each stop
+    rec_types: List[str]
+        Record type for each stop
+    num_bins: int
+        Total number of time bins in analysis range
 
     """
     num_stop_recs = len(in_bins)
