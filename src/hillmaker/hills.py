@@ -26,6 +26,27 @@ from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 
 
+def setup_logger(verbose):
+    # Set logging level
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear() # Needed to prevent dup messages when module imported
+    logger_handler = logging.StreamHandler()
+    logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger_handler.setFormatter(logger_formatter)
+
+    if verbose == 0:
+        root_logger.setLevel(logging.WARNING)
+        logger_handler.setLevel(logging.WARNING)
+    elif verbose == 1:
+        root_logger.setLevel(logging.INFO)
+        logger_handler.setLevel(logging.INFO)
+    else:
+        root_logger.setLevel(logging.DEBUG)
+        logger_handler.setLevel(logging.DEBUG)
+
+    root_logger.addHandler(logger_handler)
+
+
 def make_hills(scenario_name, stops_df, in_field, out_field,
                start_analysis_dt, end_analysis_dt,
                cat_field=None,
@@ -40,7 +61,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                export_summaries_csv=True,
                export_path=Path('.'),
                edge_bins=1,
-               verbose=1):
+               verbose=0):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -51,30 +72,31 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     Parameters
     ----------
 
-    scenario_name : string
+    scenario_name : str
         Used in output filenames
     stops_df : DataFrame
         Base data containing one row per visit
-    in_field : string
+    in_field : str
         Column name corresponding to the arrival times
-    out_field : string
+    out_field : str
         Column name corresponding to the departure times
     start_analysis_dt : datetime-like, str
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
     end_analysis_dt : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    cat_field : string or List of strings, optional
-        Column name(s) corresponding to the categories. If none is specified, then
-        only overall occupancy is analyzed.
+    cat_field : str, optional
+        Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
         Default is None
     bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day, default is 60
+        Number of minutes in each time bin of the day, default is 60. Use a value that
+        divides into 1440 with no remainder
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
     cat_to_exclude : list, optional
-        Categories to ignore, default is None
-    occ_weight_field : string, optional
-        Column name corresponding to the weights to use for occupancy incrementing.
+        Category values to ignore, default is None
+    occ_weight_field : str, optional
+        Column name corresponding to the weights to use for occupancy incrementing, default is None
+        which corresponds to a weight of 1.0.
     edge_bins: int, default 1
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     totals: int, default 1
@@ -90,7 +112,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     export_path : str or Path, optional
         Destination path for exported csv files, default is current directory
     verbose : int, optional
-        Used to set level in loggers. 1=logging.INFO, 0=logging.WARNING (default=1)
+        Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
 
     Returns
     -------
@@ -98,17 +120,23 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    # Reconfgure root logger if necessary
-    if not verbose:
-        root_logger = logging.getLogger()
-        root_logger.setLevel(logging.WARNING)
+    setup_logger(verbose)
 
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
 
     # pandas Timestamp versions of analysis span end points
-    start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
-    end_analysis_dt_ts = pd.Timestamp(end_analysis_dt)
+    try:
+        start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
+    except ValueError as error:
+        raise ValueError(f'Cannot convert {start_analysis_dt} to Timestamp\n{error}')
+
+    try:
+        end_analysis_dt_ts = pd.Timestamp(end_analysis_dt)
+    except ValueError as error:
+        raise ValueError(f'Cannot convert {end_analysis_dt} to Timestamp\n{error}')
+
+
 
     # numpy datetime64 versions of analysis span end points
     start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
@@ -116,6 +144,9 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
 
     # Filter out records that don't overlap the analysis span
     stops_df = stops_df.loc[(stops_df[in_field] <= end_analysis_dt_ts) & (stops_df[out_field] >= start_analysis_dt_ts)]
+
+    # reset index of df to ensure sequential numbering
+    stops_df = stops_df.reset_index(drop=True)
 
     # Create the bydatetime DataFrame
     with HillTimer() as t:
@@ -211,13 +242,13 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
     summary_all_dfs: dict of DataFrames
         Output from make_hills to be exported
 
-    scenario_name: string
+    scenario_name: str
         Used in output filenames
 
-    export_path: string
+    export_path: str
         Destination path for exported csv files
 
-    temporal_key: string
+    temporal_key: str
         'nonstationary' or 'stationary'
 
     """
@@ -257,47 +288,7 @@ def process_command_line(argv=None):
     """
 
     """
-        scenario_name : string
-        Used in output filenames
-    stops_df : DataFrame
-        Base data containing one row per visit
-    infield : string
-        Column name corresponding to the arrival times
-    outfield : string
-        Column name corresponding to the departure times
-    start_analysis_dt : datetime-like, str
-        Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis_dt : datetime-like, str
-        Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    catfield : str, optional
-        Column name(s) corresponding to the categories. If none is specified, then
-        only overall occupancy is analyzed.
-        Default is None
-    bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day, default is 60
-    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
-        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    cat_to_exclude : list, optional
-        Categories to ignore, default is None
-    occ_weight_field : string, optional
-        Column name corresponding to the weights to use for occupancy incrementing.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
-    totals: int, default 1
-        0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
-        catfields (only relevant for > 1 category field)
-    nonstationary_stats : bool, optional
-       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    stationary_stats : bool, optional
-       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    export_bydatetime_csv : bool, optional
-       If True, bydatetime DataFrames are exported to csv files. Default is True.
-    export_summaries_csv : bool, optional
-       If True, summary DataFrames are exported to csv files. Default is True.
-    export_path : str or Path, optional
-        Destination path for exported csv files, default is current directory
-    verbose : int, optional
-        The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
+
     """
 
     # Create the parser
@@ -366,8 +357,8 @@ def process_command_line(argv=None):
     )
 
     parser.add_argument(
-        '--verbose', type=int, default=1,
-        help="Used to set level in loggers. 1=logging.INFO, 0=logging.WARNING (default=1)"
+        '--verbose', type=int, default=0,
+        help="Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG"
     )
 
     # Do the parsing and return the populated namespace with the input arg values

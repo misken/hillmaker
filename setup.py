@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(name='hillmaker',
-      version='0.3.0',
+      version='0.4.0',
       description='Occupancy analysis tool for systems having time of day and day of week effects',
       author='Mark Isken',
       author_email='isken@oakland.edu',
       url='http://github.com/misken/hillmaker/',
-      packages=['hillmaker'],
+      packages=find_packages("src"),
+      package_dir={"": "src"},
       platforms='any',
       classifiers=[
           'Programming Language :: Python :: 3 ',

@@ -58,9 +58,6 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
     Examples
     --------
 
-    TODO
-    ----
-
     Notes
     -----
 
@@ -92,18 +89,12 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
     summary_stationary_dfs = {}
 
     if stationary_stats:
-
-        for bydt in bydt_dfs:
-
-            bydt_df = bydt_dfs[bydt]
+        for bydt, bydt_df in bydt_dfs.items():
 
             midx_fields = bydt_df.index.names
             catfield = [x for x in midx_fields if x != 'datetime']
-
             summary_key = '_'.join(catfield)
-
             summaries = summarize_stationary(bydt_df, catfield, percentiles, verbose)
-
             summary_stationary_dfs[summary_key] = summaries
 
     summaries_all = {'nonstationary': summary_nonstationary_dfs, 'stationary': summary_stationary_dfs}
@@ -122,8 +113,8 @@ def summarize_nonstationary(bydt_df, catfield=None,
     bydt_df : DataFrame
        Occupancy, arrivals, departures by category (optional) and by datetime bin
 
-    catfield : string or List of strings, optional
-        Column name(s) corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
+    catfield : str, optional
+        Column name corresponding to the categories. If none is specified, then only overall occupancy is analyzed.
 
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
@@ -138,9 +129,6 @@ def summarize_nonstationary(bydt_df, catfield=None,
 
     Examples
     --------
-
-    TODO
-    ----
 
     Notes
     -----
@@ -197,8 +185,8 @@ def summarize_stationary(bydt_df, catfield=None,
     bydt_df: DataFrames
        Occupancy, arrivals, departures by category(ies) by datetime bin
 
-    catfield : string or List of strings, optional
-       Column name(s) corresponding to the categories. If none is specified,
+    catfield : str, optional
+       Column name corresponding to the categories. If none is specified,
        then only overall occupancy is analyzed.
 
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
@@ -214,18 +202,6 @@ def summarize_stationary(bydt_df, catfield=None,
        Occupancy, arrival and departure summaries as DataFrames
 
     Examples
-    --------
-
-    TODO
-    ----
-
-    Notes
-    -----
-
-    References
-    ----------
-
-    See Also
     --------
     """
 
