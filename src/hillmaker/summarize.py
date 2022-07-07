@@ -89,10 +89,7 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
     summary_stationary_dfs = {}
 
     if stationary_stats:
-
-        for bydt in bydt_dfs:
-
-            bydt_df = bydt_dfs[bydt]
+        for bydt, bydt_df in bydt_dfs.items():
 
             midx_fields = bydt_df.index.names
             catfield = [x for x in midx_fields if x != 'datetime']
