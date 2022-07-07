@@ -26,6 +26,27 @@ from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 
 
+def setup_logger(verbose):
+    # Set logging level
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear() # Needed to prevent dup messages when module imported
+    logger_handler = logging.StreamHandler()
+    logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger_handler.setFormatter(logger_formatter)
+
+    if verbose == 0:
+        root_logger.setLevel(logging.WARNING)
+        logger_handler.setLevel(logging.WARNING)
+    elif verbose == 1:
+        root_logger.setLevel(logging.INFO)
+        logger_handler.setLevel(logging.INFO)
+    else:
+        root_logger.setLevel(logging.DEBUG)
+        logger_handler.setLevel(logging.DEBUG)
+
+    root_logger.addHandler(logger_handler)
+
+
 def make_hills(scenario_name, stops_df, in_field, out_field,
                start_analysis_dt, end_analysis_dt,
                cat_field=None,
@@ -99,14 +120,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    # Set logging level
-    root_logger = logging.getLogger()
-    if verbose == 0:
-        root_logger.setLevel(logging.WARNING)
-    elif verbose == 1:
-        root_logger.setLevel(logging.INFO)
-    else:
-        root_logger.setLevel(logging.DEBUG)
+    setup_logger(verbose)
 
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
