@@ -144,11 +144,11 @@ def summarize_nonstationary(bydt_df, catfield=None,
         if isinstance(catfield, str):
             catfield = [catfield]
         if not catfield:
-            bydt_dfgrp = bydt_df.groupby(['day_of_week', 'dow_name', 'bin_of_day'])
+            bydt_dfgrp = bydt_df.groupby(['day_of_week', 'dow_name', 'bin_of_day', 'bin_of_day_str'])
         else:
-            bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'dow_name', 'bin_of_day'])
+            bydt_dfgrp = bydt_df.groupby([*catfield, 'day_of_week', 'dow_name', 'bin_of_day', 'bin_of_day_str'])
     else:
-        bydt_dfgrp = bydt_df.groupby(['day_of_week', 'dow_name', 'bin_of_day'])
+        bydt_dfgrp = bydt_df.groupby(['day_of_week', 'dow_name', 'bin_of_day', 'bin_of_day_str'])
 
     if verbose > 1:
         print(bydt_df.head())

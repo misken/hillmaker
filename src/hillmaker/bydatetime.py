@@ -137,9 +137,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Get the unique category values and exclude any specified to exclude
     categories = []
-    if cat_to_exclude is not None:
+    if cat_to_exclude is not None and len(cat_to_exclude) > 0:
         for i in range(len(catfield)):
-            categories.append(tuple([c for c in stops_df[catfield[i]].unique() if c not in cat_to_exclude[i]]))
+            categories.append(tuple([c for c in stops_df[catfield[i]].unique() if c not in cat_to_exclude]))
     else:
         for i in range(len(catfield)):
             categories.append(tuple([c for c in stops_df[catfield[i]].unique()]))
@@ -299,8 +299,9 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_mi
                 df[c] = cat
 
         df['day_of_week'] = df['datetime'].map(lambda x: x.weekday())
-        df['dow_name'] = df['datetime'].map(lambda x: x.day_name())
+        df['dow_name'] = df['datetime'].map(lambda x: x.strftime('%a'))
         df['bin_of_day'] = df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
+        df['bin_of_day_str'] = df['datetime'].map(lambda x: x.strftime('%H:%M'))
         df['bin_of_week'] = df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
         dfs.append(df)  # Add category specific dataframe to list
@@ -323,7 +324,7 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_mi
 
     # Reorder the columns
     col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week', 'dow_name',
-                 'bin_of_day', 'bin_of_week']
+                 'bin_of_day_str', 'bin_of_day', 'bin_of_week']
 
     bydt_df = bydt_df[col_order]
 
