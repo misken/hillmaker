@@ -42,7 +42,7 @@ Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 You can see an html version of the [basic_usage_shortstay_unit notebook here](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_040.html).
 
 
-The source and a binary wheel are available from PyPi. You can install using pip: ::
+The source and a binary wheel are available from PyPi. You can install using pip: 
 
     pip install hillmaker
 
