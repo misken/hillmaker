@@ -46,7 +46,7 @@ def get_user_input():
     # get the script name without the extension and use it to build up
     # the json filename
     script_name = os.path.splitext(os.path.basename(__file__))[0]
-    args_file = "{}-args.json".format(script_name)
+    args_file = 'f{script_name}-args.json'
 
     # read in the prior arguments as a dictionary
     if os.path.isfile(args_file):
@@ -55,6 +55,7 @@ def get_user_input():
 
     test = "user_input.lower().endswith('.csv')"
     message = 'Must be .csv file'
+    today = str(int(dt.now().strftime('%Y%m%d')))
 
     parser = GooeyParser(description='Computes occupancy statistics based on a list of start and stop times.')
     parser.add_argument('stops_fn',
@@ -114,7 +115,7 @@ def get_user_input():
                         widget='DateChooser',
                         gooey_options={
                             'validator': {
-                                'test': 'int(user_input.replace("-", "")) <= ' + str(int(dt.now().strftime('%Y%m%d'))),
+                                'test': 'int(user_input.replace("-", "")) <= ' + today,
                                 'message': 'Must be a valid date up to and including today'
                             }
                         })
@@ -127,7 +128,7 @@ def get_user_input():
                         widget='DateChooser',
                         gooey_options={
                             'validator': {
-                                'test': 'int(user_input.replace("-", "")) <= ' + str(int(dt.now().strftime('%Y%m%d'))),
+                                'test': 'int(user_input.replace("-", "")) <= ' + today,
                                 'message': 'Must be a valid date up to and including today'
                             }
                         })
