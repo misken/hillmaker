@@ -46,7 +46,7 @@ def get_user_input():
     # get the script name without the extension and use it to build up
     # the json filename
     script_name = os.path.splitext(os.path.basename(__file__))[0]
-    args_file = 'f{script_name}-args.json'
+    args_file = f'{script_name}-args.json'
 
     # read in the prior arguments as a dictionary
     if os.path.isfile(args_file):
