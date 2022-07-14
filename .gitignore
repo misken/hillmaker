@@ -4,7 +4,7 @@ archive/*
 *.pyc
 .ipynb_checkpoints/
 __pycache__/
-
+src/hillmaker.egg-info/
 .idea/
 
 # tests
