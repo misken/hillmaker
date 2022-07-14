@@ -23,14 +23,13 @@ statistics.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
 - Requires Python 3.7+ and pandas 1.0.0+
-- Apache 2.0 licensed
+- MIT License
 
 Where to get it
 ---------------
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Binary on Anaconda.org: http://anaconda.org/hselab/hillmaker
 * Documentation: Coming soon
 
 Quick Start
