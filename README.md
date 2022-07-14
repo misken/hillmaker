@@ -60,4 +60,4 @@ changed with this recent version.
 * [Using hillmaker from R with reticulate](https://misken.github.io/blog/hillmaker_r_sfcs/)
 * [Numpy speeds up hillmaker dramatically](https://misken.github.io/blog/hillmaker_030_released/)
 
-I published `a paper a long time ago regarding the use of hillmaker in practice <https://www.researchgate.net/publication/7322712_Hillmaker_An_open_source_occupancy_analysis_tool>`_.
+I published [a paper a long time ago regarding the use of hillmaker in practice](https://www.researchgate.net/publication/7322712_Hillmaker_An_open_source_occupancy_analysis_tool).
