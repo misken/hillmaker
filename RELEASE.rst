@@ -24,6 +24,21 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
+
+hillmaker 0.4.0
+===============
+
+**Release date:** 2022-07-14
+
+**New features**
+
+- added basic usage explainer notebook
+
+**Bug Fixes**
+
+- adjusted arrivals and departures by bin arrays to account for stops with arrivals or departures outside the analysis range
+
+
 hillmaker 0.3.0
 ===============
 
