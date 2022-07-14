@@ -30,7 +30,6 @@ Where to get it
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Binary on Anaconda.org: http://anaconda.org/hselab/hillmaker
 * Documentation: Coming soon
 
 Quick Start
