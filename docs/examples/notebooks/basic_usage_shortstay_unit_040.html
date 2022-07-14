@@ -13380,8 +13380,8 @@ memory usage: 1.8+ MB
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Current-(2022-07-13)-status-of-code">Current (2022-07-13) status of code<a class="anchor-link" href="#Current-(2022-07-13)-status-of-code">&#182;</a></h2><p>Version 0.4.0 was just released and is available on <a href="https://pypi.org/project/hillmaker/">PyPI</a> or source from <a href="https://github.com/misken/hillmaker">https://github.com/misken/hillmaker</a>. This version is much faster than previous versions (thank you numpy) and includes a CLI, flow conservation checks and better logging. It does however revert back to only allowing a single category field (multiple category fields can easily be handled by constructing composite category strings). You can read more about this latest release of Hillmaker at <a href="https://misken.github.io/blog/hillmaker-python-released/">https://misken.github.io/blog/hillmaker-python-released/</a>. It's free and open source.</p>
-<p>Hillmaker is implemented as an importable Python module and as a runnable script with a simple CLI. This new version of Hillmaker is still in what I'd call a pre-release state. The output does match the Access version for the ShortStay database that I included in the original Hillmaker. I've been actively using it to process thousands of simulation output log files as part of a research project on OB patient flow. More testing is needed before I release it as version 1.0, but it does appear to be doing its primary job correctly. Please open an issue on GitHub if you think it's computing something incorrectly. Before using for any real project work, you should do your own testing to confirm that it is working appropriately for your needs. Use at your own risk - see <a href="https://github.com/misken/hillmaker/blob/master/LICENSE">LICENSE file in GitHub</a>.</p>
+<h2 id="Current-(2022-07-13)-status-of-code">Current (2022-07-13) status of code<a class="anchor-link" href="#Current-(2022-07-13)-status-of-code">&#182;</a></h2><p>Version 0.4.0 was just released and is available on <a href="https://pypi.org/project/hillmaker/">PyPI</a> or source from <a href="https://github.com/misken/hillmaker">https://github.com/misken/hillmaker</a>. This version is much faster than previous versions (thank you numpy) and includes a CLI, flow conservation checks and better logging. It does however revert back to only allowing a single category field (multiple category fields can easily be handled by constructing composite category strings). You can read more about this latest release of hillmaker at <a href="https://misken.github.io/blog/hillmaker-python-released/">https://misken.github.io/blog/hillmaker-python-released/</a>. It's free and open source.</p>
+<p>The new hillmaker is implemented as an importable Python module and as a runnable script with a simple CLI. This new version of hillmaker is still in what I'd call a pre-release state. The output does match the Access version for the ShortStay database that I included in the original Hillmaker. I've been actively using it to process thousands of simulation output log files as part of a research project on OB patient flow. More testing is needed before I release it as version 1.0, but it does appear to be doing its primary job correctly. Please open an issue on GitHub if you think it's computing something incorrectly. Before using for any real project work, you should do your own testing to confirm that it is working appropriately for your needs. Use at your own risk - see <a href="https://github.com/misken/hillmaker/blob/master/LICENSE">LICENSE file in GitHub</a>.</p>
 
 </div>
 </div>
@@ -13395,7 +13395,7 @@ memory usage: 1.8+ MB
 <li>run main Hillmaker sub from Access VBA Immediate Window</li>
 <li>run Hillmaker main sub (and/or components subs) via custom VBA procedures</li>
 </ul>
-<p>I'd like users to be able to use the new Python based version in a number of different ways as well. As I'll show in this Jupyter notebook, it can be used by importing the <code>hillmaker</code> module and then calling Hillmaker functions via:</p>
+<p>I'd like users to be able to use the new Python based version in a number of different ways as well. As I'll show in this Jupyter notebook, it can be used by importing the <code>hillmaker</code> module and then calling hillmaker functions via:</p>
 <ul>
 <li>a Jupyter notebook (or any Python terminal such as an IPython shell or QT console, or IDLE)</li>
 <li>a Python script with the input arguments set and passed via Python statements</li>
@@ -13421,7 +13421,7 @@ memory usage: 1.8+ MB
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Module-imports">Module imports<a class="anchor-link" href="#Module-imports">&#182;</a></h2><p>To run Hillmaker we only need to import a few modules. Since the main hillmaker function uses pandas DataFrames for both data input and output, we need to import <code>pandas</code> in addition to <code>hillmaker</code>.</p>
+<h2 id="Module-imports">Module imports<a class="anchor-link" href="#Module-imports">&#182;</a></h2><p>To run hillmaker we only need to import a few modules. Since the main hillmaker function uses pandas DataFrames for both data input and output, we need to import <code>pandas</code> in addition to <code>hillmaker</code>.</p>
 
 </div>
 </div>
@@ -14148,50 +14148,50 @@ make_hills(scenario_name, stops_df, in_field, out_field, start_analysis_dt, end_
 
 
 <div class="output_subarea output_stream output_stderr output_text">
-<pre>2022-07-13 22:03:05,129 - hillmaker.bydatetime - INFO - min of intime: 1996-01-01 07:44:00
-2022-07-13 22:03:05,130 - hillmaker.bydatetime - INFO - max of intime: 1996-09-30 22:45:00
-2022-07-13 22:03:05,130 - hillmaker.bydatetime - INFO - min of outtime: 1996-01-01 08:50:00
-2022-07-13 22:03:05,131 - hillmaker.bydatetime - INFO - max of outtime: 1996-09-30 23:35:00
-2022-07-13 22:03:05,131 - hillmaker.bydatetime - INFO - start analysis: 1996-01-01T00:00:00.000000000, end analysis: 1996-01-01T00:00:00.000000000
-2022-07-13 22:03:05,150 - hillmaker.bydatetime - INFO - min of entry time_bin = 7
-2022-07-13 22:03:05,151 - hillmaker.bydatetime - INFO - max of exit time_bin = 6574 and num_bins=6576
-2022-07-13 22:03:06,294 - hillmaker.bydatetime - INFO - cat IVT {&#39;inner&#39;: 33179}
-2022-07-13 22:03:06,347 - hillmaker.bydatetime - INFO - cat IVT num_arrivals_hm 33179 num_arrivals_stops 33179
-2022-07-13 22:03:06,348 - hillmaker.bydatetime - INFO - cat IVT num_departures_hm 33179 num_departures_stops 33179
-2022-07-13 22:03:06,349 - hillmaker.bydatetime - INFO - cat IVT tot_occ_hm 38070.18 tot_occ_stops 38070.18
-2022-07-13 22:03:06,354 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
-2022-07-13 22:03:06,355 - hillmaker.bydatetime - INFO - max of exit time_bin = 6569 and num_bins=6576
-2022-07-13 22:03:06,573 - hillmaker.bydatetime - INFO - cat MYE {&#39;inner&#39;: 6478}
-2022-07-13 22:03:06,585 - hillmaker.bydatetime - INFO - cat MYE num_arrivals_hm 6478 num_arrivals_stops 6478
-2022-07-13 22:03:06,586 - hillmaker.bydatetime - INFO - cat MYE num_departures_hm 6478 num_departures_stops 6478
-2022-07-13 22:03:06,587 - hillmaker.bydatetime - INFO - cat MYE tot_occ_hm 9257.20 tot_occ_stops 9257.20
-2022-07-13 22:03:06,592 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
-2022-07-13 22:03:06,594 - hillmaker.bydatetime - INFO - max of exit time_bin = 6575 and num_bins=6576
-2022-07-13 22:03:06,933 - hillmaker.bydatetime - INFO - cat CAT {&#39;inner&#39;: 10692}
-2022-07-13 22:03:06,952 - hillmaker.bydatetime - INFO - cat CAT num_arrivals_hm 10692 num_arrivals_stops 10692
-2022-07-13 22:03:06,952 - hillmaker.bydatetime - INFO - cat CAT num_departures_hm 10692 num_departures_stops 10692
-2022-07-13 22:03:06,953 - hillmaker.bydatetime - INFO - cat CAT tot_occ_hm 11161.53 tot_occ_stops 11161.53
-2022-07-13 22:03:06,959 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
-2022-07-13 22:03:06,959 - hillmaker.bydatetime - INFO - max of exit time_bin = 6568 and num_bins=6576
-2022-07-13 22:03:07,166 - hillmaker.bydatetime - INFO - cat ART {&#39;inner&#39;: 5761}
-2022-07-13 22:03:07,179 - hillmaker.bydatetime - INFO - cat ART num_arrivals_hm 5761 num_arrivals_stops 5761
-2022-07-13 22:03:07,180 - hillmaker.bydatetime - INFO - cat ART num_departures_hm 5761 num_departures_stops 5761
-2022-07-13 22:03:07,181 - hillmaker.bydatetime - INFO - cat ART tot_occ_hm 8523.30 tot_occ_stops 8523.30
-2022-07-13 22:03:07,186 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
-2022-07-13 22:03:07,187 - hillmaker.bydatetime - INFO - max of exit time_bin = 6567 and num_bins=6576
-2022-07-13 22:03:07,396 - hillmaker.bydatetime - INFO - cat OTH {&#39;inner&#39;: 3767}
-2022-07-13 22:03:07,406 - hillmaker.bydatetime - INFO - cat OTH num_arrivals_hm 3767 num_arrivals_stops 3767
-2022-07-13 22:03:07,407 - hillmaker.bydatetime - INFO - cat OTH num_departures_hm 3767 num_departures_stops 3767
-2022-07-13 22:03:07,409 - hillmaker.bydatetime - INFO - cat OTH tot_occ_hm 5658.22 tot_occ_stops 5658.22
-2022-07-13 22:03:08,153 - hillmaker.hills - INFO - Datetime matrix created (seconds): 3.0830
-2022-07-13 22:03:14,249 - hillmaker.summarize - INFO - Created nonstationary summaries - [&#39;PatType&#39;]
-2022-07-13 22:03:15,266 - hillmaker.summarize - INFO - Created nonstationary summaries - []
-2022-07-13 22:03:15,305 - hillmaker.summarize - INFO - Created stationary summaries - [&#39;PatType&#39;]
-2022-07-13 22:03:15,319 - hillmaker.summarize - INFO - Created stationary summaries - []
-2022-07-13 22:03:15,320 - hillmaker.hills - INFO - Summaries by datetime created (seconds): 7.1638
-2022-07-13 22:03:15,605 - hillmaker.hills - INFO - By datetime exported to csv (seconds): 0.2751
-2022-07-13 22:03:15,667 - hillmaker.hills - INFO - Summaries exported to csv (seconds): 0.0630
-2022-07-13 22:03:15,668 - hillmaker.hills - INFO - Total time (seconds): 10.5868
+<pre>2022-07-14 17:16:49,591 - hillmaker.bydatetime - INFO - min of intime: 1996-01-01 07:44:00
+2022-07-14 17:16:49,591 - hillmaker.bydatetime - INFO - max of intime: 1996-09-30 22:45:00
+2022-07-14 17:16:49,592 - hillmaker.bydatetime - INFO - min of outtime: 1996-01-01 08:50:00
+2022-07-14 17:16:49,593 - hillmaker.bydatetime - INFO - max of outtime: 1996-09-30 23:35:00
+2022-07-14 17:16:49,594 - hillmaker.bydatetime - INFO - start analysis: 1996-01-01T00:00:00.000000000, end analysis: 1996-01-01T00:00:00.000000000
+2022-07-14 17:16:49,614 - hillmaker.bydatetime - INFO - min of entry time_bin = 7
+2022-07-14 17:16:49,616 - hillmaker.bydatetime - INFO - max of exit time_bin = 6574 and num_bins=6576
+2022-07-14 17:16:50,839 - hillmaker.bydatetime - INFO - cat IVT {&#39;inner&#39;: 33179}
+2022-07-14 17:16:50,898 - hillmaker.bydatetime - INFO - cat IVT num_arrivals_hm 33179 num_arrivals_stops 33179
+2022-07-14 17:16:50,899 - hillmaker.bydatetime - INFO - cat IVT num_departures_hm 33179 num_departures_stops 33179
+2022-07-14 17:16:50,900 - hillmaker.bydatetime - INFO - cat IVT tot_occ_hm 38070.18 tot_occ_stops 38070.18
+2022-07-14 17:16:50,905 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
+2022-07-14 17:16:50,906 - hillmaker.bydatetime - INFO - max of exit time_bin = 6569 and num_bins=6576
+2022-07-14 17:16:51,140 - hillmaker.bydatetime - INFO - cat MYE {&#39;inner&#39;: 6478}
+2022-07-14 17:16:51,152 - hillmaker.bydatetime - INFO - cat MYE num_arrivals_hm 6478 num_arrivals_stops 6478
+2022-07-14 17:16:51,153 - hillmaker.bydatetime - INFO - cat MYE num_departures_hm 6478 num_departures_stops 6478
+2022-07-14 17:16:51,154 - hillmaker.bydatetime - INFO - cat MYE tot_occ_hm 9257.20 tot_occ_stops 9257.20
+2022-07-14 17:16:51,159 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
+2022-07-14 17:16:51,159 - hillmaker.bydatetime - INFO - max of exit time_bin = 6575 and num_bins=6576
+2022-07-14 17:16:51,542 - hillmaker.bydatetime - INFO - cat CAT {&#39;inner&#39;: 10692}
+2022-07-14 17:16:51,560 - hillmaker.bydatetime - INFO - cat CAT num_arrivals_hm 10692 num_arrivals_stops 10692
+2022-07-14 17:16:51,561 - hillmaker.bydatetime - INFO - cat CAT num_departures_hm 10692 num_departures_stops 10692
+2022-07-14 17:16:51,562 - hillmaker.bydatetime - INFO - cat CAT tot_occ_hm 11161.53 tot_occ_stops 11161.53
+2022-07-14 17:16:51,567 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
+2022-07-14 17:16:51,568 - hillmaker.bydatetime - INFO - max of exit time_bin = 6568 and num_bins=6576
+2022-07-14 17:16:51,773 - hillmaker.bydatetime - INFO - cat ART {&#39;inner&#39;: 5761}
+2022-07-14 17:16:51,784 - hillmaker.bydatetime - INFO - cat ART num_arrivals_hm 5761 num_arrivals_stops 5761
+2022-07-14 17:16:51,785 - hillmaker.bydatetime - INFO - cat ART num_departures_hm 5761 num_departures_stops 5761
+2022-07-14 17:16:51,786 - hillmaker.bydatetime - INFO - cat ART tot_occ_hm 8523.30 tot_occ_stops 8523.30
+2022-07-14 17:16:51,791 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
+2022-07-14 17:16:51,792 - hillmaker.bydatetime - INFO - max of exit time_bin = 6567 and num_bins=6576
+2022-07-14 17:16:51,976 - hillmaker.bydatetime - INFO - cat OTH {&#39;inner&#39;: 3767}
+2022-07-14 17:16:51,984 - hillmaker.bydatetime - INFO - cat OTH num_arrivals_hm 3767 num_arrivals_stops 3767
+2022-07-14 17:16:51,985 - hillmaker.bydatetime - INFO - cat OTH num_departures_hm 3767 num_departures_stops 3767
+2022-07-14 17:16:51,986 - hillmaker.bydatetime - INFO - cat OTH tot_occ_hm 5658.22 tot_occ_stops 5658.22
+2022-07-14 17:16:52,705 - hillmaker.hills - INFO - Datetime matrix created (seconds): 3.1212
+2022-07-14 17:16:58,193 - hillmaker.summarize - INFO - Created nonstationary summaries - [&#39;PatType&#39;]
+2022-07-14 17:16:59,186 - hillmaker.summarize - INFO - Created nonstationary summaries - []
+2022-07-14 17:16:59,218 - hillmaker.summarize - INFO - Created stationary summaries - [&#39;PatType&#39;]
+2022-07-14 17:16:59,230 - hillmaker.summarize - INFO - Created stationary summaries - []
+2022-07-14 17:16:59,230 - hillmaker.hills - INFO - Summaries by datetime created (seconds): 6.5267
+2022-07-14 17:16:59,495 - hillmaker.hills - INFO - By datetime exported to csv (seconds): 0.2643
+2022-07-14 17:16:59,559 - hillmaker.hills - INFO - Summaries exported to csv (seconds): 0.0635
+2022-07-14 17:16:59,559 - hillmaker.hills - INFO - Total time (seconds): 9.9776
 </pre>
 </div>
 </div>
@@ -16433,50 +16433,50 @@ optional arguments:
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>2022-07-13 22:03:34,709 - hillmaker.bydatetime - INFO - min of intime: 1996-01-01 07:44:00
-2022-07-13 22:03:34,709 - hillmaker.bydatetime - INFO - max of intime: 1996-09-30 22:45:00
-2022-07-13 22:03:34,709 - hillmaker.bydatetime - INFO - min of outtime: 1996-01-01 08:50:00
-2022-07-13 22:03:34,709 - hillmaker.bydatetime - INFO - max of outtime: 1996-09-30 23:35:00
-2022-07-13 22:03:34,709 - hillmaker.bydatetime - INFO - start analysis: 1996-01-01T00:00:00.000000000, end analysis: 1996-01-01T00:00:00.000000000
-2022-07-13 22:03:34,721 - hillmaker.bydatetime - INFO - min of entry time_bin = 7
-2022-07-13 22:03:34,722 - hillmaker.bydatetime - INFO - max of exit time_bin = 6574 and num_bins=6576
-2022-07-13 22:03:35,783 - hillmaker.bydatetime - INFO - cat IVT {&#39;inner&#39;: 33179}
-2022-07-13 22:03:35,835 - hillmaker.bydatetime - INFO - cat IVT num_arrivals_hm 33179 num_arrivals_stops 33179
-2022-07-13 22:03:35,835 - hillmaker.bydatetime - INFO - cat IVT num_departures_hm 33179 num_departures_stops 33179
-2022-07-13 22:03:35,835 - hillmaker.bydatetime - INFO - cat IVT tot_occ_hm 38070.18 tot_occ_stops 38070.18
-2022-07-13 22:03:35,839 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
-2022-07-13 22:03:35,839 - hillmaker.bydatetime - INFO - max of exit time_bin = 6569 and num_bins=6576
-2022-07-13 22:03:36,051 - hillmaker.bydatetime - INFO - cat MYE {&#39;inner&#39;: 6478}
-2022-07-13 22:03:36,063 - hillmaker.bydatetime - INFO - cat MYE num_arrivals_hm 6478 num_arrivals_stops 6478
-2022-07-13 22:03:36,063 - hillmaker.bydatetime - INFO - cat MYE num_departures_hm 6478 num_departures_stops 6478
-2022-07-13 22:03:36,064 - hillmaker.bydatetime - INFO - cat MYE tot_occ_hm 9257.20 tot_occ_stops 9257.20
-2022-07-13 22:03:36,068 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
-2022-07-13 22:03:36,068 - hillmaker.bydatetime - INFO - max of exit time_bin = 6575 and num_bins=6576
-2022-07-13 22:03:36,424 - hillmaker.bydatetime - INFO - cat CAT {&#39;inner&#39;: 10692}
-2022-07-13 22:03:36,441 - hillmaker.bydatetime - INFO - cat CAT num_arrivals_hm 10692 num_arrivals_stops 10692
-2022-07-13 22:03:36,441 - hillmaker.bydatetime - INFO - cat CAT num_departures_hm 10692 num_departures_stops 10692
-2022-07-13 22:03:36,442 - hillmaker.bydatetime - INFO - cat CAT tot_occ_hm 11161.53 tot_occ_stops 11161.53
-2022-07-13 22:03:36,445 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
-2022-07-13 22:03:36,445 - hillmaker.bydatetime - INFO - max of exit time_bin = 6568 and num_bins=6576
-2022-07-13 22:03:36,638 - hillmaker.bydatetime - INFO - cat ART {&#39;inner&#39;: 5761}
-2022-07-13 22:03:36,650 - hillmaker.bydatetime - INFO - cat ART num_arrivals_hm 5761 num_arrivals_stops 5761
-2022-07-13 22:03:36,650 - hillmaker.bydatetime - INFO - cat ART num_departures_hm 5761 num_departures_stops 5761
-2022-07-13 22:03:36,651 - hillmaker.bydatetime - INFO - cat ART tot_occ_hm 8523.30 tot_occ_stops 8523.30
-2022-07-13 22:03:36,655 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
-2022-07-13 22:03:36,655 - hillmaker.bydatetime - INFO - max of exit time_bin = 6567 and num_bins=6576
-2022-07-13 22:03:36,793 - hillmaker.bydatetime - INFO - cat OTH {&#39;inner&#39;: 3767}
-2022-07-13 22:03:36,800 - hillmaker.bydatetime - INFO - cat OTH num_arrivals_hm 3767 num_arrivals_stops 3767
-2022-07-13 22:03:36,800 - hillmaker.bydatetime - INFO - cat OTH num_departures_hm 3767 num_departures_stops 3767
-2022-07-13 22:03:36,801 - hillmaker.bydatetime - INFO - cat OTH tot_occ_hm 5658.22 tot_occ_stops 5658.22
-2022-07-13 22:03:37,485 - hillmaker.hills - INFO - Datetime matrix created (seconds): 2.7765
-2022-07-13 22:03:43,233 - hillmaker.summarize - INFO - Created nonstationary summaries - [&#39;PatType&#39;]
-2022-07-13 22:03:44,236 - hillmaker.summarize - INFO - Created nonstationary summaries - []
-2022-07-13 22:03:44,266 - hillmaker.summarize - INFO - Created stationary summaries - [&#39;PatType&#39;]
-2022-07-13 22:03:44,276 - hillmaker.summarize - INFO - Created stationary summaries - []
-2022-07-13 22:03:44,276 - hillmaker.hills - INFO - Summaries by datetime created (seconds): 6.7896
-2022-07-13 22:03:44,497 - hillmaker.hills - INFO - By datetime exported to csv (seconds): 0.2206
-2022-07-13 22:03:44,554 - hillmaker.hills - INFO - Summaries exported to csv (seconds): 0.0576
-2022-07-13 22:03:44,554 - hillmaker.hills - INFO - Total time (seconds): 9.8446
+<pre>2022-07-14 17:17:18,461 - hillmaker.bydatetime - INFO - min of intime: 1996-01-01 07:44:00
+2022-07-14 17:17:18,461 - hillmaker.bydatetime - INFO - max of intime: 1996-09-30 22:45:00
+2022-07-14 17:17:18,461 - hillmaker.bydatetime - INFO - min of outtime: 1996-01-01 08:50:00
+2022-07-14 17:17:18,461 - hillmaker.bydatetime - INFO - max of outtime: 1996-09-30 23:35:00
+2022-07-14 17:17:18,461 - hillmaker.bydatetime - INFO - start analysis: 1996-01-01T00:00:00.000000000, end analysis: 1996-01-01T00:00:00.000000000
+2022-07-14 17:17:18,472 - hillmaker.bydatetime - INFO - min of entry time_bin = 7
+2022-07-14 17:17:18,472 - hillmaker.bydatetime - INFO - max of exit time_bin = 6574 and num_bins=6576
+2022-07-14 17:17:19,531 - hillmaker.bydatetime - INFO - cat IVT {&#39;inner&#39;: 33179}
+2022-07-14 17:17:19,589 - hillmaker.bydatetime - INFO - cat IVT num_arrivals_hm 33179 num_arrivals_stops 33179
+2022-07-14 17:17:19,590 - hillmaker.bydatetime - INFO - cat IVT num_departures_hm 33179 num_departures_stops 33179
+2022-07-14 17:17:19,590 - hillmaker.bydatetime - INFO - cat IVT tot_occ_hm 38070.18 tot_occ_stops 38070.18
+2022-07-14 17:17:19,594 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
+2022-07-14 17:17:19,594 - hillmaker.bydatetime - INFO - max of exit time_bin = 6569 and num_bins=6576
+2022-07-14 17:17:19,832 - hillmaker.bydatetime - INFO - cat MYE {&#39;inner&#39;: 6478}
+2022-07-14 17:17:19,843 - hillmaker.bydatetime - INFO - cat MYE num_arrivals_hm 6478 num_arrivals_stops 6478
+2022-07-14 17:17:19,843 - hillmaker.bydatetime - INFO - cat MYE num_departures_hm 6478 num_departures_stops 6478
+2022-07-14 17:17:19,844 - hillmaker.bydatetime - INFO - cat MYE tot_occ_hm 9257.20 tot_occ_stops 9257.20
+2022-07-14 17:17:19,847 - hillmaker.bydatetime - INFO - min of entry time_bin = 11
+2022-07-14 17:17:19,847 - hillmaker.bydatetime - INFO - max of exit time_bin = 6575 and num_bins=6576
+2022-07-14 17:17:20,189 - hillmaker.bydatetime - INFO - cat CAT {&#39;inner&#39;: 10692}
+2022-07-14 17:17:20,206 - hillmaker.bydatetime - INFO - cat CAT num_arrivals_hm 10692 num_arrivals_stops 10692
+2022-07-14 17:17:20,206 - hillmaker.bydatetime - INFO - cat CAT num_departures_hm 10692 num_departures_stops 10692
+2022-07-14 17:17:20,207 - hillmaker.bydatetime - INFO - cat CAT tot_occ_hm 11161.53 tot_occ_stops 11161.53
+2022-07-14 17:17:20,211 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
+2022-07-14 17:17:20,211 - hillmaker.bydatetime - INFO - max of exit time_bin = 6568 and num_bins=6576
+2022-07-14 17:17:20,407 - hillmaker.bydatetime - INFO - cat ART {&#39;inner&#39;: 5761}
+2022-07-14 17:17:20,417 - hillmaker.bydatetime - INFO - cat ART num_arrivals_hm 5761 num_arrivals_stops 5761
+2022-07-14 17:17:20,417 - hillmaker.bydatetime - INFO - cat ART num_departures_hm 5761 num_departures_stops 5761
+2022-07-14 17:17:20,418 - hillmaker.bydatetime - INFO - cat ART tot_occ_hm 8523.30 tot_occ_stops 8523.30
+2022-07-14 17:17:20,422 - hillmaker.bydatetime - INFO - min of entry time_bin = 30
+2022-07-14 17:17:20,422 - hillmaker.bydatetime - INFO - max of exit time_bin = 6567 and num_bins=6576
+2022-07-14 17:17:20,553 - hillmaker.bydatetime - INFO - cat OTH {&#39;inner&#39;: 3767}
+2022-07-14 17:17:20,560 - hillmaker.bydatetime - INFO - cat OTH num_arrivals_hm 3767 num_arrivals_stops 3767
+2022-07-14 17:17:20,560 - hillmaker.bydatetime - INFO - cat OTH num_departures_hm 3767 num_departures_stops 3767
+2022-07-14 17:17:20,561 - hillmaker.bydatetime - INFO - cat OTH tot_occ_hm 5658.22 tot_occ_stops 5658.22
+2022-07-14 17:17:21,225 - hillmaker.hills - INFO - Datetime matrix created (seconds): 2.7645
+2022-07-14 17:17:26,687 - hillmaker.summarize - INFO - Created nonstationary summaries - [&#39;PatType&#39;]
+2022-07-14 17:17:27,675 - hillmaker.summarize - INFO - Created nonstationary summaries - []
+2022-07-14 17:17:27,710 - hillmaker.summarize - INFO - Created stationary summaries - [&#39;PatType&#39;]
+2022-07-14 17:17:27,722 - hillmaker.summarize - INFO - Created stationary summaries - []
+2022-07-14 17:17:27,722 - hillmaker.hills - INFO - Summaries by datetime created (seconds): 6.4934
+2022-07-14 17:17:27,956 - hillmaker.hills - INFO - By datetime exported to csv (seconds): 0.2339
+2022-07-14 17:17:28,023 - hillmaker.hills - INFO - Summaries exported to csv (seconds): 0.0673
+2022-07-14 17:17:28,023 - hillmaker.hills - INFO - Total time (seconds): 9.5594
 </pre>
 </div>
 </div>
