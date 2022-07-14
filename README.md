@@ -46,4 +46,18 @@ The source and a binary wheel are available from PyPi. You can install using pip
     pip install hillmaker
 
 
-More examples and documentation are on the way.
+Learn more about hillmaker
+--------------------------
+Hillmaker has been around in various forms for over 30 years. A few
+blog posts describing how it works are available though many things
+about the API as well as the computational guts of hillmaker have
+changed with this recent version.
+
+* [Computing occupancy statistics with Python - 1 of 3](https://misken.github.io/blog/hillpy_bydate_demo/)
+* [Computing occupancy statistics with Python - 1 of 3](https://misken.github.io/blog/hillpy_occstats_demo/)
+* [Plotting occupancy statistics with Python - 3 of 3](https://misken.github.io/blog/hillpy_plotting_matplotlib_basic_recipe/)
+* [Analyzing bike share usage](https://misken.github.io/blog/basic_usage_cycleshare/)
+* [Using hillmaker from R with reticulate](https://misken.github.io/blog/hillmaker_r_sfcs/)
+* [Numpy speeds up hillmaker dramatically](https://misken.github.io/blog/hillmaker_030_released/)
+
+I published `a paper a long time ago regarding the use of hillmaker in practice <https://www.researchgate.net/publication/7322712_Hillmaker_An_open_source_occupancy_analysis_tool>`_.
