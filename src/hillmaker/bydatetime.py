@@ -105,7 +105,9 @@ def make_bydatetime(stops_df, infield, outfield,
     logger.info(f"max of outtime: {max_outtime}")
 
     # Check for mismatch between analysis dates and dates in stops_df
-    check_date_ranges(start_analysis_np, end_analysis_np, min_intime, max_outtime)
+    check_date_ranges(start_analysis_np, start_analysis_np, min_intime, max_outtime)
+    logger.info(f'start analysis: {start_analysis_np}, end analysis: {start_analysis_np}')
+
 
     # Occupancy weights
     # If no occ weight field specified, create fake one containing 1.0 as values.
@@ -162,7 +164,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
         # Compute entry and exit bin arrays
         entry_bin = hmlib.bin_of_span(in_ts_np, start_analysis_np, bin_size_minutes)
+        logger.info(f'min of entry time_bin = {np.amin(entry_bin)}')
         exit_bin = hmlib.bin_of_span(out_ts_np, start_analysis_np, bin_size_minutes)
+        logger.info(f'max of exit time_bin = {np.amax(exit_bin)} and num_bins={num_bins}')
 
         # Compute inbin and outbin fraction arrays
         entry_bin_frac = in_bin_occ_frac(entry_bin, in_ts_np, out_ts_np,
@@ -187,9 +191,15 @@ def make_bydatetime(stops_df, infield, outfield,
         occ = np.zeros(num_bins, dtype=np.float64)
         update_occ(occ, entry_bin, rec_type, list_of_inc_arrays)
 
-        # Count arrivals and departures by bin
+        # Count unadjusted arrivals and departures by bin
         arr = np.bincount(entry_bin, minlength=num_bins).astype(np.float64)
         dep = np.bincount(exit_bin, minlength=num_bins).astype(np.float64)
+
+        # Adjust the arrival and departure counts to account for rec_types left, right, and outer
+        arr[0] -= rec_counts.get('left', 0)
+        arr[0] -= rec_counts.get('outer', 0)
+        dep[num_bins - 1] -= rec_counts.get('right', 0)
+        dep[num_bins - 1] -= rec_counts.get('outer', 0)
 
         # Combine arr, dep, occ (in that order) into matrix
         occ_arr_dep = np.column_stack((arr, dep, occ))
@@ -210,11 +220,11 @@ def make_bydatetime(stops_df, infield, outfield,
 
         if num_arrivals_hm != num_arrivals_stops:
             logger.warning(
-                f'num_arrivals_hm ({num_arrivals_hm}) not equal to num_arrivals_stops ({num_arrivals_stops})')
+                f'num_arrivals_hm ({num_arrivals_hm:.0f}) not equal to num_arrivals_stops ({num_arrivals_stops})')
 
         if num_departures_hm != num_departures_stops:
             logger.warning(
-                f'num_departures_hm ({num_departures_hm}) not equal to departures_stops ({num_departures_stops})')
+                f'num_departures_hm ({num_departures_hm:.0f}) not equal to departures_stops ({num_departures_stops})')
 
         # Conservation of flow checks for weighted occupancy
         tot_occ_him = occ.sum()

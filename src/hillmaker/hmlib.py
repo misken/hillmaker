@@ -251,6 +251,7 @@ def bin_of_span(dt, start_span, bin_size_mins=60):
     minutes = minutes.astype(np.int64)
     # Convert minutes to bin
     time_bin = np.floor(minutes / bin_size_mins).astype(np.int64)
+
     return time_bin
 
 

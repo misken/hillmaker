@@ -15,8 +15,7 @@ df['EnteredTS'] = df.apply(lambda row:
 df['ExitedTS'] = df.apply(lambda row:
                            pd.Timestamp(round((basedate + pd.DateOffset(hours=row['Exited'])).value,-9)), axis=1)
                            
-                           scenario_name = 'log_unitocc_test'
-
+scenario_name = 'log_unitocc_test'
 in_fld_name = 'EnteredTS'
 out_fld_name = 'ExitedTS'
 cat_fld_name = 'Unit'
@@ -27,7 +26,9 @@ end_analysis = '11/1/2017'
 bin_size_mins = 120
 output_path = './output'
 
-hm.make_hills(scenario_name, df, in_fld_name, out_fld_name,
+results = hm.make_hills(scenario_name, df, in_fld_name, out_fld_name,
                      start_analysis, end_analysis, cat_fld_name,
                      bin_size_minutes=bin_size_mins,
                      output_path=output_path, verbose=1)
+
+print(results.keys())
