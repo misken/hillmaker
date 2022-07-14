@@ -23,7 +23,7 @@ statistics.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
 - Requires Python 3.7+ and pandas 1.0.0+
-- Apache 2.0 licensed
+- MIT License
 
 Where to get it
 ---------------
