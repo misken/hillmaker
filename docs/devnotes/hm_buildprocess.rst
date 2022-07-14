@@ -73,75 +73,38 @@ Now we will do the following:
 
     $ git checkout master
     $ git merge --no-ff release-0.4.0
-    $ git tag -a 0.4.0 -m "Release 0.4.0"
+    $ git tag -a v0.4.0 -m "Release 0.4.0"
     $ git push origin master
     # Push the tag
-    $ git push origin 0.4.0
+    $ git push origin v0.4.0
     $ git checkout develop
     $ git merge --no-ff release-0.4.0
     $ git branch -d release-0.4.0
     
 
-
-
-Source
-------
-
-Update setup.py with new version number
-
-Make sure all changes  on develop branch committed and pushed to GitHub
-
-	$ git checkout master
-	$ git merge develop
-	$ git push
-
-Tag release on GitHub
-
-	$ git tag -a v0.2.1 -m 'Removed some testing code in bin_of_week but really doing this to get noarch version to conda-forge'
-	
-	git push origin v0.2.1
-
 PyPi
 ----
 
-https://python-packaging-user-guide.readthedocs.org/en/latest/
+This is a bit tricky because we are using Anaconda on Linux and
+have to make sure we are using the ``python`` and ``pip`` executables
+that are in our conda virtual environment (and **NOT** in our
+base conda environment)
 
-**Source and wheel distribution** ::
+Using instructions from Real Python tutorial - https://realpython.com/pypi-publish-python-package/#publish-your-package-to-pypi.
 
-  python setup.py sdist bdist_wheel
+Need to install ``build`` and ``twine`` into a conda virtual environment.
+Again, make sure you are using the ``pip`` that is part of the 
+venv and not the base pip.
 
-**Upload via twine** ::
+.. code::
 
-hillmaker$ which twine
-/home/mark/anaconda3/envs/datasci/bin/twine
-(datasci) mark@quercus:~/Documents/development/hillmaker
-hillmaker$ twine upload dist/hillmaker-0.2.1*
+    $ /PATH/TO/anaconda3/envs/py37/bin/python -m pip install build twine
+    $ /PATH/TO/anaconda3/envs/py37/bin/python -m build
+    $ twine check dist/*
+    # PyPI now using API tokens
+    $ twine --repository hillmaker
+    $ twine upload dist/*
 
-username is hselab and pw is teddy
 
-Anaconda.org
-------------
 
-Increment version number in recipes/hillmaker/meta.yaml
 
-  package:
-    name: hillmaker
-    version: "0.1.1"
-
-  source:
-    git_rev: v0.1.1
-    git_url: https://github.com/misken/hillmaker
-
-::
-
-  cd ~/Documents/development/recipes
-  conda build hillmaker
-
-Now need to upload to Anaconda.org ::
-
-  # Get to appropriate dir
-  cd ~/anaconda3/conda-bld/noarch
-  # Login to anaconda if not already logged in
-  anaconda login
-  # Upload the file
-  anaconda upload <bz2 filename>
