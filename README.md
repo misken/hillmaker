@@ -10,7 +10,7 @@ statistics.
 
 ![hillmaker Screenshot](/docs/hillmaker-user-guide/images/ssu_occ_1.png "hillmaker screenshot")
 
-- Takes a pandas DataFrame as the input data type
+- Takes a pandas DataFrame or csv file as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
   by time of day, day of week, and entity category(s) based on a pandas DataFrame containing one
   record per visit.
@@ -39,12 +39,10 @@ Quick Start
 A companion repo, https://github.com/misken/hillmaker-examples/ contains
 Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 
-In particular, the following Jupyter notebook explains how to get and
-use hillmaker.
+You can see an html version of the [basic_usage_shortstay_unit notebook here](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_040.html).
 
-https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit_multicats.ipynb
 
-The source and a binary wheel are available from PyPi. You can install using pip: ::
+The source and a binary wheel are available from PyPi. You can install using pip: 
 
     pip install hillmaker
 
