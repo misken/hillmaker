@@ -12,17 +12,17 @@ statistics.
 
 - Takes a pandas DataFrame or csv file as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
-  by time of day, day of week, and entity category(s) based on a pandas DataFrame containing one
+  by time of day, day of week, and entity category based on a pandas DataFrame containing one
   record per visit.
 - Functions for computing arrival, departure and occupancy for each datetime
-  bin in the analysis period, by zero or more category fields.
+  bin in the analysis period, by zero or one category fields.
 - Select any time bin size (minutes) that divides evenly into a day.
 - Output statistics includes sample size, mean, min, max, standard deviation,
   coefficient of variation, standard error, skew, kurtosis, and percentiles.
 - Output CSV files are written by default but can be supressed.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
-- Requires Python 3.7+ and pandas 1.0.0+
+- Requires Python 3.7+ and pandas 1.2.0+
 - MIT License
 
 Where to get it
