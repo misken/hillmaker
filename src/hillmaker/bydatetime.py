@@ -91,7 +91,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     """
     # Number of bins in analysis span
-    num_bins = hmlib.bin_of_span(end_analysis_np, start_analysis_np, bin_size_minutes) + 1
+    num_bins = hmlib.bin_of_analysis_range(end_analysis_np, start_analysis_np, bin_size_minutes) + 1
 
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
@@ -163,9 +163,9 @@ def make_bydatetime(stops_df, infield, outfield,
         occ_weight = cat_df[occ_weight_field].to_numpy()
 
         # Compute entry and exit bin arrays
-        entry_bin = hmlib.bin_of_span(in_ts_np, start_analysis_np, bin_size_minutes)
+        entry_bin = hmlib.bin_of_analysis_range(in_ts_np, start_analysis_np, bin_size_minutes)
         logger.info(f'min of entry time_bin = {np.amin(entry_bin)}')
-        exit_bin = hmlib.bin_of_span(out_ts_np, start_analysis_np, bin_size_minutes)
+        exit_bin = hmlib.bin_of_analysis_range(out_ts_np, start_analysis_np, bin_size_minutes)
         logger.info(f'max of exit time_bin = {np.amax(exit_bin)} and num_bins={num_bins}')
 
         # Compute inbin and outbin fraction arrays
