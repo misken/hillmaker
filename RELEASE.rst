@@ -24,6 +24,20 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
+
+hillmaker 0.4.2
+===============
+
+**Release date:** 2022-07-15
+
+**New features**
+
+- Added option to treat missing departure timestamps as censored data.
+
+**Bug Fixes**
+
+- disallowed missing entry timestamps
+
 hillmaker 0.4.1
 ===============
 
