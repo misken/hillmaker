@@ -45,6 +45,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                totals=1,
                nonstationary_stats=True,
                stationary_stats=True,
+               no_censored_departures=False,
                export_bydatetime_csv=True,
                export_summaries_csv=True,
                output_path=Path('.'),
@@ -93,6 +94,9 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
        If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+    censored_departures: bool, optional
+       If True, missing departure datetimes are replaced with datetime of end of analysis range. If False,
+       record is ignored. Default is True.
     export_bydatetime_csv : bool, optional
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
@@ -120,7 +124,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
         raise ValueError(f'Cannot convert {start_analysis_dt} to Timestamp\n{error}')
 
     try:
-        end_analysis_dt_ts = pd.Timestamp(end_analysis_dt).floor("d") + pd.Timedelta(1439, "m")
+        end_analysis_dt_ts = pd.Timestamp(end_analysis_dt).floor("d") + pd.Timedelta(86399, "s")
     except ValueError as error:
         raise ValueError(f'Cannot convert {end_analysis_dt} to Timestamp\n{error}')
 
@@ -128,8 +132,33 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
     end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
 
-    # Filter out records that don't overlap the analysis span
-    stops_df = stops_df.loc[(stops_df[in_field] < end_analysis_dt_ts) & (stops_df[out_field] >= start_analysis_dt_ts)]
+    # Looking for missing entry and departure timestamps
+    num_recs_missing_entry_ts = stops_df[in_field].isna().sum()
+    num_recs_missing_exit_ts = stops_df[out_field].isna().sum()
+    if num_recs_missing_entry_ts > 0:
+        logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
+
+    # Update departure timestamp for missing values if no_censored_departures=False
+    if not no_censored_departures:
+        num_recs_uncensored = num_recs_missing_exit_ts
+        if num_recs_missing_exit_ts > 0:
+            logger.info(f'{num_recs_missing_exit_ts} records with missing exit timestamps - end of analysis range used for occupancy purposes')
+            uncensored_out_field = f'{out_field}_uncensored'
+            uncensored_out_value = pd.Timestamp(end_analysis_dt).floor("d") + pd.Timedelta(1, "d")
+            stops_df[uncensored_out_field] = stops_df[out_field].fillna(value=uncensored_out_value)
+            active_out_field = uncensored_out_field
+        else:
+            # Records with missing departures will be ignored
+            active_out_field = out_field
+            if num_recs_missing_exit_ts > 0:
+                logger.warning(f'{num_recs_missing_exit_ts} records with missing exit timestamps - records ignored')
+    else:
+        active_out_field = out_field
+
+    # Filter out records that don't overlap the analysis span or have missing entry timestamps
+    stops_df = stops_df.loc[(stops_df[in_field] < end_analysis_dt_ts) &
+                            (~stops_df[in_field].isna()) &
+                            (stops_df[active_out_field] >= start_analysis_dt_ts)]
 
     # reset index of df to ensure sequential numbering
     stops_df = stops_df.reset_index(drop=True)
@@ -139,7 +168,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
         starttime = t.start
         bydt_dfs = make_bydatetime(stops_df,
                                    in_field,
-                                   out_field,
+                                   active_out_field,
                                    start_analysis_dt_np,
                                    end_analysis_dt_np,
                                    cat_field,
@@ -354,6 +383,11 @@ def process_command_line(argv=None):
         default=[],  # default if nothing is provided
     )
 
+    parser.add_argument(
+        '--no_censored_departures', action='store_true',
+        help="If set, records with missing departure timestamps are ignored. By default, such records are assumed to be still in the system at the end_analysis_dt."
+    )
+
     # Do the parsing and return the populated namespace with the input arg values
     # If argv == None, then ``parse_args`` will use ``sys.argv[1:]``.
     args = parser.parse_args(argv)
@@ -378,7 +412,8 @@ def main(argv=None):
     # Make hills
     dfs = make_hills(args.scenario, stops_df, args.in_field, args.out_field,
                      args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
-                     output_path=args.output_path, verbose=args.verbose, cats_to_exclude=args.cats_to_exclude)
+                     output_path=args.output_path, verbose=args.verbose,
+                     cats_to_exclude=args.cats_to_exclude, )
 
 
 if __name__ == '__main__':
