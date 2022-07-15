@@ -223,7 +223,7 @@ def stoprec_analysis_rltnshp(in_dt, out_dt, start_span, end_span):
         return 'none'
 
 
-def bin_of_span(dt, start_span, bin_size_mins=60):
+def bin_of_analysis_range(dt, start_analysis_range, bin_size_mins=60):
     """
     Compute bin of span of analysis based on bin size for a datetime.
 
@@ -247,7 +247,7 @@ def bin_of_span(dt, start_span, bin_size_mins=60):
     """
 
     # Number of minutes from beginning of span
-    minutes = (dt - start_span).astype('timedelta64[s]') / 60.0
+    minutes = (dt - start_analysis_range).astype('timedelta64[s]') / 60.0
     minutes = minutes.astype(np.int64)
     # Convert minutes to bin
     time_bin = np.floor(minutes / bin_size_mins).astype(np.int64)
