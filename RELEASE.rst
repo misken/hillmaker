@@ -24,6 +24,18 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
+hillmaker 0.4.1
+===============
+
+**Release date:** 2022-07-14
+
+
+**Bug Fixes**
+
+- date range sanity check had copy paste error with start and end variables
+- removed old licensing references
+- fixed typos in basic usage notebook
+- added hillmaker related blog post links to readme
 
 hillmaker 0.4.0
 ===============
