@@ -372,6 +372,11 @@ def process_command_line(argv=None):
     )
 
     parser.add_argument(
+        '--config', type=str, default=None,
+        help="Configuration file containing input parameter arguments and values"
+    )
+
+    parser.add_argument(
         '--verbose', type=int, default=0,
         help="Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG"
     )
@@ -393,6 +398,31 @@ def process_command_line(argv=None):
     args = parser.parse_args(argv)
     return args
 
+def update_args(args, config):
+    """
+    Update args namespace values from config dictionary
+
+    Parameters
+    ----------
+    args : namespace
+    config : dict
+
+    Returns
+    -------
+    Updated args namespace
+    """
+
+    # Convert args namespace to a dict
+    args_dict = vars(args)
+
+    # Update args dict from config dict
+    for key in config.keys():
+        args_dict[key] = config[key]
+
+    # Convert dict to updated namespace
+    args = argparse.Namespace(**args_dict)
+    return args
+
 
 def main(argv=None):
     """
@@ -405,6 +435,13 @@ def main(argv=None):
     # testing via pytest.
     # Get input arguments
     args = process_command_line(argv)
+
+    # Update input args if config file passed
+    if args.config is not None:
+        # Read inputs from config file
+        with open(args.config, 'rt') as yaml_file:
+            yaml_config = yaml.safe_load(yaml_file)
+            args = update_args(args, yaml_config)
 
     # Read in stop data to DataFrame
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
