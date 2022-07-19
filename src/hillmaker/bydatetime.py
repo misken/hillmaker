@@ -34,7 +34,7 @@ def make_bydatetime(stops_df, infield, outfield,
                     totals=1,
                     occ_weight_field=None,
                     edge_bins=1,
-                    verbose=0):
+                    verbosity=0):
     """
     Create bydatetime tablefrom which summary statistics can be computed.
 
@@ -75,7 +75,7 @@ def make_bydatetime(stops_df, infield, outfield,
         Column name corresponding to the weights to use for occupancy incrementing.
         If omitted, occupancy weights of 1.0 are used (i.e. pure occupancy)
 
-    verbose : int, default=0
+    verbosity : int, default=0
         The verbosity level. The default is 0 where 0=logging.WARNING, 1=logging.INFO and
         2=logging.DEBUG.
 
@@ -535,7 +535,7 @@ if __name__ == '__main__':
     end_analysis = '1/3/1996 23:45'
 
     # Optional inputs
-    verbose = 1
+    verbosity = 1
     output_path = './output/'
 
     # Create dfs
