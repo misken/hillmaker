@@ -132,6 +132,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     # numpy datetime64 versions of analysis span end points
     start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
     end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
+    if start_analysis_dt_np > end_analysis_dt_np:
+        raise ValueError(f'end date {end_analysis_dt_np} is before start date {start_analysis_dt_np}')
 
     # Looking for missing entry and departure timestamps
     num_recs_missing_entry_ts = stops_df[in_field].isna().sum()
@@ -423,27 +425,10 @@ def update_args(args, toml_config):
     """
     Update args namespace values from toml_config dictionary
 
-    [scenario_data]
-scenario = "ssu_test_01"
-stop_data_csv = "../docs/examples/data/ShortStay.csv"
-
-[fields]
-in_field = "InRoomTS"
-out_field = "OutRoomTS"
-cat_field = "PatType"
-
-[analysis_dates]
-start_analysis_dt = 1996-01-01
-end_analysis_dt = 1996-09-30
-
-[settings]
-bin_size_mins = 60
-verbosity = 1
-
     Parameters
     ----------
     args : namespace
-    config : dict
+    toml_config : dict from loading TOML config file
 
     Returns
     -------
@@ -453,7 +438,7 @@ verbosity = 1
     # Convert args namespace to a dict
     args_dict = vars(args)
 
-    # Flatten toml config (we know there are no key clashes)
+    # Flatten toml config (we know there are no key clashes and only one nesting level)
     # Update args dict from config dict
     for outerkey, outerval in toml_config.items():
         for key, val in outerval.items():
@@ -463,6 +448,25 @@ verbosity = 1
     args = Namespace(**args_dict)
     return args
 
+def check_for_required_args(args):
+    """
+
+    Parameters
+    ----------
+    args: Namespace
+
+    Returns
+    -------
+
+    """
+
+    # Make sure all required args are present
+    required_args = ['scenario', 'stop_data_csv', 'in_field', 'out_field', 'start_analysis_dt', 'start_analysis_dt']
+    # Convert args namespace to a dict
+    args_dict = vars(args)
+    for req_arg in required_args:
+        if args_dict[req_arg] is None:
+            raise ValueError(f'{req_arg} is required')
 
 def main(argv=None):
     """
@@ -482,6 +486,9 @@ def main(argv=None):
         with open(args.config, mode="rb") as toml_file:
             toml_config = tomli.load(toml_file)
             args = update_args(args, toml_config)
+
+    # Make sure all required args are specified
+    check_for_required_args(args)
 
     # Read in stop data to DataFrame
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
