@@ -397,6 +397,13 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
+        "--percentiles",
+        nargs="*",  # 0 or more values expected => creates a list
+        type=float,
+        default=(0.25, 0.5, 0.75, 0.95, 0.99),  # default if nothing is provided
+    )
+
+    optional.add_argument(
         "--cats_to_exclude",
         nargs="*",  # 0 or more values expected => creates a list
         type=str,
@@ -405,7 +412,7 @@ def process_command_line(argv=None):
 
     optional.add_argument(
         '--no_censored_departures', action='store_true',
-        help="If set, records with missing departure timestamps are ignored. By default, such records are assumed to be still in the system at the end_analysis_dt."
+        help="If set (true), records with missing departure timestamps are ignored. By default, such records are assumed to be still in the system at the end_analysis_dt."
     )
 
     # Add back help
@@ -497,7 +504,7 @@ def main(argv=None):
     dfs = make_hills(args.scenario, stops_df, args.in_field, args.out_field,
                      args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
                      output_path=args.output_path, verbosity=args.verbosity,
-                     cats_to_exclude=args.cats_to_exclude, )
+                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles)
 
 
 if __name__ == '__main__':
