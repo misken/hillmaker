@@ -219,7 +219,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
         with HillTimer() as t:
             export_bydatetime(bydt_dfs, scenario_name, output_path)
 
-        logger.info(f"By datetime exported to csv (seconds): {t.interval:.4f}")
+        logger.info(f"By datetime exported to csv in {output_path} (seconds): {t.interval:.4f}")
 
     if export_summaries_csv:
         with HillTimer() as t:
@@ -228,7 +228,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
             if stationary_stats:
                 export_summaries(summary_dfs, scenario_name, output_path, 'stationary')
 
-        logger.info(f"Summaries exported to csv (seconds): {t.interval:.4f}")
+        logger.info(f"Summaries exported to csv in {output_path} (seconds): {t.interval:.4f}")
 
     hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
 
@@ -258,6 +258,7 @@ def export_bydatetime(bydt_dfs, scenario_name, export_path):
 
     for d in bydt_dfs:
         file_bydt_csv = f'{scenario_name}_bydatetime_{d}.csv'
+        Path(export_path).mkdir(parents=True, exist_ok=True)
         csv_wpath = Path(export_path, file_bydt_csv)
 
         dt_cols = ['arrivals', 'departures', 'occupancy',
@@ -299,6 +300,7 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
             else:
                 file_summary_csv = file_summary_csv + '.csv'
 
+            Path(export_path).mkdir(parents=True, exist_ok=True)
             csv_wpath = Path(export_path, file_summary_csv)
 
             catfield = df.index.names
