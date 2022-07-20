@@ -122,6 +122,18 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
 
+    # Check if in and out fields are part of stops_df
+    if in_field not in list(stops_df):
+        raise ValueError(f'Bad in_field - {in_field} is not part of the stops dataframe')
+
+    if out_field not in list(stops_df):
+        raise ValueError(f'Bad out_field - {out_field} is not part of the stops dataframe')
+
+    # Check if catfield is part of stops_df
+    if cat_field is not None:
+        if cat_field not in list(stops_df):
+            raise ValueError(f'Bad cat_field - {cat_field} is not part of the stops dataframe')
+
     # pandas Timestamp versions of analysis span end points
     try:
         start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
