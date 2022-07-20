@@ -8,7 +8,11 @@ from argparse import ArgumentParser, Namespace, SUPPRESS
 import logging
 
 import pandas as pd
-import tomli
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
@@ -491,7 +495,7 @@ def main(argv=None):
     if args.config is not None:
         # Read inputs from config file
         with open(args.config, mode="rb") as toml_file:
-            toml_config = tomli.load(toml_file)
+            toml_config = tomllib.load(toml_file)
             args = update_args(args, toml_config)
 
     # Make sure all required args are specified
