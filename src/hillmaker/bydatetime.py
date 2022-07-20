@@ -34,7 +34,7 @@ def make_bydatetime(stops_df, infield, outfield,
                     totals=1,
                     occ_weight_field=None,
                     edge_bins=1,
-                    verbose=0):
+                    verbosity=0):
     """
     Create bydatetime tablefrom which summary statistics can be computed.
 
@@ -75,7 +75,7 @@ def make_bydatetime(stops_df, infield, outfield,
         Column name corresponding to the weights to use for occupancy incrementing.
         If omitted, occupancy weights of 1.0 are used (i.e. pure occupancy)
 
-    verbose : int, default=0
+    verbosity : int, default=0
         The verbosity level. The default is 0 where 0=logging.WARNING, 1=logging.INFO and
         2=logging.DEBUG.
 
@@ -91,7 +91,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     """
     # Number of bins in analysis span
-    num_bins = hmlib.bin_of_span(end_analysis_np, start_analysis_np, bin_size_minutes) + 1
+    num_bins = hmlib.bin_of_analysis_range(end_analysis_np, start_analysis_np, bin_size_minutes) + 1
 
     # Compute min and max of in and out times
     min_intime = stops_df[infield].min()
@@ -106,6 +106,8 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Check for mismatch between analysis dates and dates in stops_df
     check_date_ranges(start_analysis_np, end_analysis_np, min_intime, max_outtime)
+    logger.info(f'start analysis: {np.datetime_as_string(start_analysis_np, unit="D")}, end analysis: {np.datetime_as_string(end_analysis_np, unit="D")}')
+
 
     # Occupancy weights
     # If no occ weight field specified, create fake one containing 1.0 as values.
@@ -137,9 +139,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Get the unique category values and exclude any specified to exclude
     categories = []
-    if cat_to_exclude is not None:
+    if cat_to_exclude is not None and len(cat_to_exclude) > 0:
         for i in range(len(catfield)):
-            categories.append(tuple([c for c in stops_df[catfield[i]].unique() if c not in cat_to_exclude[i]]))
+            categories.append(tuple([c for c in stops_df[catfield[i]].unique() if c not in cat_to_exclude]))
     else:
         for i in range(len(catfield)):
             categories.append(tuple([c for c in stops_df[catfield[i]].unique()]))
@@ -161,8 +163,10 @@ def make_bydatetime(stops_df, infield, outfield,
         occ_weight = cat_df[occ_weight_field].to_numpy()
 
         # Compute entry and exit bin arrays
-        entry_bin = hmlib.bin_of_span(in_ts_np, start_analysis_np, bin_size_minutes)
-        exit_bin = hmlib.bin_of_span(out_ts_np, start_analysis_np, bin_size_minutes)
+        entry_bin = hmlib.bin_of_analysis_range(in_ts_np, start_analysis_np, bin_size_minutes)
+        logger.info(f'min of entry time_bin = {np.amin(entry_bin)}')
+        exit_bin = hmlib.bin_of_analysis_range(out_ts_np, start_analysis_np, bin_size_minutes)
+        logger.info(f'max of exit time_bin = {np.amax(exit_bin)} and num_bins={num_bins}')
 
         # Compute inbin and outbin fraction arrays
         entry_bin_frac = in_bin_occ_frac(entry_bin, in_ts_np, out_ts_np,
@@ -187,9 +191,15 @@ def make_bydatetime(stops_df, infield, outfield,
         occ = np.zeros(num_bins, dtype=np.float64)
         update_occ(occ, entry_bin, rec_type, list_of_inc_arrays)
 
-        # Count arrivals and departures by bin
+        # Count unadjusted arrivals and departures by bin
         arr = np.bincount(entry_bin, minlength=num_bins).astype(np.float64)
         dep = np.bincount(exit_bin, minlength=num_bins).astype(np.float64)
+
+        # Adjust the arrival and departure counts to account for rec_types left, right, and outer
+        arr[0] -= rec_counts.get('left', 0)
+        arr[0] -= rec_counts.get('outer', 0)
+        dep[num_bins - 1] -= rec_counts.get('right', 0)
+        dep[num_bins - 1] -= rec_counts.get('outer', 0)
 
         # Combine arr, dep, occ (in that order) into matrix
         occ_arr_dep = np.column_stack((arr, dep, occ))
@@ -210,11 +220,11 @@ def make_bydatetime(stops_df, infield, outfield,
 
         if num_arrivals_hm != num_arrivals_stops:
             logger.warning(
-                f'num_arrivals_hm ({num_arrivals_hm}) not equal to num_arrivals_stops ({num_arrivals_stops})')
+                f'num_arrivals_hm ({num_arrivals_hm:.0f}) not equal to num_arrivals_stops ({num_arrivals_stops})')
 
         if num_departures_hm != num_departures_stops:
             logger.warning(
-                f'num_departures_hm ({num_departures_hm}) not equal to departures_stops ({num_departures_stops})')
+                f'num_departures_hm ({num_departures_hm:.0f}) not equal to departures_stops ({num_departures_stops})')
 
         # Conservation of flow checks for weighted occupancy
         tot_occ_him = occ.sum()
@@ -299,8 +309,9 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_mi
                 df[c] = cat
 
         df['day_of_week'] = df['datetime'].map(lambda x: x.weekday())
-        df['dow_name'] = df['datetime'].map(lambda x: x.day_name())
+        df['dow_name'] = df['datetime'].map(lambda x: x.strftime('%a'))
         df['bin_of_day'] = df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
+        df['bin_of_day_str'] = df['datetime'].map(lambda x: x.strftime('%H:%M'))
         df['bin_of_week'] = df['datetime'].map(lambda x: hmlib.bin_of_week(x, bin_size_minutes))
 
         dfs.append(df)  # Add category specific dataframe to list
@@ -323,7 +334,7 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_mi
 
     # Reorder the columns
     col_order = ['arrivals', 'departures', 'occupancy', 'day_of_week', 'dow_name',
-                 'bin_of_day', 'bin_of_week']
+                 'bin_of_day_str', 'bin_of_day', 'bin_of_week']
 
     bydt_df = bydt_df[col_order]
 
@@ -524,7 +535,7 @@ if __name__ == '__main__':
     end_analysis = '1/3/1996 23:45'
 
     # Optional inputs
-    verbose = 1
+    verbosity = 1
     output_path = './output/'
 
     # Create dfs

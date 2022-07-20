@@ -23,7 +23,7 @@ bin_mins = 60
 df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 
 hm.make_hills(scenario, df, in_fld_name, out_fld_name,
-                     start, end, cat_fld_name,
-                     bin_mins,
-                     export_path='./output', verbose=verbose)
+              start, end, cat_fld_name,
+              bin_mins,
+              output_path='./output', verbose=verbose)
 

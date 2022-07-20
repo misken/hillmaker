@@ -12,25 +12,24 @@ statistics.
 
 - Takes a pandas DataFrame or csv file as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
-  by time of day, day of week, and entity category(s) based on a pandas DataFrame containing one
+  by time of day, day of week, and entity category based on a pandas DataFrame containing one
   record per visit.
 - Functions for computing arrival, departure and occupancy for each datetime
-  bin in the analysis period, by zero or more category fields.
+  bin in the analysis period, by zero or one category fields.
 - Select any time bin size (minutes) that divides evenly into a day.
 - Output statistics includes sample size, mean, min, max, standard deviation,
   coefficient of variation, standard error, skew, kurtosis, and percentiles.
 - Output CSV files are written by default but can be supressed.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
-- Requires Python 3.7+ and pandas 1.0.0+
-- Apache 2.0 licensed
+- Requires Python 3.7+ and pandas 1.2.0+
+- MIT License
 
 Where to get it
 ---------------
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Binary on Anaconda.org: http://anaconda.org/hselab/hillmaker
 * Documentation: Coming soon
 
 Quick Start
@@ -39,14 +38,29 @@ Quick Start
 A companion repo, https://github.com/misken/hillmaker-examples/ contains
 Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 
-In particular, the following Jupyter notebook explains how to get and
-use hillmaker.
+You can see an html versions of basic usage notebooks at:
 
-https://github.com/misken/hillmaker-examples/blob/master/notebooks/basic_usage_shortstay_unit_multicats.ipynb
+- [basic usage notebook for v0.4.3](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_043.html)
+- [basic usage notebook for v0.4.0-2](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_040.html).
 
-The source and a binary wheel are available from PyPi. You can install using pip: ::
+
+The source and a binary wheel are available from PyPi. You can install using pip: 
 
     pip install hillmaker
 
 
-More examples and documentation are on the way.
+Learn more about hillmaker
+--------------------------
+Hillmaker has been around in various forms for over 30 years. A few
+blog posts describing how it works are available though many things
+about the API as well as the computational guts of hillmaker have
+changed with this recent version.
+
+* [Computing occupancy statistics with Python - 1 of 3](https://misken.github.io/blog/hillpy_bydate_demo/)
+* [Computing occupancy statistics with Python - 1 of 3](https://misken.github.io/blog/hillpy_occstats_demo/)
+* [Plotting occupancy statistics with Python - 3 of 3](https://misken.github.io/blog/hillpy_plotting_matplotlib_basic_recipe/)
+* [Analyzing bike share usage](https://misken.github.io/blog/basic_usage_cycleshare/)
+* [Using hillmaker from R with reticulate](https://misken.github.io/blog/hillmaker_r_sfcs/)
+* [Numpy speeds up hillmaker dramatically](https://misken.github.io/blog/hillmaker_030_released/)
+
+I published [a paper a long time ago regarding the use of hillmaker in practice](https://www.researchgate.net/publication/7322712_Hillmaker_An_open_source_occupancy_analysis_tool).
