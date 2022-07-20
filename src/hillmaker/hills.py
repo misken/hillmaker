@@ -4,17 +4,22 @@
 
 import sys
 from pathlib import Path
-import argparse
+from argparse import ArgumentParser, Namespace, SUPPRESS
 import logging
 
 import pandas as pd
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 
 
-def setup_logger(verbose):
+def setup_logger(verbosity):
     # Set logging level
     root_logger = logging.getLogger()
     root_logger.handlers.clear() # Needed to prevent dup messages when module imported
@@ -22,10 +27,10 @@ def setup_logger(verbose):
     logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger_handler.setFormatter(logger_formatter)
 
-    if verbose == 0:
+    if verbosity == 0:
         root_logger.setLevel(logging.WARNING)
         logger_handler.setLevel(logging.WARNING)
-    elif verbose == 1:
+    elif verbosity == 1:
         root_logger.setLevel(logging.INFO)
         logger_handler.setLevel(logging.INFO)
     else:
@@ -50,7 +55,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                export_summaries_csv=True,
                output_path=Path('.'),
                edge_bins=1,
-               verbose=0):
+               verbosity=0):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -103,7 +108,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        If True, summary DataFrames are exported to csv files. Default is True.
     output_path : str or Path, optional
         Destination path for exported csv files, default is current directory
-    verbose : int, optional
+    verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
 
     Returns
@@ -112,7 +117,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    setup_logger(verbose)
+    setup_logger(verbosity)
 
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
@@ -131,6 +136,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
     # numpy datetime64 versions of analysis span end points
     start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
     end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
+    if start_analysis_dt_np > end_analysis_dt_np:
+        raise ValueError(f'end date {end_analysis_dt_np} is before start date {start_analysis_dt_np}')
 
     # Looking for missing entry and departure timestamps
     num_recs_missing_entry_ts = stops_df[in_field].isna().sum()
@@ -177,7 +184,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                                    occ_weight_field=occ_weight_field,
                                    edge_bins=edge_bins,
                                    totals=totals,
-                                   verbose=verbose)
+                                   verbosity=verbosity)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
@@ -191,7 +198,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                                     stationary_stats=stationary_stats,
                                     percentiles=percentiles,
                                     totals=totals,
-                                    verbose=verbose)
+                                    verbosity=verbosity)
 
         logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
 
@@ -306,86 +313,118 @@ def process_command_line(argv=None):
 
     """
 
+    # Disable default help
+    #parser = ArgumentParser(add_help=False)
+    # required = parser.add_argument_group('required arguments')
+    # optional = parser.add_argument_group('optional arguments')
+
+
+
+
     # Create the parser
-    parser = argparse.ArgumentParser(prog='hillmaker',
-                                     description='Occupancy analysis by time of day and day of week')
+    parser = ArgumentParser(prog='hillmaker',
+                                     description='Occupancy analysis by time of day and day of week',
+                                     add_help=False)
+
+    required = parser.add_argument_group('required arguments (either on command line or via config file)')
+    optional = parser.add_argument_group('optional arguments')
 
     # Add arguments
-    parser.add_argument(
-        'scenario', type=str,
+    required.add_argument(
+        '--scenario', type=str,
         help="Used in output filenames"
     )
 
-    parser.add_argument(
-        'stop_data_csv', type=str,
+    required.add_argument(
+        '--stop_data_csv', type=str,
         help="Path to csv file containing the stop data to be processed"
     )
 
-    parser.add_argument(
-        'in_field', type=str,
+    required.add_argument(
+        '--in_field', type=str,
         help="Column name corresponding to the arrival times"
     )
 
-    parser.add_argument(
-        'out_field', type=str,
+    required.add_argument(
+        '--out_field', type=str,
         help="Column name corresponding to the departure times"
     )
 
-    parser.add_argument(
-        'start_analysis_dt', type=str,
+    required.add_argument(
+        '--start_analysis_dt', type=str,
         help="Starting datetime for the analysis (must be convertible to pandas Timestamp)"
     )
 
-    parser.add_argument(
-        'end_analysis_dt', type=str,
+    required.add_argument(
+        '--end_analysis_dt', type=str,
         help="Ending datetime for the analysis (must be convertible to pandas Timestamp)"
     )
 
-    parser.add_argument(
+    optional.add_argument(
+        '--config', type=str, default=None,
+        help="Configuration file (TOML format) containing input parameter arguments and values"
+    )
+
+    optional.add_argument(
         '--cat_field', type=str, default=None,
         help="Column name corresponding to the categories. If None, then only overall occupancy is analyzed"
     )
 
-    parser.add_argument(
+    optional.add_argument(
         '--bin_size_mins', type=int, default=60,
         help="Number of minutes in each time bin of the day"
     )
 
-    parser.add_argument(
+    optional.add_argument(
         '--occ_weight_field', type=str, default=None,
         help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used"
     )
 
-    parser.add_argument(
+    optional.add_argument(
         '--edge_bins', type=int, default=1,
         help="Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin"
     )
 
-    parser.add_argument(
+    optional.add_argument(
         '--no_totals', action='store_true',
         help="Use to suppress totals (default is False)"
     )
 
-    parser.add_argument(
+    optional.add_argument(
         '--output_path', type=str, default='.',
         help="Destination path for exported csv files, default is current directory."
     )
 
-    parser.add_argument(
-        '--verbose', type=int, default=0,
+    optional.add_argument(
+        '--verbosity', type=int, default=0,
         help="Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG"
     )
 
-    parser.add_argument(
+    optional.add_argument(
+        "--percentiles",
+        nargs="*",  # 0 or more values expected => creates a list
+        type=float,
+        default=(0.25, 0.5, 0.75, 0.95, 0.99),  # default if nothing is provided
+    )
+
+    optional.add_argument(
         "--cats_to_exclude",
         nargs="*",  # 0 or more values expected => creates a list
         type=str,
         default=[],  # default if nothing is provided
     )
 
-    parser.add_argument(
+    optional.add_argument(
         '--no_censored_departures', action='store_true',
-        help="If set, records with missing departure timestamps are ignored. By default, such records are assumed to be still in the system at the end_analysis_dt."
+        help="If set (true), records with missing departure timestamps are ignored. By default, such records are assumed to be still in the system at the end_analysis_dt."
+    )
+
+    # Add back help
+    optional.add_argument(
+        '-h',
+        '--help',
+        action='help',
+        default=SUPPRESS,
     )
 
     # Do the parsing and return the populated namespace with the input arg values
@@ -393,6 +432,52 @@ def process_command_line(argv=None):
     args = parser.parse_args(argv)
     return args
 
+def update_args(args, toml_config):
+    """
+    Update args namespace values from toml_config dictionary
+
+    Parameters
+    ----------
+    args : namespace
+    toml_config : dict from loading TOML config file
+
+    Returns
+    -------
+    Updated args namespace
+    """
+
+    # Convert args namespace to a dict
+    args_dict = vars(args)
+
+    # Flatten toml config (we know there are no key clashes and only one nesting level)
+    # Update args dict from config dict
+    for outerkey, outerval in toml_config.items():
+        for key, val in outerval.items():
+            args_dict[key] = val
+
+    # Convert dict to updated namespace
+    args = Namespace(**args_dict)
+    return args
+
+def check_for_required_args(args):
+    """
+
+    Parameters
+    ----------
+    args: Namespace
+
+    Returns
+    -------
+
+    """
+
+    # Make sure all required args are present
+    required_args = ['scenario', 'stop_data_csv', 'in_field', 'out_field', 'start_analysis_dt', 'start_analysis_dt']
+    # Convert args namespace to a dict
+    args_dict = vars(args)
+    for req_arg in required_args:
+        if args_dict[req_arg] is None:
+            raise ValueError(f'{req_arg} is required')
 
 def main(argv=None):
     """
@@ -406,14 +491,24 @@ def main(argv=None):
     # Get input arguments
     args = process_command_line(argv)
 
+    # Update input args if config file passed
+    if args.config is not None:
+        # Read inputs from config file
+        with open(args.config, mode="rb") as toml_file:
+            toml_config = tomllib.load(toml_file)
+            args = update_args(args, toml_config)
+
+    # Make sure all required args are specified
+    check_for_required_args(args)
+
     # Read in stop data to DataFrame
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
     # Make hills
     dfs = make_hills(args.scenario, stops_df, args.in_field, args.out_field,
                      args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
-                     output_path=args.output_path, verbose=args.verbose,
-                     cats_to_exclude=args.cats_to_exclude, )
+                     output_path=args.output_path, verbosity=args.verbosity,
+                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles)
 
 
 if __name__ == '__main__':

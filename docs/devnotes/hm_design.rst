@@ -20,12 +20,10 @@ http://stackoverflow.com/questions/16613501/pycharm-and-unittesting-structuring-
 Possible features
 =================
 
-Input parameters
+Config files
 ----------------
+https://stackoverflow.com/questions/65283208/toml-vs-yaml-vs-strictyaml
 
-Ability to pass in list of category values to analyze. Default is all.
-
-Ability to specify whether or not to compute totals. Default is true.
 
 
 Possible classes
