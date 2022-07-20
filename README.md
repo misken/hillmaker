@@ -38,7 +38,10 @@ Quick Start
 A companion repo, https://github.com/misken/hillmaker-examples/ contains
 Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 
-You can see an html version of the [basic_usage_shortstay_unit notebook here](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_040.html).
+You can see an html versions of basic usage notebooks at:
+
+- [basic usage notebook for v0.4.3](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_043.html)
+- [basic usage notebook for v0.4.0-2](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_040.html).
 
 
 The source and a binary wheel are available from PyPi. You can install using pip: 
