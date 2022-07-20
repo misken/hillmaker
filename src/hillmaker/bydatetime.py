@@ -106,7 +106,7 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Check for mismatch between analysis dates and dates in stops_df
     check_date_ranges(start_analysis_np, end_analysis_np, min_intime, max_outtime)
-    logger.info(f'start analysis: {start_analysis_np}, end analysis: {end_analysis_np}')
+    logger.info(f'start analysis: {np.datetime_as_string(start_analysis_np, unit="D")}, end analysis: {np.datetime_as_string(end_analysis_np, unit="D")}')
 
 
     # Occupancy weights
