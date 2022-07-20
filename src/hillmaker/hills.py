@@ -1,6 +1,6 @@
 """Hillmaker"""
 
-# Copyright 2015, 2022 Mark Isken
+# Copyright 2015, 2022 Mark Isken, Jacob Norman
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import pandas as pd
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
+from hillmaker.plotting import export_dow_plot, export_week_plot
 
 
 def setup_logger(verbose):
@@ -55,10 +56,13 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                cat_to_exclude=None,
                occ_weight_field=None,
                totals=1,
+               cap=None,
                nonstationary_stats=True,
                stationary_stats=True,
                export_bydatetime_csv=True,
                export_summaries_csv=True,
+               export_dow_png=False,
+               export_week_png=False,
                export_path=Path('.'),
                edge_bins=1,
                verbose=0):
@@ -101,6 +105,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     totals: int, default 1
         0=no totals, 1=totals by datetime
+    cap : int, optional
+        Capacity of area being analyzed, default is None
     nonstationary_stats : bool, optional
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
@@ -109,6 +115,10 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is True.
+    export_dow_png : bool, optional
+       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+    export_week_png : bool, optional
+       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
     export_path : str or Path, optional
         Destination path for exported csv files, default is current directory
     verbose : int, optional
@@ -195,6 +205,30 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                 export_summaries(summary_dfs, scenario_name, export_path, 'stationary')
 
         logger.info(f"Summaries exported to csv (seconds): {t.interval:.4f}")
+
+    if export_dow_png:
+        with HillTimer() as t:
+            for metric in summary_dfs:
+                print(summary_dfs.keys())
+                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
+                fullwk_df = fullwk_df.reset_index()
+                for dow in fullwk_df['day_of_week'].unique():
+                    split_df = fullwk_df.loc[fullwk_df['day_of_week'] == dow]
+                    export_dow_plot(split_df, scenario_name, metric, export_path, cap=cap)
+
+        logger.info(f"Day of week plots exported to png (seconds): {t.interval:.4f}")
+
+    if export_week_png:
+        with HillTimer() as t:
+            for metric in summary_dfs:
+                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
+                fullwk_df = fullwk_df.reset_index()
+                wkday_df = fullwk_df.loc[fullwk_df['day_of_week'] < 5]
+
+                export_week_plot(fullwk_df, scenario_name, metric, export_path, cap=cap)
+                export_week_plot(wkday_df, scenario_name, metric, export_path, cap=cap)
+
+        logger.info(f"Entire week plots exported to png (seconds): {t.interval:.4f}")
 
     hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
 
