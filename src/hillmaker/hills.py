@@ -69,7 +69,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                export_summaries_csv=True,
                export_dow_png=False,
                export_week_png=False,
-               export_path=Path('.'),
+               output_path=Path('.'),
                edge_bins=1,
                verbosity=0):
     """
@@ -117,9 +117,9 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
        If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    censored_departures: bool, optional
+    no_censored_departures: bool, optional
        If True, missing departure datetimes are replaced with datetime of end of analysis range. If False,
-       record is ignored. Default is True.
+       record is ignored. Default is False.
     export_bydatetime_csv : bool, optional
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
@@ -128,8 +128,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
     export_week_png : bool, optional
        If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
-    export_path : str or Path, optional
-        Destination path for exported csv files, default is current directory
+    output_path : str or Path, optional
+        Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
 
@@ -254,25 +254,24 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
 
     if export_dow_png:
         with HillTimer() as t:
-            for metric in summary_dfs:
-                print(summary_dfs.keys())
+            for metric in summary_dfs['nonstationary']['dow_binofday']:
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
                 for dow in fullwk_df['day_of_week'].unique():
                     split_df = fullwk_df.loc[fullwk_df['day_of_week'] == dow]
-                    export_dow_plot(split_df, scenario_name, metric, export_path, cap=cap)
+                    export_dow_plot(split_df, scenario_name, metric, output_path, cap=cap)
 
         logger.info(f"Day of week plots exported to png (seconds): {t.interval:.4f}")
 
     if export_week_png:
         with HillTimer() as t:
-            for metric in summary_dfs:
+            for metric in summary_dfs['nonstationary']['dow_binofday']:
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
                 wkday_df = fullwk_df.loc[fullwk_df['day_of_week'] < 5]
 
-                export_week_plot(fullwk_df, scenario_name, metric, export_path, cap=cap)
-                export_week_plot(wkday_df, scenario_name, metric, export_path, cap=cap)
+                export_week_plot(fullwk_df, scenario_name, metric, output_path, cap=cap)
+                export_week_plot(wkday_df, scenario_name, metric, output_path, cap=cap)
 
         logger.info(f"Entire week plots exported to png (seconds): {t.interval:.4f}")
 
