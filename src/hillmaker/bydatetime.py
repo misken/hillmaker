@@ -139,6 +139,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Get the unique category values and exclude any specified to exclude
     categories = []
+    if isinstance(cat_to_exclude, str):
+        cat_to_exclude = [cat_to_exclude]
+
     if cat_to_exclude is not None and len(cat_to_exclude) > 0:
         for i in range(len(catfield)):
             categories.append(tuple([c for c in stops_df[catfield[i]].unique() if c not in cat_to_exclude]))
