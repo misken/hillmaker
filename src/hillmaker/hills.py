@@ -29,7 +29,7 @@ except ModuleNotFoundError:
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
-from hillmaker.plotting import export_dow_plot, export_week_plot
+from hillmaker.plotting import export_hill_plot
 
 
 def setup_logger(verbosity):
@@ -252,28 +252,29 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
 
         logger.info(f"Summaries exported to csv in {output_path} (seconds): {t.interval:.4f}")
 
-    if export_dow_png:
-        with HillTimer() as t:
-            for metric in summary_dfs['nonstationary']['dow_binofday']:
-                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
-                fullwk_df = fullwk_df.reset_index()
-                for dow in fullwk_df['day_of_week'].unique():
-                    split_df = fullwk_df.loc[fullwk_df['day_of_week'] == dow]
-                    export_dow_plot(split_df, scenario_name, metric, output_path, cap=cap)
-
-        logger.info(f"Day of week plots exported to png (seconds): {t.interval:.4f}")
-
+    # Create and export full week plots if requested
     if export_week_png:
         with HillTimer() as t:
             for metric in summary_dfs['nonstationary']['dow_binofday']:
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
-                wkday_df = fullwk_df.loc[fullwk_df['day_of_week'] < 5]
+                export_hill_plot(fullwk_df, scenario_name, metric, export_path=output_path,
+                                 bin_size_minutes=bin_size_minutes, cap=cap)
 
-                export_week_plot(fullwk_df, scenario_name, metric, output_path, cap=cap)
-                export_week_plot(wkday_df, scenario_name, metric, output_path, cap=cap)
+        logger.info(f"Full week plots exported to png (seconds): {t.interval:.4f}")
 
-        logger.info(f"Entire week plots exported to png (seconds): {t.interval:.4f}")
+    # Create and export individual day of week plots if requested
+    if export_dow_png:
+        with HillTimer() as t:
+            for metric in summary_dfs['nonstationary']['dow_binofday']:
+                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
+                fullwk_df = fullwk_df.reset_index()
+                for dow in fullwk_df['dow_name'].unique():
+                    dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
+                    export_hill_plot(dow_df, scenario_name, metric, export_path=output_path,
+                                     bin_size_minutes=bin_size_minutes, cap=cap, week_range=dow)
+
+        logger.info(f"Individual day of week plots exported to png (seconds): {t.interval:.4f}")
 
     hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
 
