@@ -28,11 +28,11 @@ stops_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 hills = hm.make_hills(scenario, stops_df, in_fld_name, out_fld_name,
                       start, end, cat_fld_name,
                       bin_mins,
-                      cat_to_exclude=None,
+                      cats_to_exclude=None,
                       nonstationary_stats=nonstationary_stats,
                       stationary_stats=stationary_stats,
                       totals=totals,
                       export_bydatetime_csv=True,
                       export_summaries_csv=True,
-                      export_path='./output', verbose=1)
+                      output_path='./output', verbose=1)
 

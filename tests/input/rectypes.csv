@@ -1,0 +1,24 @@
+PatID,InRoomTS,OutRoomTS,PatType
+1,1/1/1996 7:20,1/1/1996 8:50,inner_mbins_frac
+2,1/1/1996 9:30,1/1/1996 11:00,inner_mbins_boundary
+3,1/1/1996 7:15,1/2/1996 8:50 13:30,inner_mbins_frac
+4,1/1/1996 7:00,1/1/1996 7:20,inner_onebin
+5,1/1/1996 9:00,1/1/1996 9:30,inner_onebin
+6,1/1/1996 11:40,1/1/1996 11:50,inner_onebin
+7,1/1/1996 6:10,1/1/1996 6:50,inner_twobins
+8,1/1/1996 7:00,1/1/1996 7:50,inner_twobins
+9,1/1/1996 23:50,1/2/1996 0:20,inner_twobins_overmid
+#
+10,12/10/1995 7:20,1/1/1996 8:50,left_mbins_frac
+11,1/1/1996 7:20,1/4/1996 8:50,right_mbins_frac
+12,12/10/1995 7:20,1/4/1996 8:50,outer_mbins_frac
+#
+13,1/1/1996 6:10,1/1/1996 7:00,inner_twobins_boundary
+14,1/1/1996 7:00,1/1/1996 8:00,inner_twobins_boundary
+15,1/1/1996 23:50,1/2/1996 0:30,inner_twobins_boundary_overmid
+16,1/2/1996 23:30,1/3/1996 0:30,inner_twobins_boundary_overmid
+#
+17,1/1/1996 6:10,1/1/1996 8:00,inner_mbins_boundary
+18,1/1/1996 7:00,1/1/1996 9:00,inner_mbins_boundary
+19,1/1/1996 23:50,1/2/1996 1:30,inner_mbins_boundary_overmid
+20,1/2/1996 23:30,1/3/1996 1:30,inner_mbins_boundary_overmid
