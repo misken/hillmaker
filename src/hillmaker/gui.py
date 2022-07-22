@@ -100,7 +100,6 @@ def get_user_input(argv=None):
                         metavar='Out Time Field Name',
                         action='store',
                         default=stored_args.get('out_fld_name'),
-                        required=True,
                         help='Set the time out field name',
                         gooey_options={
                             'validator': {
