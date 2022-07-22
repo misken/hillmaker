@@ -21,7 +21,7 @@ import pandas as pd
 from hillmaker import make_hills
 
 
-@Gooey(program_name='hill_gui',
+@Gooey(program_name='Hillmaker Occupancy Analysis',
        default_size=(610, 610),
        required_cols=2,
        optional_cols=2,
