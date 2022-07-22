@@ -1,6 +1,6 @@
 """Hillmaker"""
 
-# Copyright 2022 Mark Isken
+# Copyright 2022 Mark Isken, Jacob Norman
 
 import sys
 from pathlib import Path
@@ -17,6 +17,7 @@ except ModuleNotFoundError:
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
+from hillmaker.plotting import export_hill_plot
 
 
 def setup_logger(verbosity):
@@ -48,11 +49,16 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                cats_to_exclude=None,
                occ_weight_field=None,
                totals=1,
+               cap=None,
                nonstationary_stats=True,
                stationary_stats=True,
                no_censored_departures=False,
                export_bydatetime_csv=True,
                export_summaries_csv=True,
+               export_dow_png=False,
+               export_week_png=False,
+               xlabel=None,
+               ylabel=None,
                output_path=Path('.'),
                edge_bins=1,
                verbosity=0):
@@ -95,19 +101,29 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     totals: int, default 1
         0=no totals, 1=totals by datetime
+    cap : int, optional
+        Capacity of area being analyzed, default is None
     nonstationary_stats : bool, optional
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
        If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    censored_departures: bool, optional
+    no_censored_departures: bool, optional
        If True, missing departure datetimes are replaced with datetime of end of analysis range. If False,
-       record is ignored. Default is True.
+       record is ignored. Default is False.
     export_bydatetime_csv : bool, optional
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is True.
+    export_dow_png : bool, optional
+       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+    export_week_png : bool, optional
+       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+    xlabel : str
+        x-axis label, default='Hour'
+    ylabel : str
+        y-axis label, default='Patients'
     output_path : str or Path, optional
-        Destination path for exported csv files, default is current directory
+        Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
 
@@ -121,6 +137,18 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
 
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
+
+    # Check if in and out fields are part of stops_df
+    if in_field not in list(stops_df):
+        raise ValueError(f'Bad in_field - {in_field} is not part of the stops dataframe')
+
+    if out_field not in list(stops_df):
+        raise ValueError(f'Bad out_field - {out_field} is not part of the stops dataframe')
+
+    # Check if catfield is part of stops_df
+    if cat_field is not None:
+        if cat_field not in list(stops_df):
+            raise ValueError(f'Bad cat_field - {cat_field} is not part of the stops dataframe')
 
     # pandas Timestamp versions of analysis span end points
     try:
@@ -207,7 +235,7 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
         with HillTimer() as t:
             export_bydatetime(bydt_dfs, scenario_name, output_path)
 
-        logger.info(f"By datetime exported to csv (seconds): {t.interval:.4f}")
+        logger.info(f"By datetime exported to csv in {output_path} (seconds): {t.interval:.4f}")
 
     if export_summaries_csv:
         with HillTimer() as t:
@@ -216,7 +244,33 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
             if stationary_stats:
                 export_summaries(summary_dfs, scenario_name, output_path, 'stationary')
 
-        logger.info(f"Summaries exported to csv (seconds): {t.interval:.4f}")
+        logger.info(f"Summaries exported to csv in {output_path} (seconds): {t.interval:.4f}")
+
+    # Create and export full week plots if requested
+    if export_week_png:
+        with HillTimer() as t:
+            for metric in summary_dfs['nonstationary']['dow_binofday']:
+                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
+                fullwk_df = fullwk_df.reset_index()
+                export_hill_plot(fullwk_df, scenario_name, metric, export_path=output_path,
+                                 bin_size_minutes=bin_size_minutes, cap=cap,
+                                 xlabel=xlabel, ylabel=ylabel)
+
+        logger.info(f"Full week plots exported to png (seconds): {t.interval:.4f}")
+
+    # Create and export individual day of week plots if requested
+    if export_dow_png:
+        with HillTimer() as t:
+            for metric in summary_dfs['nonstationary']['dow_binofday']:
+                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
+                fullwk_df = fullwk_df.reset_index()
+                for dow in fullwk_df['dow_name'].unique():
+                    dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
+                    export_hill_plot(dow_df, scenario_name, metric, export_path=output_path,
+                                     bin_size_minutes=bin_size_minutes, cap=cap, week_range=dow,
+                                     xlabel=xlabel, ylabel=ylabel)
+
+        logger.info(f"Individual day of week plots exported to png (seconds): {t.interval:.4f}")
 
     hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
 
@@ -246,6 +300,7 @@ def export_bydatetime(bydt_dfs, scenario_name, export_path):
 
     for d in bydt_dfs:
         file_bydt_csv = f'{scenario_name}_bydatetime_{d}.csv'
+        Path(export_path).mkdir(parents=True, exist_ok=True)
         csv_wpath = Path(export_path, file_bydt_csv)
 
         dt_cols = ['arrivals', 'departures', 'occupancy',
@@ -287,6 +342,7 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
             else:
                 file_summary_csv = file_summary_csv + '.csv'
 
+            Path(export_path).mkdir(parents=True, exist_ok=True)
             csv_wpath = Path(export_path, file_summary_csv)
 
             catfield = df.index.names
@@ -312,14 +368,6 @@ def process_command_line(argv=None):
     """
 
     """
-
-    # Disable default help
-    #parser = ArgumentParser(add_help=False)
-    # required = parser.add_argument_group('required arguments')
-    # optional = parser.add_argument_group('optional arguments')
-
-
-
 
     # Create the parser
     parser = ArgumentParser(prog='hillmaker',
@@ -396,8 +444,34 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
+        '--export_week_png', action='store_true',
+        help="If set (true), weekly plots are exported to OUTPUT_PATH"
+
+    )
+
+    optional.add_argument(
+        '--export_dow_png', action='store_true',
+        help="If set (true), individual day of week plots are exported to OUTPUT_PATH"
+    )
+
+    optional.add_argument(
+        '--xlabel', type=str, default='Hour',
+        help="x-axis label for plots"
+    )
+
+    optional.add_argument(
+        '--ylabel', type=str, default='Hour',
+        help="y-axis label for plots"
+    )
+
+    optional.add_argument(
         '--verbosity', type=int, default=0,
         help="Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG"
+    )
+
+    optional.add_argument(
+        '--cap', type=int, default=None,
+        help="Capacity level line to include in plots"
     )
 
     optional.add_argument(
@@ -508,7 +582,9 @@ def main(argv=None):
     dfs = make_hills(args.scenario, stops_df, args.in_field, args.out_field,
                      args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
                      output_path=args.output_path, verbosity=args.verbosity,
-                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles)
+                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
+                     export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
+                     cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
 
 
 if __name__ == '__main__':

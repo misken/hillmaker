@@ -24,6 +24,15 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
+hillmaker 0.4.4
+===============
+
+**Release date:** 2022-07-22
+
+**New features and API changes**
+
+- adding weekly and dow plots of arrivals, departures, occupancy
+
 hillmaker 0.4.3
 ===============
 
