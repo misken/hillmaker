@@ -32,7 +32,8 @@ setup(name='hillmaker',
           'Topic :: Scientific/Engineering :: Information Analysis',
       ],
       entry_points={
-          'console_scripts': ['hillmaker=hillmaker.hills:main', 'hill_gui=hillmaker.gui:main'],
+          'console_scripts':
+              ['hillmaker=hillmaker.hills:main', 'hill_gui=hillmaker.gui:main'],
       },
       project_urls={
           'Source': 'http://github.com/misken/hillmaker',

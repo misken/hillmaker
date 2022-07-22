@@ -17,11 +17,10 @@ import os
 import sys
 import json
 from gooey import Gooey, GooeyParser
-import pandas as pd
-from hillmaker import make_hills
 
 
 @Gooey(program_name='Hillmaker Occupancy Analysis',
+       target='hillmaker.exe',
        default_size=(610, 610),
        required_cols=2,
        optional_cols=2,
@@ -101,6 +100,7 @@ def get_user_input(argv=None):
                         metavar='Out Time Field Name',
                         action='store',
                         default=stored_args.get('out_fld_name'),
+                        required=True,
                         help='Set the time out field name',
                         gooey_options={
                             'validator': {
@@ -135,7 +135,7 @@ def get_user_input(argv=None):
                             }
                         })
 
-    parser.add_argument('--cat_field', 
+    parser.add_argument('--cat_field',
                         metavar='Category',
                         action='store',
                         #default=stored_args.get('cat_fld_name'),
@@ -185,14 +185,6 @@ def main(argv=None):
     """
     # launch gui and get user input
     inputs = get_user_input()
-
-    # read in csv file and convert in and out cols to datetime
-    stops_df = pd.read_csv(inputs.stop_data_csv, parse_dates=[inputs.in_field, inputs.out_field])
-
-    # run occupancy analysis
-    dfs = make_hills(inputs.scenario, stops_df, inputs.in_field, inputs.out_field,
-                     inputs.start_analysis_dt, inputs.end_analysis_dt, cat_field=inputs.cat_field,
-                     bin_size_minutes=inputs.bin_size_mins, export_path=inputs.output_path, verbosity=inputs.verbosity)
 
 
 if __name__ == '__main__':
