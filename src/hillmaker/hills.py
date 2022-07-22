@@ -361,14 +361,6 @@ def process_command_line(argv=None):
 
     """
 
-    # Disable default help
-    #parser = ArgumentParser(add_help=False)
-    # required = parser.add_argument_group('required arguments')
-    # optional = parser.add_argument_group('optional arguments')
-
-
-
-
     # Create the parser
     parser = ArgumentParser(prog='hillmaker',
                                      description='Occupancy analysis by time of day and day of week',
