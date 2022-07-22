@@ -14,20 +14,21 @@
 
 from datetime import datetime as dt
 import os
+import sys
 import json
 from gooey import Gooey, GooeyParser
 import pandas as pd
 from hillmaker import make_hills
 
 
-@Gooey(program_name='Hillmaker Occupancy Analysis',
+@Gooey(program_name='hill_gui',
        default_size=(610, 610),
        required_cols=2,
        optional_cols=2,
        tabbed_groups=True,
        use_events='VALIDATE_FORM'
        )
-def get_user_input():
+def get_user_input(argv=None):
     """
     Adds GUI to hillmaker function make_hills.
 
@@ -58,18 +59,6 @@ def get_user_input():
     today = str(int(dt.now().strftime('%Y%m%d')))
 
     parser = GooeyParser(description='Computes occupancy statistics based on a list of start and stop times.')
-    parser.add_argument('stops_fn',
-                        metavar='Timestamps Filename',
-                        action='store',
-                        default=stored_args.get('stops_fn'),
-                        help='Select file containing start and stop times',
-                        widget='FileChooser',
-                        gooey_options={
-                            'validator': {
-                                'test': test,
-                                'message': message
-                            }
-                        })
 
     parser.add_argument('scenario',
                         metavar='Scenario',
@@ -83,7 +72,20 @@ def get_user_input():
                             }
                         })
 
-    parser.add_argument('in_fld_name',
+    parser.add_argument('stop_data_csv',
+                        metavar='Timestamps Filename',
+                        action='store',
+                        default=stored_args.get('stops_fn'),
+                        help='Select file containing start and stop times',
+                        widget='FileChooser',
+                        gooey_options={
+                            'validator': {
+                                'test': test,
+                                'message': message
+                            }
+                        })
+
+    parser.add_argument('in_field',
                         metavar='In Time Field Name',
                         action='store',
                         default=stored_args.get('in_fld_name'),
@@ -95,7 +97,7 @@ def get_user_input():
                             }
                         })
 
-    parser.add_argument('out_fld_name',
+    parser.add_argument('out_field',
                         metavar='Out Time Field Name',
                         action='store',
                         default=stored_args.get('out_fld_name'),
@@ -107,7 +109,7 @@ def get_user_input():
                             }
                         })
 
-    parser.add_argument('start_ts',
+    parser.add_argument('start_analysis_dt',
                         metavar='Start Date',
                         action='store',
                         default=stored_args.get('start_ts'),
@@ -120,7 +122,7 @@ def get_user_input():
                             }
                         })
 
-    parser.add_argument('end_ts',
+    parser.add_argument('end_analysis_dt',
                         metavar='End Date',
                         action='store',
                         default=stored_args.get('end_ts'),
@@ -133,14 +135,14 @@ def get_user_input():
                             }
                         })
 
-    parser.add_argument('-cat_fld_name', '-o',
+    parser.add_argument('--cat_field', '-o',
                         metavar='Category',
                         action='store',
                         #default=stored_args.get('cat_fld_name'),
                         help='Select a category to separate analysis by'
                         )
 
-    parser.add_argument('-bin_size',
+    parser.add_argument('--bin_size_mins',
                         metavar='Bin Size',
                         action='store',
                         widget='Slider',
@@ -150,7 +152,15 @@ def get_user_input():
                         gooey_options={'min': 0, 'max': 60}
                         )
 
-    parser.add_argument('-verbose',
+    parser.add_argument('--output_path',
+                        metavar='Output Directory',
+                        action='store',
+                        widget='DirChooser',
+                        default=stored_args.get('output_dir'),
+                        help='Select output directory to save files',
+                        )
+
+    parser.add_argument('--verbose',
                         metavar='Verbosity',
                         action='store',
                         widget='Slider',
@@ -158,14 +168,6 @@ def get_user_input():
                         help='The higher the integer, the more verbose the output',
                         type=int,
                         gooey_options={'min': 0, 'max': 5}
-                        )
-
-    parser.add_argument('-output_dir',
-                        metavar='Output Directory',
-                        action='store',
-                        widget='DirChooser',
-                        default=stored_args.get('output_dir'),
-                        help='Select output directory to save files',
                         )
 
     args = parser.parse_args()
@@ -176,28 +178,22 @@ def get_user_input():
     return args
 
 
-def hill_gui():
+def main(argv=None):
     """
-    Full program for computing occupancy based on in and out timestamps.
-
-    Extends the functionality of hillmaker to include a graphic user
-    interface with get_user_input to the function make_hills. Allows
-    business users to easily run occupancy statistics and outputs files
-
-    Returns
-    -------
-    hm_dict : dictionary
-        Dictionary of hillmaker dataframes.
+    :param argv: Input arguments
+    :return: No return value
     """
     # launch gui and get user input
     inputs = get_user_input()
 
     # read in csv file and convert in and out cols to datetime
-    stops_df = pd.read_csv(inputs.stops_fn, parse_dates=[inputs.in_fld_name, inputs.out_fld_name])
+    stops_df = pd.read_csv(inputs.stop_data_csv, parse_dates=[inputs.in_field, inputs.out_field])
 
     # run occupancy analysis
-    hm_dict = make_hills(inputs.scenario, stops_df, inputs.in_fld_name,
-                         inputs.out_fld_name, inputs.start_ts, inputs.end_ts, cat_field=inputs.cat_fld_name,
-                         bin_size_minutes=inputs.bin_size, export_path=inputs.output_dir, verbose=inputs.verbose)
+    dfs = make_hills(inputs.scenario, stops_df, inputs.in_field, inputs.out_field,
+                     inputs.start_analysis_dt, inputs.end_analysis_dt, cat_field=inputs.cat_field,
+                     bin_size_minutes=inputs.bin_size_mins, export_path=inputs.output_path, verbose=inputs.verbose)
 
-    return hm_dict
+
+if __name__ == '__main__':
+    sys.exit(main())
