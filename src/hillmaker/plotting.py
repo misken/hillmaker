@@ -7,7 +7,8 @@ from pathlib import Path
 
 
 def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
-                     bin_size_minutes=60, cap=None, week_range='full week'):
+                     bin_size_minutes=60, cap=None, week_range='full week',
+                     xlabel='Hour', ylabel='Patients'):
     """
     Exports day of week plot for occupancy, arrival, and departure statistics
 
@@ -34,6 +35,10 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     week_range : str
         Week range of summary df. Default is 'full week', can also take the form of
         the first three characters of a day of week name (ex: 'Tue')
+    xlabel : str
+        x-axis label, default='Hour'
+    ylabel : str
+        y-axis label, default='Patients'
     """
 
     plt.style.use('seaborn-darkgrid')
@@ -99,8 +104,8 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
                               x=0.125, y=0.95, horizontalalignment='left', verticalalignment='top', fontsize=16)
 
     ax1.set_title('All category types', loc='left', style='italic')
-    ax1.set_xlabel(None)
-    ax1.set_ylabel('Units')
+    ax1.set_xlabel(xlabel)
+    ax1.set_ylabel(ylabel)
 
     # Legend
     ax1.legend(loc='best', frameon=True, facecolor='w')

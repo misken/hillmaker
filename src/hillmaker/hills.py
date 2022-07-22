@@ -57,6 +57,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                export_summaries_csv=True,
                export_dow_png=False,
                export_week_png=False,
+               xlabel=None,
+               ylabel=None,
                output_path=Path('.'),
                edge_bins=1,
                verbosity=0):
@@ -116,6 +118,10 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
     export_week_png : bool, optional
        If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+    xlabel : str
+        x-axis label, default='Hour'
+    ylabel : str
+        y-axis label, default='Patients'
     output_path : str or Path, optional
         Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
@@ -247,7 +253,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
                 export_hill_plot(fullwk_df, scenario_name, metric, export_path=output_path,
-                                 bin_size_minutes=bin_size_minutes, cap=cap)
+                                 bin_size_minutes=bin_size_minutes, cap=cap,
+                                 xlabel=xlabel, ylabel=ylabel)
 
         logger.info(f"Full week plots exported to png (seconds): {t.interval:.4f}")
 
@@ -260,7 +267,8 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
                 for dow in fullwk_df['dow_name'].unique():
                     dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
                     export_hill_plot(dow_df, scenario_name, metric, export_path=output_path,
-                                     bin_size_minutes=bin_size_minutes, cap=cap, week_range=dow)
+                                     bin_size_minutes=bin_size_minutes, cap=cap, week_range=dow,
+                                     xlabel=xlabel, ylabel=ylabel)
 
         logger.info(f"Individual day of week plots exported to png (seconds): {t.interval:.4f}")
 
@@ -436,8 +444,34 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
+        '--export_week_png', action='store_true',
+        help="If set (true), weekly plots are exported to OUTPUT_PATH"
+
+    )
+
+    optional.add_argument(
+        '--export_dow_png', action='store_true',
+        help="If set (true), individual day of week plots are exported to OUTPUT_PATH"
+    )
+
+    optional.add_argument(
+        '--xlabel', type=str, default='Hour',
+        help="x-axis label for plots"
+    )
+
+    optional.add_argument(
+        '--ylabel', type=str, default='Hour',
+        help="y-axis label for plots"
+    )
+
+    optional.add_argument(
         '--verbosity', type=int, default=0,
         help="Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG"
+    )
+
+    optional.add_argument(
+        '--cap', type=int, default=None,
+        help="Capacity level line to include in plots"
     )
 
     optional.add_argument(
@@ -548,7 +582,9 @@ def main(argv=None):
     dfs = make_hills(args.scenario, stops_df, args.in_field, args.out_field,
                      args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
                      output_path=args.output_path, verbosity=args.verbosity,
-                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles)
+                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
+                     export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
+                     cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
 
 
 if __name__ == '__main__':
