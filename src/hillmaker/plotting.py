@@ -89,9 +89,8 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     ax1.plot(timestamps, pctile_occ, linestyle=pctile_line_style, label=f'95th %ile {metric}', color=pctile_color)
 
     # establish capacity horizontal line if supplied
-    if cap is not None:
-        if metric == 'occupancy':
-            plt.axhline(cap, color='r', linestyle='--', label='Capacity')
+    if cap is not None and metric == 'occupancy':
+        plt.axhline(cap, color='r', linestyle='--', label='Capacity')
 
     # Create formatter variables
     day_fmt = '' if num_days == 1 else '%a'
