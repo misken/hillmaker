@@ -135,7 +135,7 @@ def get_user_input(argv=None):
                             }
                         })
 
-    parser.add_argument('--cat_field', '-o',
+    parser.add_argument('--cat_field', 
                         metavar='Category',
                         action='store',
                         #default=stored_args.get('cat_fld_name'),
@@ -160,7 +160,7 @@ def get_user_input(argv=None):
                         help='Select output directory to save files',
                         )
 
-    parser.add_argument('--verbose',
+    parser.add_argument('--verbosity',
                         metavar='Verbosity',
                         action='store',
                         widget='Slider',
@@ -192,7 +192,7 @@ def main(argv=None):
     # run occupancy analysis
     dfs = make_hills(inputs.scenario, stops_df, inputs.in_field, inputs.out_field,
                      inputs.start_analysis_dt, inputs.end_analysis_dt, cat_field=inputs.cat_field,
-                     bin_size_minutes=inputs.bin_size_mins, export_path=inputs.output_path, verbose=inputs.verbose)
+                     bin_size_minutes=inputs.bin_size_mins, export_path=inputs.output_path, verbosity=inputs.verbosity)
 
 
 if __name__ == '__main__':
