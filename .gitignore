@@ -10,3 +10,4 @@ src/hillmaker.egg-info/
 # tests
 tests/output/
 docs/examples/scripts/output/
+docs/examples/notebooks/output/
