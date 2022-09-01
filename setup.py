@@ -37,6 +37,6 @@ setup(name='hillmaker',
       project_urls={
           'Source': 'http://github.com/misken/hillmaker',
           'Examples': 'https://github.com/misken/hillmaker-examples',
-      }, install_requires=['pandas>=1.4.0', 'numpy>=1.21.5'],
+      }, install_requires=['pandas>=1.4.0', 'numpy>=1.21.5', 'tomli>=1.1.0'],
       python_requires='>=3.8'
       )

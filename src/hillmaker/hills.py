@@ -6,8 +6,11 @@ import sys
 from pathlib import Path
 from argparse import ArgumentParser, Namespace, SUPPRESS
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+from pydantic import BaseModel
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -18,6 +21,53 @@ from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 from hillmaker.plotting import export_hill_plot
+
+class Hills(BaseModel):
+    """pydantic model for hm inputs
+
+    - using some required fields for now. So, can't, for example, create an instane with just a df
+    and add the other "required" fields later. Still learning pydantic and couldn't figure out how to do well.
+    - some of the defaults should live in some sort of settings file (see BaseSettings)
+
+    """
+
+    df: pd.DataFrame
+    in_field: str
+    out_field: str
+    start_analysis_dt: datetime
+    end_analysis_dt: datetime
+    scenario: str = datetime.now().strftime("%Y%m%d%H%M")
+    cat_field: str = None
+    bin_size_minutes: int = 60
+    percentiles: Tuple[float] = (0.25, 0.5, 0.75, 0.95, 0.99)
+    cats_to_exclude: List[str] = None
+    occ_weight_field: str = None
+    totals: bool = True
+    cap: int = None
+    nonstationary_stats: bool = True
+    stationary_stats: bool = True
+    no_censored_departures: bool = False
+    export_bydatetime_csv: bool = True
+    export_summaries_csv: bool = True
+    export_dow_png: bool = False
+    export_week_png: bool = False
+    xlabel: str = None
+    ylabel: str = None
+    output_path: Path = Path('.')
+    edge_bins: int = 1
+    verbosity: int = 0
+    config_file: Union[Path, str] = None
+
+    """
+    Run hillmaker on pandas dataframe
+    """
+
+
+    if config_file is not None:
+        # Read inputs from config file
+        with open(config_file, mode="rb") as toml_file:
+            toml_config = tomllib.load(toml_file)
+            args = update_params(args, toml_config)
 
 
 def setup_logger(verbosity):
@@ -353,185 +403,34 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
                 df.to_csv(csv_wpath, index=False, float_format='%.6f')
 
 
-def process_command_line(argv=None):
-    """
-    Parse command line arguments
 
-    Parameters
-    ----------
-    argv : list of arguments, or `None` for ``sys.argv[1:]``.
-    Returns
-    ----------
-    Namespace representing the argument list.
-    """
 
-    """
-
-    """
-
-    # Create the parser
-    parser = ArgumentParser(prog='hillmaker',
-                                     description='Occupancy analysis by time of day and day of week',
-                                     add_help=False)
-
-    required = parser.add_argument_group('required arguments (either on command line or via config file)')
-    optional = parser.add_argument_group('optional arguments')
-
-    # Add arguments
-    required.add_argument(
-        '--scenario', type=str,
-        help="Used in output filenames"
-    )
-
-    required.add_argument(
-        '--stop_data_csv', type=str,
-        help="Path to csv file containing the stop data to be processed"
-    )
-
-    required.add_argument(
-        '--in_field', type=str,
-        help="Column name corresponding to the arrival times"
-    )
-
-    required.add_argument(
-        '--out_field', type=str,
-        help="Column name corresponding to the departure times"
-    )
-
-    required.add_argument(
-        '--start_analysis_dt', type=str,
-        help="Starting datetime for the analysis (must be convertible to pandas Timestamp)"
-    )
-
-    required.add_argument(
-        '--end_analysis_dt', type=str,
-        help="Ending datetime for the analysis (must be convertible to pandas Timestamp)"
-    )
-
-    optional.add_argument(
-        '--config', type=str, default=None,
-        help="Configuration file (TOML format) containing input parameter arguments and values"
-    )
-
-    optional.add_argument(
-        '--cat_field', type=str, default=None,
-        help="Column name corresponding to the categories. If None, then only overall occupancy is analyzed"
-    )
-
-    optional.add_argument(
-        '--bin_size_mins', type=int, default=60,
-        help="Number of minutes in each time bin of the day"
-    )
-
-    optional.add_argument(
-        '--occ_weight_field', type=str, default=None,
-        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used"
-    )
-
-    optional.add_argument(
-        '--edge_bins', type=int, default=1,
-        help="Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin"
-    )
-
-    optional.add_argument(
-        '--no_totals', action='store_true',
-        help="Use to suppress totals (default is False)"
-    )
-
-    optional.add_argument(
-        '--output_path', type=str, default='.',
-        help="Destination path for exported csv files, default is current directory."
-    )
-
-    optional.add_argument(
-        '--export_week_png', action='store_true',
-        help="If set (true), weekly plots are exported to OUTPUT_PATH"
-
-    )
-
-    optional.add_argument(
-        '--export_dow_png', action='store_true',
-        help="If set (true), individual day of week plots are exported to OUTPUT_PATH"
-    )
-
-    optional.add_argument(
-        '--xlabel', type=str, default='Hour',
-        help="x-axis label for plots"
-    )
-
-    optional.add_argument(
-        '--ylabel', type=str, default='Hour',
-        help="y-axis label for plots"
-    )
-
-    optional.add_argument(
-        '--verbosity', type=int, default=0,
-        help="Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG"
-    )
-
-    optional.add_argument(
-        '--cap', type=int, default=None,
-        help="Capacity level line to include in plots"
-    )
-
-    optional.add_argument(
-        "--percentiles",
-        nargs="*",  # 0 or more values expected => creates a list
-        type=float,
-        default=(0.25, 0.5, 0.75, 0.95, 0.99),  # default if nothing is provided
-    )
-
-    optional.add_argument(
-        "--cats_to_exclude",
-        nargs="*",  # 0 or more values expected => creates a list
-        type=str,
-        default=[],  # default if nothing is provided
-    )
-
-    optional.add_argument(
-        '--no_censored_departures', action='store_true',
-        help="If set (true), records with missing departure timestamps are ignored. By default, such records are assumed to be still in the system at the end_analysis_dt."
-    )
-
-    # Add back help
-    optional.add_argument(
-        '-h',
-        '--help',
-        action='help',
-        default=SUPPRESS,
-    )
-
-    # Do the parsing and return the populated namespace with the input arg values
-    # If argv == None, then ``parse_args`` will use ``sys.argv[1:]``.
-    args = parser.parse_args(argv)
-    return args
-
-def update_args(args, toml_config):
+def update_params(params, toml_config):
     """
     Update args namespace values from toml_config dictionary
 
     Parameters
     ----------
-    args : namespace
+    params : namespace
     toml_config : dict from loading TOML config file
 
     Returns
     -------
-    Updated args namespace
+    Updated parameters namespace
     """
 
-    # Convert args namespace to a dict
-    args_dict = vars(args)
+    # Convert pydantic model to a dict
+    params_dict = params.dict()
 
     # Flatten toml config (we know there are no key clashes and only one nesting level)
     # Update args dict from config dict
     for outerkey, outerval in toml_config.items():
         for key, val in outerval.items():
-            args_dict[key] = val
+            params_dict[key] = val
 
-    # Convert dict to updated namespace
-    args = Namespace(**args_dict)
-    return args
+    # Convert dict to updated pydantic model
+    params = Hills.parse_obj(params_dict)
+    return params
 
 def check_for_required_args(args):
     """
@@ -553,41 +452,5 @@ def check_for_required_args(args):
         if args_dict[req_arg] is None:
             raise ValueError(f'{req_arg} is required')
 
-def main(argv=None):
-    """
-    :param argv: Input arguments
-    :return: No return value
-    """
-
-    # By including ``argv=None`` as input to ``main``, our program can be
-    # imported and ``main`` called with arguments. This will be useful for
-    # testing via pytest.
-    # Get input arguments
-    args = process_command_line(argv)
-
-    # Update input args if config file passed
-    if args.config is not None:
-        # Read inputs from config file
-        with open(args.config, mode="rb") as toml_file:
-            toml_config = tomllib.load(toml_file)
-            args = update_args(args, toml_config)
-
-    # Make sure all required args are specified
-    check_for_required_args(args)
-
-    # Read in stop data to DataFrame
-    stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
-
-    # Make hills
-    dfs = make_hills(args.scenario, stops_df, args.in_field, args.out_field,
-                     args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
-                     output_path=args.output_path, verbosity=args.verbosity,
-                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
-                     export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
-                     cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
-
-
-if __name__ == '__main__':
-    sys.exit(main())
 
 
