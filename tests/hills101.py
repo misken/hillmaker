@@ -174,18 +174,7 @@ class HillsScenario():
 
         # If params_path is not None, merge into params
         if params_path is not None:
-            with open(params_path, mode="rb") as toml_file:
-                params_toml = tomllib.load(toml_file)
-
-            # Need to do checks to see if param was set in toml file
-            params_toml_dict = {
-                'scenario': params_toml['scenario_data']['scenario'],
-                'in_field': params_toml['fields']['in_field'],
-                'out_field': params_toml['fields']['out_field'],
-                'start_analysis_dt': params_toml['analysis_dates']['start_analysis_dt'],
-                'end_analysis_dt': params_toml['analysis_dates']['end_analysis_dt'],
-                'bin_size_minutes': params_toml['settings']['bin_size_minutes'],
-            }
+            params_toml_dict = toml_to_dict(params_path)
             params = params | params_toml_dict
 
         # Args passed to function get ultimate say
@@ -201,7 +190,20 @@ class HillsScenario():
         params_model = Parameters(**params)
         self.scenario_params = params_model
 
+def toml_to_dict(toml_filepath: Union[str, Path]):
+    with open(toml_filepath, mode="rb") as toml_file:
+        params_toml = tomllib.load(toml_file)
 
+    flat_dict = pd.json_normalize(params_toml, max_level=1)
+    # Fix up key names
+    for key, val in flat_dict.items():
+        if '.' in key:
+            new_key = key.split('.',)[1]
+            flat_dict[new_key] = val
+            del flat_dict[key]
+
+
+    return flat_dict.iloc[0].to_dict()
 
 
 ssu_df = pd.read_csv('fixtures/ShortStay2_10pct.csv', parse_dates=['InRoomTS', 'OutRoomTS'])
