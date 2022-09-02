@@ -176,7 +176,17 @@ class HillsScenario():
         if params_path is not None:
             with open(params_path, mode="rb") as toml_file:
                 params_toml = tomllib.load(toml_file)
-            params = params | params_toml
+
+            # Need to do checks to see if param was set in toml file
+            params_toml_dict = {
+                'scenario': params_toml['scenario_data']['scenario'],
+                'in_field': params_toml['fields']['in_field'],
+                'out_field': params_toml['fields']['out_field'],
+                'start_analysis_dt': params_toml['analysis_dates']['start_analysis_dt'],
+                'end_analysis_dt': params_toml['analysis_dates']['end_analysis_dt'],
+                'bin_size_minutes': params_toml['settings']['bin_size_minutes'],
+            }
+            params = params | params_toml_dict
 
         # Args passed to function get ultimate say
         if len(kwargs) > 0:
@@ -230,3 +240,20 @@ hm4 = HillsScenario(df=ssu_df, in_field=in_fld, out_field=out_fld,
 
 print(hm4.scenario_params.scenario, hm4.scenario_params.in_field, hm4.scenario_params.out_field,
       hm4.scenario_params.start_analysis_dt, hm4.scenario_params.bin_size_minutes)
+
+hm5_inputs = {
+    'df': ssu_df,
+    'in_field' : 'InRoomTS',
+    'out_field' : 'OutRoomTS',
+    'start_analysis_dt' : '1996-03-15',
+    'end_analysis_dt' : '1996-06-30',
+    'cat_fld' : 'PatType'
+}
+hm5 = HillsScenario(scenario='hm5', params_dict=hm5_inputs)
+print(hm5.scenario_params.scenario, hm5.scenario_params.in_field, hm5.scenario_params.out_field,
+      hm5.scenario_params.start_analysis_dt, hm5.scenario_params.bin_size_minutes)
+
+input_path = Path('./input/hm6.toml')
+hm6 = HillsScenario(df=ssu_df, params_path=input_path)
+print(hm6.scenario_params.scenario, hm6.scenario_params.in_field, hm6.scenario_params.out_field,
+      hm6.scenario_params.start_analysis_dt, hm6.scenario_params.bin_size_minutes)
