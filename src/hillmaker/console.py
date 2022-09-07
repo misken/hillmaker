@@ -1,5 +1,7 @@
 from argparse import ArgumentParser, Namespace, SUPPRESS
 
+from hillmaker.hills import HillsScenario
+
 def process_command_line(argv=None):
     """
     Parse command line arguments
@@ -121,6 +123,7 @@ def process_command_line(argv=None):
         help="Capacity level line to include in plots"
     )
 
+    # Be nice if this default came from application settings file
     optional.add_argument(
         "--percentiles",
         nargs="*",  # 0 or more values expected => creates a list
@@ -179,12 +182,36 @@ def main(argv=None):
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
     # Make hills
-    dfs = make_hills(args.scenario, stops_df, args.in_field, args.out_field,
+    scenario = HillsScenario(args.scenario, stops_df, args.in_field, args.out_field,
                      args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
                      output_path=args.output_path, verbosity=args.verbosity,
                      cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
                      export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
                      cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
+
+    dfs = scenario.make_hills()
+
+
+def check_for_required_args(args):
+    """
+
+    Parameters
+    ----------
+    args: Namespace
+
+    Returns
+    -------
+    Raises ValueError if a required arg is missing
+
+    """
+
+    # Make sure all required args are present
+    required_args = ['scenario', 'stop_data_csv', 'in_field', 'out_field', 'start_analysis_dt', 'start_analysis_dt']
+    # Convert args namespace to a dict
+    args_dict = vars(args)
+    for req_arg in required_args:
+        if args_dict[req_arg] is None:
+            raise ValueError(f'{req_arg} is required')
 
 
 if __name__ == '__main__':

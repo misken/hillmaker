@@ -10,64 +10,57 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, validator, Field
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
 
-
+from hillmaker.parameters import Parameters
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 from hillmaker.plotting import export_hill_plot
 
-class Hills(BaseModel):
-    """pydantic model for hm inputs
 
-    - using some required fields for now. So, can't, for example, create an instane with just a df
-    and add the other "required" fields later. Still learning pydantic and couldn't figure out how to do well.
-    - some of the defaults should live in some sort of settings file (see BaseSettings)
+class HillsScenario():
+    """User facing class to gather inputs for a hillmaker scenario"""
+    def __init__(
+        self,
+        params_dict: Optional[Dict] = None,
+        params_path: Optional[Union[str, Path]] = None,
+        **kwargs
+    ):
+        # Create empty dict for input parameters
+        params = {}
 
-    """
+        # If params_dict is not None, merge into params
+        if params_dict is not None:
+            params.update(params_dict)
 
-    df: pd.DataFrame
-    in_field: str
-    out_field: str
-    start_analysis_dt: datetime
-    end_analysis_dt: datetime
-    scenario: str = datetime.now().strftime("%Y%m%d%H%M")
-    cat_field: str = None
-    bin_size_minutes: int = 60
-    percentiles: Tuple[float] = (0.25, 0.5, 0.75, 0.95, 0.99)
-    cats_to_exclude: List[str] = None
-    occ_weight_field: str = None
-    totals: bool = True
-    cap: int = None
-    nonstationary_stats: bool = True
-    stationary_stats: bool = True
-    no_censored_departures: bool = False
-    export_bydatetime_csv: bool = True
-    export_summaries_csv: bool = True
-    export_dow_png: bool = False
-    export_week_png: bool = False
-    xlabel: str = None
-    ylabel: str = None
-    output_path: Path = Path('.')
-    edge_bins: int = 1
-    verbosity: int = 0
-    config_file: Union[Path, str] = None
+        # If params_path is not None, merge into params
+        if params_path is not None:
+            params_toml_dict = toml_to_dict(params_path)
+            params.update(params_toml_dict)
 
-    """
-    Run hillmaker on pandas dataframe
-    """
+        # Args passed to function get ultimate say
+        if len(kwargs) > 0:
+            params.update(kwargs)
 
+        # Now, from the params dictionary, create pydantic Parameters model
+        # Be nice to construct model so that some of the default values
+        # can be based on app settings
+        # Get application settings
+        # app_settings: Settings = Settings()
 
-    if config_file is not None:
-        # Read inputs from config file
-        with open(config_file, mode="rb") as toml_file:
-            toml_config = tomllib.load(toml_file)
-            args = update_params(args, toml_config)
+        params_model = Parameters(**params)
+        self.scenario_params = params_model
+        self.hills = {}
+
+    # For now, the only method is make_hills which simply passes on the parameters model
+    # to the module level make_hills function.
+    def make_hills(self):
+        self.hills = make_hills(self.scenario_params)
 
 
 def setup_logger(verbosity):
@@ -91,91 +84,15 @@ def setup_logger(verbosity):
     root_logger.addHandler(logger_handler)
 
 
-def make_hills(scenario_name, stops_df, in_field, out_field,
-               start_analysis_dt, end_analysis_dt,
-               cat_field=None,
-               bin_size_minutes=60,
-               percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
-               cats_to_exclude=None,
-               occ_weight_field=None,
-               totals=1,
-               cap=None,
-               nonstationary_stats=True,
-               stationary_stats=True,
-               no_censored_departures=False,
-               export_bydatetime_csv=True,
-               export_summaries_csv=True,
-               export_dow_png=False,
-               export_week_png=False,
-               xlabel=None,
-               ylabel=None,
-               output_path=Path('.'),
-               edge_bins=1,
-               verbosity=0):
+def make_hills(scenario: Parameters) -> Dict:
     """
-    Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
+    Compute occupancy, arrival, and departure statistics by category,
+    time bin of day and day of week.
 
     Main function that first calls `bydatetime.make_bydatetime` to calculate occupancy, arrival
     and departure values by date by time bin and then calls `summarize.summarize`
     to compute the summary statistics.
 
-    Parameters
-    ----------
-
-    scenario_name : str
-        Used in output filenames
-    stops_df : DataFrame
-        Base data containing one row per visit
-    in_field : str
-        Column name corresponding to the arrival times
-    out_field : str
-        Column name corresponding to the departure times
-    start_analysis_dt : datetime-like, str
-        Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis_dt : datetime-like, str
-        Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    cat_field : str, optional
-        Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
-        Default is None
-    bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day, default is 60. Use a value that
-        divides into 1440 with no remainder
-    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
-        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    cats_to_exclude : list, optional
-        Category values to ignore, default is None
-    occ_weight_field : str, optional
-        Column name corresponding to the weights to use for occupancy incrementing, default is None
-        which corresponds to a weight of 1.0.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
-    totals: int, default 1
-        0=no totals, 1=totals by datetime
-    cap : int, optional
-        Capacity of area being analyzed, default is None
-    nonstationary_stats : bool, optional
-       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    stationary_stats : bool, optional
-       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    no_censored_departures: bool, optional
-       If True, missing departure datetimes are replaced with datetime of end of analysis range. If False,
-       record is ignored. Default is False.
-    export_bydatetime_csv : bool, optional
-       If True, bydatetime DataFrames are exported to csv files. Default is True.
-    export_summaries_csv : bool, optional
-       If True, summary DataFrames are exported to csv files. Default is True.
-    export_dow_png : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
-    export_week_png : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
-    xlabel : str
-        x-axis label, default='Hour'
-    ylabel : str
-        y-axis label, default='Patients'
-    output_path : str or Path, optional
-        Destination path for exported csv and png files, default is current directory
-    verbosity : int, optional
-        Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
 
     Returns
     -------
@@ -183,33 +100,36 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    setup_logger(verbosity)
+    setup_logger(scenario.verbosity)
 
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
 
+    # Leaving these input validation checks in for now, even though
+    # the pydantic model takes care of them
     # Check if in and out fields are part of stops_df
-    if in_field not in list(stops_df):
-        raise ValueError(f'Bad in_field - {in_field} is not part of the stops dataframe')
+    if scenario.in_field not in list(scenario.stops_df):
+        raise ValueError(f'Bad in_field - {scenario.in_field} is not part of the stops dataframe')
 
-    if out_field not in list(stops_df):
-        raise ValueError(f'Bad out_field - {out_field} is not part of the stops dataframe')
+    if scenario.out_field not in list(scenario.stops_df):
+        raise ValueError(f'Bad out_field - {scenario.out_field} is not part of the stops dataframe')
 
     # Check if catfield is part of stops_df
-    if cat_field is not None:
-        if cat_field not in list(stops_df):
-            raise ValueError(f'Bad cat_field - {cat_field} is not part of the stops dataframe')
+    if scenario.cat_field is not None:
+        if scenario.cat_field not in list(scenario.stops_df):
+            raise ValueError(f'Bad cat_field - {scenario.cat_field} is not part of the stops dataframe')
 
     # pandas Timestamp versions of analysis span end points
+    # The pydantic model does NOT do these timestamp validations
     try:
-        start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
+        start_analysis_dt_ts = pd.Timestamp(scenario.start_analysis_dt)
     except ValueError as error:
-        raise ValueError(f'Cannot convert {start_analysis_dt} to Timestamp\n{error}')
+        raise ValueError(f'Cannot convert {scenario.start_analysis_dt} to Timestamp\n{error}')
 
     try:
-        end_analysis_dt_ts = pd.Timestamp(end_analysis_dt).floor("d") + pd.Timedelta(86399, "s")
+        end_analysis_dt_ts = pd.Timestamp(scenario.end_analysis_dt).floor("d") + pd.Timedelta(86399, "s")
     except ValueError as error:
-        raise ValueError(f'Cannot convert {end_analysis_dt} to Timestamp\n{error}')
+        raise ValueError(f'Cannot convert {scenario.end_analysis_dt} to Timestamp\n{error}')
 
     # numpy datetime64 versions of analysis span end points
     start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
@@ -218,107 +138,107 @@ def make_hills(scenario_name, stops_df, in_field, out_field,
         raise ValueError(f'end date {end_analysis_dt_np} is before start date {start_analysis_dt_np}')
 
     # Looking for missing entry and departure timestamps
-    num_recs_missing_entry_ts = stops_df[in_field].isna().sum()
-    num_recs_missing_exit_ts = stops_df[out_field].isna().sum()
+    num_recs_missing_entry_ts = scenario.stops_df[scenario.in_field].isna().sum()
+    num_recs_missing_exit_ts = scenario.stops_df[scenario.out_field].isna().sum()
     if num_recs_missing_entry_ts > 0:
         logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
 
     # Update departure timestamp for missing values if no_censored_departures=False
-    if not no_censored_departures:
+    if not scenario.no_censored_departures:
         num_recs_uncensored = num_recs_missing_exit_ts
         if num_recs_missing_exit_ts > 0:
             logger.info(f'{num_recs_missing_exit_ts} records with missing exit timestamps - end of analysis range used for occupancy purposes')
-            uncensored_out_field = f'{out_field}_uncensored'
-            uncensored_out_value = pd.Timestamp(end_analysis_dt).floor("d") + pd.Timedelta(1, "d")
-            stops_df[uncensored_out_field] = stops_df[out_field].fillna(value=uncensored_out_value)
+            uncensored_out_field = f'{scenario.out_field}_uncensored'
+            uncensored_out_value = pd.Timestamp(scenario.end_analysis_dt).floor("d") + pd.Timedelta(1, "d")
+            scenario.stops_df[uncensored_out_field] = stops_df[out_field].fillna(value=uncensored_out_value)
             active_out_field = uncensored_out_field
         else:
             # Records with missing departures will be ignored
-            active_out_field = out_field
+            active_out_field = scenario.out_field
             if num_recs_missing_exit_ts > 0:
                 logger.warning(f'{num_recs_missing_exit_ts} records with missing exit timestamps - records ignored')
     else:
-        active_out_field = out_field
+        active_out_field = scenario.out_field
 
     # Filter out records that don't overlap the analysis span or have missing entry timestamps
-    stops_df = stops_df.loc[(stops_df[in_field] < end_analysis_dt_ts) &
-                            (~stops_df[in_field].isna()) &
-                            (stops_df[active_out_field] >= start_analysis_dt_ts)]
+    scenario.stops_df = scenario.stops_df.loc[(scenario.stops_df[scenario.in_field] < end_analysis_dt_ts) &
+                            (~scenario.stops_df[scenario.in_field].isna()) &
+                            (scenario.stops_df[active_out_field] >= start_analysis_dt_ts)]
 
     # reset index of df to ensure sequential numbering
-    stops_df = stops_df.reset_index(drop=True)
+    stops_df = scenario.stops_df.reset_index(drop=True)
 
     # Create the bydatetime DataFrame
     with HillTimer() as t:
         starttime = t.start
         bydt_dfs = make_bydatetime(stops_df,
-                                   in_field,
+                                   scenario.in_field,
                                    active_out_field,
                                    start_analysis_dt_np,
                                    end_analysis_dt_np,
-                                   cat_field,
-                                   bin_size_minutes,
-                                   cat_to_exclude=cats_to_exclude,
-                                   occ_weight_field=occ_weight_field,
-                                   edge_bins=edge_bins,
-                                   totals=totals,
-                                   verbosity=verbosity)
+                                   scenario.cat_field,
+                                   scenario.bin_size_minutes,
+                                   cat_to_exclude=scenario.cats_to_exclude,
+                                   occ_weight_field=scenario.occ_weight_field,
+                                   edge_bins=scenario.edge_bins,
+                                   totals=scenario.totals,
+                                   verbosity=scenario.verbosity)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
     # Create the summary stats DataFrames
     summary_dfs = {}
-    if nonstationary_stats or stationary_stats:
+    if scenario.nonstationary_stats or scenario.stationary_stats:
         with HillTimer() as t:
 
             summary_dfs = summarize(bydt_dfs,
-                                    nonstationary_stats=nonstationary_stats,
-                                    stationary_stats=stationary_stats,
-                                    percentiles=percentiles,
-                                    totals=totals,
-                                    verbosity=verbosity)
+                                    nonstationary_stats=scenario.nonstationary_stats,
+                                    stationary_stats=scenario.stationary_stats,
+                                    percentiles=scenario.percentiles,
+                                    totals=scenario.totals,
+                                    verbosity=scenario.verbosity)
 
         logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
 
     # Export results to csv if requested
-    if export_bydatetime_csv:
+    if scenario.export_bydatetime_csv:
         with HillTimer() as t:
-            export_bydatetime(bydt_dfs, scenario_name, output_path)
+            export_bydatetime(bydt_dfs, scenario.scenario_name, scenario.output_path)
 
-        logger.info(f"By datetime exported to csv in {output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"By datetime exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
-    if export_summaries_csv:
+    if scenario.export_summaries_csv:
         with HillTimer() as t:
-            if nonstationary_stats:
-                export_summaries(summary_dfs, scenario_name, output_path, 'nonstationary')
-            if stationary_stats:
-                export_summaries(summary_dfs, scenario_name, output_path, 'stationary')
+            if scenario.nonstationary_stats:
+                export_summaries(summary_dfs, scenario.scenario_name, scenario.output_path, 'nonstationary')
+            if scenario.stationary_stats:
+                export_summaries(summary_dfs, scenario.scenario_name, scenario.output_path, 'stationary')
 
-        logger.info(f"Summaries exported to csv in {output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"Summaries exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
     # Create and export full week plots if requested
-    if export_week_png:
+    if scenario.export_week_png:
         with HillTimer() as t:
             for metric in summary_dfs['nonstationary']['dow_binofday']:
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
-                export_hill_plot(fullwk_df, scenario_name, metric, export_path=output_path,
-                                 bin_size_minutes=bin_size_minutes, cap=cap,
-                                 xlabel=xlabel, ylabel=ylabel)
+                export_hill_plot(fullwk_df, scenario.scenario_name, metric, export_path=scenario.output_path,
+                                 bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
+                                 xlabel=scenario.xlabel, ylabel=scenario.ylabel)
 
         logger.info(f"Full week plots exported to png (seconds): {t.interval:.4f}")
 
     # Create and export individual day of week plots if requested
-    if export_dow_png:
+    if scenario.export_dow_png:
         with HillTimer() as t:
             for metric in summary_dfs['nonstationary']['dow_binofday']:
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
                 for dow in fullwk_df['dow_name'].unique():
                     dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
-                    export_hill_plot(dow_df, scenario_name, metric, export_path=output_path,
-                                     bin_size_minutes=bin_size_minutes, cap=cap, week_range=dow,
-                                     xlabel=xlabel, ylabel=ylabel)
+                    export_hill_plot(dow_df, scenario.scenario_name, metric, export_path=scenario.output_path,
+                                     bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap, week_range=dow,
+                                     xlabel=scenario.xlabel, ylabel=scenario.ylabel)
 
         logger.info(f"Individual day of week plots exported to png (seconds): {t.interval:.4f}")
 
@@ -432,25 +352,7 @@ def update_params(params, toml_config):
     params = Hills.parse_obj(params_dict)
     return params
 
-def check_for_required_args(args):
-    """
 
-    Parameters
-    ----------
-    args: Namespace
-
-    Returns
-    -------
-
-    """
-
-    # Make sure all required args are present
-    required_args = ['scenario', 'stop_data_csv', 'in_field', 'out_field', 'start_analysis_dt', 'start_analysis_dt']
-    # Convert args namespace to a dict
-    args_dict = vars(args)
-    for req_arg in required_args:
-        if args_dict[req_arg] is None:
-            raise ValueError(f'{req_arg} is required')
 
 
 

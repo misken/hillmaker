@@ -21,7 +21,7 @@ except ModuleNotFoundError:
 class Hills1(BaseModel):
     """pydantic model for hm inputs
 
-    - using some required fields for now. So, can't, for example, create an instane with just a df
+    - using some required fields for now. So, can't, for example, create an instance with just a df
     and add the other "required" fields later. Still learning pydantic and couldn't figure out how to do well.
     - some of the defaults should live in some sort of settings file (see BaseSettings)
 

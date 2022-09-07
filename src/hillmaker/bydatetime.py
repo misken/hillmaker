@@ -36,7 +36,7 @@ def make_bydatetime(stops_df, infield, outfield,
                     edge_bins=1,
                     verbosity=0):
     """
-    Create bydatetime tablefrom which summary statistics can be computed.
+    Create bydatetime table from which summary statistics can be computed.
 
     Parameters
     ----------
