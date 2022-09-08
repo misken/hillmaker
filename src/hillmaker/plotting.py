@@ -6,9 +6,9 @@ from matplotlib.dates import DateFormatter
 from pathlib import Path
 
 
-def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
-                     bin_size_minutes=60, cap=None, week_range='full week',
-                     xlabel='Hour', ylabel='Patients'):
+def make_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
+                   bin_size_minutes=60, cap=None, week_range='full week',
+                   xlabel='Hour', ylabel='Patients', export_png=False):
     """
     Exports day of week plot for occupancy, arrival, and departure statistics
 
@@ -39,6 +39,8 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
         x-axis label, default='Hour'
     ylabel : str
         y-axis label, default='Patients'
+    export_png : bool, default is False
+        If True, plot is exported to png file to `export_path`
     """
 
     plt.style.use('seaborn-darkgrid')
@@ -50,7 +52,7 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
 
     # Create a list to use as the X-axis values
     num_bins = num_days * 1440 / bin_size_minutes
-    base_date_for_first_dow = '01/05/2015'  # Pick any date with associated DOW you want to appear first on plot
+    base_date_for_first_dow = '2015-01-05'  # TODO: This is a Monday. Make flexible so any dow can be "first".
     timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
 
     # Choose appropriate major and minor tick locations
@@ -111,10 +113,13 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     ax1.legend(loc='best', frameon=True, facecolor='w')
 
     # save figure
-    week_range_str = week_range.lower().replace(' ', '_')
-    plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
-    png_wpath = Path(export_path, plot_png)
-    plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
+    if export_png:
+        week_range_str = week_range.lower().replace(' ', '_')
+        plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
+        png_wpath = Path(export_path, plot_png)
+        plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
 
     # Suppress plot output in notebook
     plt.close()
+
+    return fig1

@@ -182,14 +182,25 @@ def main(argv=None):
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
     # Make hills
+    if export_week_png:
+        make_week_plot = True
+    else:
+        make_week_plot = False
+
+    if export_dow_png:
+        make_dow_plot = True
+    else:
+        make_dow_plot = False
+
     scenario = HillsScenario(args.scenario, stops_df, args.in_field, args.out_field,
                      args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
                      output_path=args.output_path, verbosity=args.verbosity,
                      cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
+                     make_week_plot=make_week_plot, make_dow_plot=make_dow_plot,
                      export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
                      cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
 
-    dfs = scenario.make_hills()
+    scenario.make_hills()
 
 
 def check_for_required_args(args):

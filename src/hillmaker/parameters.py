@@ -99,6 +99,8 @@ class Parameters(BaseModel):
     output_path: Union[str, Path] = Path('.')
     export_bydatetime_csv: bool = True
     export_summaries_csv: bool = True
+    make_dow_plot: bool = True
+    make_week_plot: bool = True
     export_dow_png: bool = False
     export_week_png: bool = False
     cap: int = None
