@@ -1,31 +1,17 @@
 Hillmaker is a Python library
 
-May have some architectural things to learn and ideas to glean from matplot lib at
-[http://aosabook.org/en/matplotlib.html](http://aosabook.org/en/matplotlib.html).
+May have some architectural things to learn and ideas to glean from pandas-profiling at
+https://github.com/ydataai/pandas-profiling.
 
-Similarly, similarities to scikit-learn - check out its code structure
-
-- notion of multpackage:
-  name: iris
-  version: 1.6.0
-source:
-  git_url: https://github.com/esc24/iris.git
-  git_tag: udunits_xml_pathiple use modes such as the pylab vs api approaches
-- similar since hillmaker is data -> crunch -> visualize
-
-
-http://stackoverflow.com/questions/16613501/pycharm-and-unittesting-structuring-project
 
 
 Possible features
 =================
 
-Input parameters
+Config files
 ----------------
+https://stackoverflow.com/questions/65283208/toml-vs-yaml-vs-strictyaml
 
-Ability to pass in list of category values to analyze. Default is all.
-
-Ability to specify whether or not to compute totals. Default is true.
 
 
 Possible classes
@@ -35,8 +21,8 @@ Possible classes
 Scenario
 --------
 
-A *scenario* is the basic unit of analysis and is defined by an input
-dataset (IntervalData) and a set of input parameter values.
+An *scenario* is the basic unit of analysis and is defined by an input
+dataset (stop data) and a set of input parameter values.
 
 Properties
 ^^^^^^^^^^
@@ -44,7 +30,7 @@ Properties
 name : string
     Scenario identifier
 
-interval_data : pandas DataFrame
+stop_data : pandas DataFrame
 
 in_field : string
    Name of column in D to use as arrival datetime
@@ -69,7 +55,7 @@ bin_size_mins : int
 
 
 
-IntervalData
+stop_data
 ------------
 
 This is the primary input data on which Hillmaker is run.

@@ -24,6 +24,68 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
+hillmaker 0.4.4
+===============
+
+**Release date:** 2022-07-22
+
+**New features and API changes**
+
+- adding weekly and dow plots of arrivals, departures, occupancy
+
+hillmaker 0.4.3
+===============
+
+**Release date:** 2022-07-19
+
+**New features and API changes**
+
+- can use TOML formatted config file for command line args
+- added percentiles to CLI
+- renamed verbose argument to verbosity
+
+
+
+hillmaker 0.4.2
+===============
+
+**Release date:** 2022-07-15
+
+**New features**
+
+- Added option to treat missing departure timestamps as censored data.
+
+**Bug Fixes**
+
+- disallowed missing entry timestamps
+
+hillmaker 0.4.1
+===============
+
+**Release date:** 2022-07-14
+
+
+**Bug Fixes**
+
+- date range sanity check had copy paste error with start and end variables
+- removed old licensing references
+- fixed typos in basic usage notebook
+- added hillmaker related blog post links to readme
+
+hillmaker 0.4.0
+===============
+
+**Release date:** 2022-07-14
+
+**New features**
+
+- added basic usage explainer notebook
+
+**Bug Fixes**
+
+- adjusted arrivals and departures by bin arrays to account for stops with arrivals or departures outside the analysis range
+
+
 hillmaker 0.3.0
 ===============
 
