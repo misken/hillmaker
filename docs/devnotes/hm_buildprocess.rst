@@ -47,7 +47,7 @@ Do this when just about ready to release new version.
 .. code::
 
     # Create release branch off of develop
-    $ git checkout -b release-0.4.0 develop
+    $ git checkout -b release-0.4.5 develop
 
 Now do last minute fixes and updates such as:
 
@@ -72,14 +72,14 @@ Now we will do the following:
 .. code::
 
     $ git checkout master
-    $ git merge --no-ff release-0.4.0
-    $ git tag -a v0.4.0 -m "Release 0.4.0"
+    $ git merge --no-ff release-0.4.5
+    $ git tag -a v0.4.5 -m "Release 0.4.5"
     $ git push origin master
     # Push the tag
-    $ git push origin v0.4.0
+    $ git push origin v0.4.5
     $ git checkout develop
-    $ git merge --no-ff release-0.4.0
-    $ git branch -d release-0.4.0
+    $ git merge --no-ff release-0.4.5
+    $ git branch -d release-0.4.5
     
 
 PyPi
@@ -98,8 +98,8 @@ venv and not the base pip.
 
 .. code::
 
-    $ /PATH/TO/anaconda3/envs/py37/bin/python -m pip install build twine
-    $ /PATH/TO/anaconda3/envs/py37/bin/python -m build
+    $ /PATH/TO/anaconda3/envs/py39/bin/python -m pip install build twine
+    $ /PATH/TO/anaconda3/envs/py39/bin/python -m build
     $ twine check dist/*
     # PyPI now using API tokens
     $ twine --repository hillmaker

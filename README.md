@@ -40,8 +40,9 @@ Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 
 You can see the most recent one at https://github.com/misken/hillmaker-examples/blob/main/notebooks/basic_usage_shortstay_unit_044.ipynb.
 
-The source and a binary wheel are available from PyPi. You can install using pip: 
+The source and a binary wheel are available from PyPi. You can install using pip. 
 
+    pip install tomli  # Not necessary if using Python >= 3.11
     pip install hillmaker
 
 
