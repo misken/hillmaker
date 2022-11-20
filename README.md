@@ -22,7 +22,7 @@ statistics.
 - Output CSV files are written by default but can be supressed.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
-- Requires Python 3.7+ and pandas 1.2.0+
+- Requires Python >= 3.9, pandas >= 1.4.0, numpy >= 1.22
 - MIT License
 
 Where to get it
