@@ -9,5 +9,11 @@ src/hillmaker.egg-info/
 
 # tests
 tests/output/
-docs/examples/scripts/output/
-docs/examples/notebooks/output/
+
+# examples
+examples/scripts/output
+examples/notebooks/output
+examples/notebooks/.ipynb_checkpoints
+examples/notebooks/*.html
+
+
