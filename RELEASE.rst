@@ -34,6 +34,7 @@ hillmaker 0.4.5
 
 - moved examples folder to project root
 - updated dependencies to python>=3.9, pandas>=1.4, numpy>=1.22
+- updated paths in ad-hoc tests to reflect new folder layout
 
 hillmaker 0.4.4
 ===============
