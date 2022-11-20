@@ -1,6 +1,6 @@
 [scenario_data]
 scenario = "ssu_test_01"
-stop_data_csv = "../data/ShortStay.csv"
+stop_data_csv = "./data/ShortStay.csv"
 
 [fields]
 in_field = "InRoomTS"

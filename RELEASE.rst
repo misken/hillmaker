@@ -24,6 +24,17 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
+
+hillmaker 0.4.5
+===============
+
+**Release date:** 2022-11-20
+
+**New features and API changes**
+
+- moved examples folder to project root
+- updated dependencies to python>=3.9, pandas>=1.4, numpy>=1.22
+
 hillmaker 0.4.4
 ===============
 
