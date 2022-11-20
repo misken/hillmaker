@@ -60,7 +60,7 @@ When ready to release, commit all changes
 
 .. code::
 
-    $ git commit -a -m "Bumped version number to 0.4.0, updated readme and release notes"
+    $ git commit -a -m "Bumped version number to 0.4.5, updated readme and release notes"
     
 Now we will do the following:
 

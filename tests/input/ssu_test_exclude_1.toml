@@ -1,6 +1,6 @@
 [scenario_data]
 scenario = "ssu_test_exclude_1"
-stop_data_csv = "../docs/examples/data/ShortStay.csv"
+stop_data_csv = "../examples/data/ShortStay.csv"
 
 [fields]
 in_field = "InRoomTS"
