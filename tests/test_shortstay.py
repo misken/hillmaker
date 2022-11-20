@@ -4,7 +4,7 @@ import pandas as pd
 
 import hillmaker as hm
 
-file_stopdata = './fixtures/ShortStay.csv'
+file_stopdata = '../examples/data/ShortStay.csv'
 
 # Required inputs
 scenario = 'sstest_60'

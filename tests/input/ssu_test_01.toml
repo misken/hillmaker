@@ -1,6 +1,6 @@
 [scenario_data]
 scenario = "ssu_test_01"
-stop_data_csv = "../data/ShortStay.csv"
+stop_data_csv = "../examples/data/ShortStay.csv"
 
 [fields]
 in_field = "InRoomTS"
@@ -16,6 +16,11 @@ end_analysis_dt = 1996-09-30
 bin_size_mins = 60
 verbosity = 1
 output_path = "./output"
+export_week_png = "./output"
+export_dow_png = "./output"
+cap = 55
+xlabel = 'hour'
+ylabel = 'ssu patients'
 
 # Add any additional arguments here
 # Strings should be surrounded in double quotes

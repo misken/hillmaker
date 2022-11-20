@@ -22,7 +22,7 @@ statistics.
 - Output CSV files are written by default but can be supressed.
 - Optionally capture outputs as a dictionary of pandas DataFrames for further
   post-processing (e.g. plot creation).
-- Requires Python 3.7+ and pandas 1.2.0+
+- Requires Python >= 3.9, pandas >= 1.4.0, numpy >= 1.22
 - MIT License
 
 Where to get it
@@ -38,11 +38,7 @@ Quick Start
 A companion repo, https://github.com/misken/hillmaker-examples/ contains
 Jupyter notebooks and Python scripts illustrating the use of hillmaker.
 
-You can see an html versions of basic usage notebooks at:
-
-- [basic usage notebook for v0.4.4](https://misken.github.io/hillmaker-examples/basic_usage_shortstay_unit_044.html)
-- notebooks for previous versions also available at https://misken.github.io/hillmaker-examples
-
+You can see the most recent one at https://github.com/misken/hillmaker-examples/blob/main/notebooks/basic_usage_shortstay_unit_044.ipynb.
 
 The source and a binary wheel are available from PyPi. You can install using pip: 
 
@@ -64,3 +60,4 @@ changed with this recent version.
 * [Numpy speeds up hillmaker dramatically](https://misken.github.io/blog/hillmaker_030_released/)
 
 I published [a paper a long time ago regarding the use of hillmaker in practice](https://www.researchgate.net/publication/7322712_Hillmaker_An_open_source_occupancy_analysis_tool).
+It describes an ancient version of hillmaker but does describe typical use cases.
