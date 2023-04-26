@@ -53,12 +53,12 @@ blog posts describing how it works are available though many things
 about the API as well as the computational guts of hillmaker have
 changed with this recent version.
 
-* [Computing occupancy statistics with Python - 1 of 3](https://misken.github.io/blog/hillpy_bydate_demo/)
-* [Computing occupancy statistics with Python - 1 of 3](https://misken.github.io/blog/hillpy_occstats_demo/)
-* [Plotting occupancy statistics with Python - 3 of 3](https://misken.github.io/blog/hillpy_plotting_matplotlib_basic_recipe/)
-* [Analyzing bike share usage](https://misken.github.io/blog/basic_usage_cycleshare/)
-* [Using hillmaker from R with reticulate](https://misken.github.io/blog/hillmaker_r_sfcs/)
-* [Numpy speeds up hillmaker dramatically](https://misken.github.io/blog/hillmaker_030_released/)
+* [Computing occupancy statistics with Python - 1 of 3](https://bitsofanalytics.org/posts/hillmaker-bydate-demo/hillpy_bydate_demo.html)
+* [Computing occupancy statistics with Python - 2 of 3](https://bitsofanalytics.org/posts/hillmaker-occstats-demo/hillpy_occstats_demo.html)
+* [Plotting occupancy statistics with Python - 3 of 3](https://bitsofanalytics.org/posts/hillmaker-plotting-recipe/hillpy_plotting_recipe.html)
+* [Analyzing bike share usage](https://bitsofanalytics.org/posts/basic-usage-cycleshare/basic_usage_cycleshare.html)
+* [Using hillmaker from R with reticulate](https://bitsofanalytics.org/posts/hillmaker-r-sfcs/hillmaker_r_sfcs.html)
+* [Numpy speeds up hillmaker dramatically](https://bitsofanalytics.org/posts/hillmaker-speedup/)
 
 I published [a paper a long time ago regarding the use of hillmaker in practice](https://www.researchgate.net/publication/7322712_Hillmaker_An_open_source_occupancy_analysis_tool).
 It describes an ancient version of hillmaker but does describe typical use cases.
