@@ -3,7 +3,7 @@ from pandas import Timestamp
 
 import hillmaker
 
-file_stopdata = '../data/unit_stop_log_Experiment1_Scenario138_Rep17.csv'
+file_stopdata = '../examples/data/unit_stop_log_Experiment1_Scenario138_Rep17.csv'
 
 scenario_name = 'log_unitocc_test_5'
 in_fld_name = 'EnteredTS'
