@@ -1,4 +1,4 @@
-# Copyright 2022 Mark Isken
+# Copyright 2022-23 Mark Isken
 #
 
 from setuptools import find_packages, setup
@@ -9,7 +9,7 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(name='hillmaker',
-      version='0.4.5',
+      version='0.4.6',
       description='Occupancy analysis tool for systems having time of day and day of week effects',
       long_description=long_description,
       long_description_content_type='text/markdown',
