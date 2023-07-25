@@ -24,6 +24,14 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
 
+hillmaker 0.4.6
+===============
+
+**Release date:** 2023-07-25
+
+**Bug Fixes**
+
+- if no category field is specified, the plots were not being generated. This is fixed now. [[GH42]](https://github.com/misken/hillmaker/issues/42)
 
 hillmaker 0.4.5
 ===============
