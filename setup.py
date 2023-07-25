@@ -1,6 +1,5 @@
 # Copyright 2022-23 Mark Isken
 #
-
 from setuptools import find_packages, setup
 
 # read the contents of your README file
