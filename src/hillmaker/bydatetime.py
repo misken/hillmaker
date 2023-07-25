@@ -27,6 +27,7 @@ LATE_END_ANALYSIS_TOLERANCE = 48.0
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
 
+
 def make_bydatetime(stops_df, infield, outfield,
                     start_analysis_np, end_analysis_np, catfield=None,
                     bin_size_minutes=60,
@@ -122,7 +123,7 @@ def make_bydatetime(stops_df, infield, outfield,
     # Handle cases of no catfield, or a single fieldname, (no longer supporting a list of fieldnames)
     # If no category, add a temporary dummy column populated with a totals str
 
-    do_totals = True
+    #do_totals = True
     if catfield is not None:
         # If catfield a string, convert to list
         # Keeping catfield as a list in case I change mind about multiple category fields
@@ -135,7 +136,7 @@ def make_bydatetime(stops_df, infield, outfield,
         totfield_df = DataFrame({CONST_FAKE_CATFIELD_NAME: totseries})
         stops_df = pd.concat([stops_df, totfield_df], axis=1)
         catfield = [CONST_FAKE_CATFIELD_NAME]
-        do_totals = False
+        #do_totals = False
 
     # Get the unique category values and exclude any specified to exclude
     categories = []
@@ -252,17 +253,17 @@ def make_bydatetime(stops_df, infield, outfield,
     totals_key = '_'.join(bydt_df_cat.index.names)
     bydt_dfs[totals_key] = bydt_df_cat.copy()
 
-    # Do totals if there was at least one category field
-    if do_totals:
-        results_totals = {}
-        totals_key = 'datetime'
-        total_occ_arr_dep = np.zeros((num_bins, 3), dtype=np.float64)
-        for cat, oad_array in results.items():
-            total_occ_arr_dep += oad_array
+    # Compute totals - doing this even if only a fake category field
+    results_totals = {}
+    totals_key = 'datetime'
 
-        results_totals[totals_key] = total_occ_arr_dep
-        bydt_df_total = arrays_to_df(results_totals, start_analysis_np, end_analysis_np, bin_size_minutes)
-        bydt_dfs[totals_key] = bydt_df_total
+    total_occ_arr_dep = np.zeros((num_bins, 3), dtype=np.float64)
+    for cat, oad_array in results.items():
+        total_occ_arr_dep += oad_array
+
+    results_totals[totals_key] = total_occ_arr_dep
+    bydt_df_total = arrays_to_df(results_totals, start_analysis_np, end_analysis_np, bin_size_minutes)
+    bydt_dfs[totals_key] = bydt_df_total
 
     return bydt_dfs
 
