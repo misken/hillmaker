@@ -102,7 +102,6 @@ venv and not the base pip.
     $ /PATH/TO/anaconda3/envs/py39/bin/python -m build
     $ twine check dist/*
     # PyPI now using API tokens
-    $ twine --repository hillmaker
     $ twine upload dist/*
 
 
