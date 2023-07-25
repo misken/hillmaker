@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from pydantic import BaseModel, validator, Field
+
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -25,11 +26,12 @@ from hillmaker.plotting import make_hill_plot
 
 class HillsScenario():
     """User facing class to gather inputs for a hillmaker scenario"""
+
     def __init__(
-        self,
-        params_dict: Optional[Dict] = None,
-        params_path: Optional[Union[str, Path]] = None,
-        **kwargs
+            self,
+            params_dict: Optional[Dict] = None,
+            params_path: Optional[Union[str, Path]] = None,
+            **kwargs
     ):
         # Create empty dict for input parameters
         params = {}
@@ -66,7 +68,7 @@ class HillsScenario():
 def setup_logger(verbosity):
     # Set logging level
     root_logger = logging.getLogger()
-    root_logger.handlers.clear() # Needed to prevent dup messages when module imported
+    root_logger.handlers.clear()  # Needed to prevent dup messages when module imported
     logger_handler = logging.StreamHandler()
     logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger_handler.setFormatter(logger_formatter)
@@ -147,7 +149,8 @@ def make_hills(scenario: Parameters) -> Dict:
     if not scenario.no_censored_departures:
         num_recs_uncensored = num_recs_missing_exit_ts
         if num_recs_missing_exit_ts > 0:
-            logger.info(f'{num_recs_missing_exit_ts} records with missing exit timestamps - end of analysis range used for occupancy purposes')
+            logger.info(
+                f'{num_recs_missing_exit_ts} records with missing exit timestamps - end of analysis range used for occupancy purposes')
             uncensored_out_field = f'{scenario.out_field}_uncensored'
             uncensored_out_value = pd.Timestamp(scenario.end_analysis_dt).floor("d") + pd.Timedelta(1, "d")
             scenario.stops_df[uncensored_out_field] = stops_df[out_field].fillna(value=uncensored_out_value)
@@ -162,8 +165,8 @@ def make_hills(scenario: Parameters) -> Dict:
 
     # Filter out records that don't overlap the analysis span or have missing entry timestamps
     scenario.stops_df = scenario.stops_df.loc[(scenario.stops_df[scenario.in_field] < end_analysis_dt_ts) &
-                            (~scenario.stops_df[scenario.in_field].isna()) &
-                            (scenario.stops_df[active_out_field] >= start_analysis_dt_ts)]
+                                              (~scenario.stops_df[scenario.in_field].isna()) &
+                                              (scenario.stops_df[active_out_field] >= start_analysis_dt_ts)]
 
     # reset index of df to ensure sequential numbering
     stops_df = scenario.stops_df.reset_index(drop=True)
@@ -190,7 +193,6 @@ def make_hills(scenario: Parameters) -> Dict:
     summary_dfs = {}
     if scenario.nonstationary_stats or scenario.stationary_stats:
         with HillTimer() as t:
-
             summary_dfs = summarize(bydt_dfs,
                                     nonstationary_stats=scenario.nonstationary_stats,
                                     stationary_stats=scenario.stationary_stats,
@@ -228,8 +230,9 @@ def make_hills(scenario: Parameters) -> Dict:
                 plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
 
                 plot = make_hill_plot(fullwk_df, scenario.scenario_name, metric, export_path=scenario.output_path,
-                               bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
-                               xlabel=scenario.xlabel, ylabel=scenario.ylabel, export_png=scenario.export_week_png)
+                                      bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
+                                      xlabel=scenario.xlabel, ylabel=scenario.ylabel,
+                                      export_png=scenario.export_week_png)
                 plots[plot_key] = plot
 
         logger.info(f"Full week plots created (seconds): {t.interval:.4f}")
@@ -245,9 +248,9 @@ def make_hills(scenario: Parameters) -> Dict:
                     week_range_str = dow
                     plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
                     plot = make_hill_plot(dow_df, scenario.scenario_name, metric, export_path=scenario.output_path,
-                                   bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap, week_range=dow,
-                                   xlabel=scenario.xlabel,
-                                   ylabel=scenario.ylabel, export_png=scenario.export_dow_png)
+                                          bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap, week_range=dow,
+                                          xlabel=scenario.xlabel,
+                                          ylabel=scenario.ylabel, export_png=scenario.export_dow_png)
                     plots[plot_key] = plot
 
         logger.info(f"Individual day of week plots created (seconds): {t.interval:.4f}")
@@ -336,8 +339,6 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
                 df.to_csv(csv_wpath, index=False, float_format='%.6f')
 
 
-
-
 def update_params(params, toml_config):
     """
     Update args namespace values from toml_config dictionary
@@ -364,8 +365,3 @@ def update_params(params, toml_config):
     # Convert dict to updated pydantic model
     params = Hills.parse_obj(params_dict)
     return params
-
-
-
-
-
