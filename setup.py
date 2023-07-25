@@ -1,4 +1,4 @@
-# Copyright 2022 Mark Isken
+# Copyright 2023 Mark Isken
 #
 
 from setuptools import find_packages, setup
@@ -9,7 +9,7 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(name='hillmaker',
-      version='0.4.4',
+      version='0.5.0',
       description='Occupancy analysis tool for systems having time of day and day of week effects',
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -37,6 +37,6 @@ setup(name='hillmaker',
       project_urls={
           'Source': 'http://github.com/misken/hillmaker',
           'Examples': 'https://github.com/misken/hillmaker-examples',
-      }, install_requires=['pandas>=1.4.0', 'numpy>=1.21.5', 'tomli>=1.1.0'],
-      python_requires='>=3.8'
+      }, install_requires=['pandas>=1.4.0', 'numpy>=1.22', 'tomli>=1.1.0'],
+      python_requires='>=3.9'
       )
