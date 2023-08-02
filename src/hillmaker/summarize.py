@@ -9,14 +9,15 @@ or more category fields.
 import logging
 
 import numpy as np
-import pandas as pd
+
+# import pandas as pd
 
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
 
 
 def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
-              nonstationary_stats=True, stationary_stats=True, totals=1, verbosity=0):
+              nonstationary_stats=True, stationary_stats=True, verbosity=0):
     """
     Compute summary statistics. Calls specific procedures for stationary and nonstationary stats.
 
@@ -32,7 +33,7 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
         If true, datetime bin stats are computed. Else, they aren't computed. Default is True
 
     stationary_stats : bool, optional
-        If true, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+        If true, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
 
     verbosity : int, optional
         The verbosity level. The default, zero, means silent mode. Higher numbers mean more output messages.
@@ -56,13 +57,12 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
     --------
     """
 
-# Store main results bydatetime DataFrame
+    # Store main results bydatetime DataFrame
 
     summary_nonstationary_dfs = {}
     if nonstationary_stats:
 
         for bydt, bydt_df in bydt_dfs.items():
-
             midx_fields = bydt_df.index.names
             catfield = [x for x in midx_fields if x != 'datetime']
 
@@ -78,11 +78,10 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
 
     if stationary_stats:
         for bydt, bydt_df in bydt_dfs.items():
-
             midx_fields = bydt_df.index.names
             catfield = [x for x in midx_fields if x != 'datetime']
             summary_key = '_'.join(catfield)
-            summaries = summarize_stationary(bydt_df, catfield, percentiles, verbosity)
+            summaries = summarize_stationary(bydt_df, catfield, percentiles)
             summary_stationary_dfs[summary_key] = summaries
 
     summaries_all = {'nonstationary': summary_nonstationary_dfs, 'stationary': summary_stationary_dfs}
@@ -164,7 +163,7 @@ def summarize_nonstationary(bydt_df, catfield=None,
 
 
 def summarize_stationary(bydt_df, catfield=None,
-                         percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), verbosity=0):
+                         percentiles=(0.25, 0.5, 0.75, 0.95, 0.99)):
     """
     Compute summary statistics by category (no time of day or day of week)
 
@@ -180,9 +179,6 @@ def summarize_stationary(bydt_df, catfield=None,
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
 
-    verbosity : int, optional
-        The verbosity level. The default, zero, means silent mode.
-        Higher numbers mean more output messages.
 
     Returns
     -------
@@ -222,23 +218,21 @@ def summarize_stationary(bydt_df, catfield=None,
 
 
 def summary_stats(group, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), stub=''):
-    stats = {stub+'count': group.count(), stub+'mean': group.mean(),
-                stub+'min': group.min(),
-                stub+'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
-                stub+'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
-                stub+'skew': group.skew(), 'kurt': group.kurt()}
+    stats = {stub + 'count': group.count(), stub + 'mean': group.mean(),
+             stub + 'min': group.min(),
+             stub + 'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
+             stub + 'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
+             stub + 'skew': group.skew(), 'kurt': group.kurt()}
 
     if percentiles is not None:
         pctile_vals = group.quantile(percentiles)
 
         for p in percentiles:
-            pctile_name = '{}p{:d}'.format(stub, int(100 * p))
+            pctile_name = f'{stub}p{int(100 * p):d}'
             stats[pctile_name] = pctile_vals[p]
 
     return stats
 
 
 if __name__ == '__main__':
-
     pass
-

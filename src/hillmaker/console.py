@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace, SUPPRESS
 
-from hillmaker.hills import HillsScenario
+from hillmaker.hills import Scenario
 
 def process_command_line(argv=None):
     """
@@ -192,13 +192,13 @@ def main(argv=None):
     else:
         make_dow_plot = False
 
-    scenario = HillsScenario(args.scenario, stops_df, args.in_field, args.out_field,
-                     args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
-                     output_path=args.output_path, verbosity=args.verbosity,
-                     cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
-                     make_week_plot=make_week_plot, make_dow_plot=make_dow_plot,
-                     export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
-                     cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
+    scenario = Scenario(args.scenario, stops_df, args.in_field, args.out_field,
+                        args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
+                        output_path=args.output_path, verbosity=args.verbosity,
+                        cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
+                        make_week_plot=make_week_plot, make_dow_plot=make_dow_plot,
+                        export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
+                        cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
 
     scenario.make_hills()
 

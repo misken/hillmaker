@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def make_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
-                   bin_size_minutes=60, cap=None, week_range='full week',
+                   bin_size_minutes=60, cap=None, week_range='week',
                    xlabel='Hour', ylabel='Patients', export_png=False):
     """
     Exports day of week plot for occupancy, arrival, and departure statistics
@@ -33,8 +33,8 @@ def make_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     cap : int, optional
         Capacity of area being analyzed, default is None
     week_range : str
-        Week range of summary df. Default is 'full week', can also take the form of
-        the first three characters of a day of week name (ex: 'Tue')
+        Week range of summary df. Default is 'week', can also take the form of
+        the first three characters of a day of week name (ex: 'tue')
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str

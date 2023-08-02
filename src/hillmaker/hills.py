@@ -1,16 +1,17 @@
 """Hillmaker"""
 
-# Copyright 2022 Mark Isken, Jacob Norman
+# Copyright 2022-2023 Mark Isken, Jacob Norman
 
-import sys
+
 from pathlib import Path
-from argparse import ArgumentParser, Namespace, SUPPRESS
+# f rom argparse import ArgumentParser, Namespace, SUPPRESS
 import logging
-from datetime import datetime
+# from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
-from pydantic import BaseModel, validator, Field
+
+# from pydantic import BaseModel, validator, Field
 
 try:
     import tomllib
@@ -24,7 +25,7 @@ from hillmaker.hmlib import HillTimer
 from hillmaker.plotting import make_hill_plot
 
 
-class HillsScenario():
+class Scenario:
     """User facing class to gather inputs for a hillmaker scenario"""
 
     def __init__(
@@ -42,15 +43,16 @@ class HillsScenario():
 
         # If params_path is not None, merge into params
         if params_path is not None:
-            params_toml_dict = toml_to_dict(params_path)
-            params.update(params_toml_dict)
+            with open(params_path, "rb") as f:
+                params_toml_dict = tomllib.load(f)
+                params.update(params_toml_dict)
 
         # Args passed to function get ultimate say
         if len(kwargs) > 0:
             params.update(kwargs)
 
         # Now, from the params dictionary, create pydantic Parameters model
-        # Be nice to construct model so that some of the default values
+        # Be nice to construct model so that some default values
         # can be based on app settings
         # Get application settings
         # app_settings: Settings = Settings()
@@ -60,12 +62,49 @@ class HillsScenario():
         self.hills = {}
 
     # For now, the only method is make_hills which simply passes on the parameters model
-    # to the module level make_hills function.
+    # to the module level make_hills function. This should make it easy to also call make_hills directly.
     def make_hills(self):
         self.hills = make_hills(self.scenario_params)
 
+    def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
+        """
+        Get plot object for specified flow metric and whether full week or specified day of week.
 
-def setup_logger(verbosity):
+        Parameters
+        ----------
+        flow_metric : str
+            Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
+            Default='occupancy'
+        day_of_week : str
+            Either of 'week', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'. Default='week'
+
+        Returns
+        -------
+        plot object from matplotlib
+
+        """
+        flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
+        flow_metric_str = flow_metrics[flow_metric[0].lower()]
+        if day_of_week.lower() != 'week':
+            day_of_week_str = day_of_week[:3].lower()
+        else:
+            day_of_week_str = 'week'
+
+        plot_name = f'{self.scenario_params.scenario_name}_{flow_metric_str}_plot_{day_of_week_str}'
+        try:
+            plot = self.hills['plots'][plot_name]
+            return plot
+        except KeyError as error:
+            print(f'The plot {error} does not exist.')
+            return None
+
+    def __str__(self):
+        """Pretty string representation of a scenario"""
+        # TODO - write str method for Scenario class
+        return str(self.scenario_params.dict())
+
+
+def setup_logger(verbosity: int):
     # Set logging level
     root_logger = logging.getLogger()
     root_logger.handlers.clear()  # Needed to prevent dup messages when module imported
@@ -147,13 +186,15 @@ def make_hills(scenario: Parameters) -> Dict:
 
     # Update departure timestamp for missing values if no_censored_departures=False
     if not scenario.no_censored_departures:
-        num_recs_uncensored = num_recs_missing_exit_ts
+        # num_recs_uncensored = num_recs_missing_exit_ts
         if num_recs_missing_exit_ts > 0:
+            msg = 'records with missing exit timestamps - end of analysis range used for occupancy purposes'
             logger.info(
-                f'{num_recs_missing_exit_ts} records with missing exit timestamps - end of analysis range used for occupancy purposes')
+                f'{num_recs_missing_exit_ts} {msg}')
             uncensored_out_field = f'{scenario.out_field}_uncensored'
             uncensored_out_value = pd.Timestamp(scenario.end_analysis_dt).floor("d") + pd.Timedelta(1, "d")
-            scenario.stops_df[uncensored_out_field] = stops_df[out_field].fillna(value=uncensored_out_value)
+            scenario.stops_df[uncensored_out_field] = scenario.stops_df[scenario.out_field].fillna(
+                value=uncensored_out_value)
             active_out_field = uncensored_out_field
         else:
             # Records with missing departures will be ignored
@@ -197,7 +238,6 @@ def make_hills(scenario: Parameters) -> Dict:
                                     nonstationary_stats=scenario.nonstationary_stats,
                                     stationary_stats=scenario.stationary_stats,
                                     percentiles=scenario.percentiles,
-                                    totals=scenario.totals,
                                     verbosity=scenario.verbosity)
 
         logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
@@ -338,30 +378,29 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
             else:
                 df.to_csv(csv_wpath, index=False, float_format='%.6f')
 
-
-def update_params(params, toml_config):
-    """
-    Update args namespace values from toml_config dictionary
-
-    Parameters
-    ----------
-    params : namespace
-    toml_config : dict from loading TOML config file
-
-    Returns
-    -------
-    Updated parameters namespace
-    """
-
-    # Convert pydantic model to a dict
-    params_dict = params.dict()
-
-    # Flatten toml config (we know there are no key clashes and only one nesting level)
-    # Update args dict from config dict
-    for outerkey, outerval in toml_config.items():
-        for key, val in outerval.items():
-            params_dict[key] = val
-
-    # Convert dict to updated pydantic model
-    params = Hills.parse_obj(params_dict)
-    return params
+# def update_params(params, toml_config):
+#     """
+#     Update args namespace values from toml_config dictionary
+#
+#     Parameters
+#     ----------
+#     params : namespace
+#     toml_config : dict from loading TOML config file
+#
+#     Returns
+#     -------
+#     Updated parameters namespace
+#     """
+#
+#     # Convert pydantic model to a dict
+#     params_dict = params.dict()
+#
+#     # Flatten toml config (we know there are no key clashes and only one nesting level)
+#     # Update args dict from config dict
+#     for outerkey, outerval in toml_config.items():
+#         for key, val in outerval.items():
+#             params_dict[key] = val
+#
+#     # Convert dict to updated pydantic model
+#     params = Hills.parse_obj(params_dict)
+#     return params
