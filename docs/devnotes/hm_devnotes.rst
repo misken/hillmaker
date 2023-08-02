@@ -3,6 +3,8 @@ Best practices for Python development
 
 https://gist.github.com/sloria/7001839
 
+https://third-bit.com/sdxpy/intro/
+
 
 
 

@@ -30,6 +30,8 @@ HillsScenario
 An *scenario* is the basic unit of analysis and is defined by an input
 dataset (stop data) and a set of input parameter values.
 
+https://www.bugbytes.io/posts/introduction-to-pydantic/
+
 Properties
 ^^^^^^^^^^
 
