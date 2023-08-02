@@ -17,10 +17,10 @@ verbosity = 1 # INFO level logging
 output_path = './output'
 bin_size_minutes = 60
 
-scenario01 = hm.HillsScenario(stops_df = stops_df,
-                              in_field = in_field_name, out_field = out_field_name,
-                              start_analysis_dt = start_date, end_analysis_dt = end_date,
-                              cat_field = cat_field_name)
+scenario01 = hm.Scenario(stops_df = stops_df,
+                         in_field = in_field_name, out_field = out_field_name,
+                         start_analysis_dt = start_date, end_analysis_dt = end_date,
+                         cat_field = cat_field_name)
 
 
 scenario_dict = scenario01.scenario_params.dict()
