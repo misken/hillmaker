@@ -225,7 +225,6 @@ def make_hills(scenario: Parameters) -> Dict:
                                    cat_to_exclude=scenario.cats_to_exclude,
                                    occ_weight_field=scenario.occ_weight_field,
                                    edge_bins=scenario.edge_bins,
-                                   totals=scenario.totals,
                                    verbosity=scenario.verbosity)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")

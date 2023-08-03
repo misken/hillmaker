@@ -12,7 +12,6 @@ import pandas as pd
 from pandas import DataFrame
 from pandas import Series
 from pandas import Timestamp
-from datetime import datetime
 from pandas.tseries.offsets import Minute
 
 import hillmaker.hmlib as hmlib
@@ -27,11 +26,11 @@ LATE_END_ANALYSIS_TOLERANCE = 48.0
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
 
+
 def make_bydatetime(stops_df, infield, outfield,
                     start_analysis_np, end_analysis_np, catfield=None,
                     bin_size_minutes=60,
                     cat_to_exclude=None,
-                    totals=1,
                     occ_weight_field=None,
                     edge_bins=1,
                     verbosity=0):
@@ -67,9 +66,6 @@ def make_bydatetime(stops_df, infield, outfield,
 
     edge_bins: int, default=1
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
-
-    totals: int, default=1
-        0=no totals, 1=totals by datetime
 
     occ_weight_field : str, optional
         Column name corresponding to the weights to use for occupancy incrementing.
@@ -173,9 +169,9 @@ def make_bydatetime(stops_df, infield, outfield,
 
         # Compute inbin and outbin fraction arrays
         entry_bin_frac = in_bin_occ_frac(entry_bin, in_ts_np, out_ts_np,
-                                         start_analysis_np, bin_size_minutes, edge_bins=1)
+                                         start_analysis_np, bin_size_minutes, edge_bins=edge_bins)
         exit_bin_frac = out_bin_occ_frac(exit_bin, in_ts_np, out_ts_np,
-                                         start_analysis_np, bin_size_minutes, edge_bins=1)
+                                         start_analysis_np, bin_size_minutes, edge_bins=edge_bins)
 
         # Create list of occupancy incrementor arrays
         list_of_inc_arrays = [make_occ_inc(entry_bin[i], exit_bin[i],

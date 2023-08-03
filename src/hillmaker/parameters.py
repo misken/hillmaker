@@ -108,7 +108,7 @@ class Parameters(BaseModel):
     export_week_png: bool = False
     cap: int = None
     xlabel: str = 'Hour'
-    ylabel: str = 'Occupancy'
+    ylabel: str = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
 
     # Ensure required fields and submitted optional fields exist

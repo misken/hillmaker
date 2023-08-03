@@ -1,4 +1,4 @@
-# Copyright 2022 Mark Isken, Jacob Norman
+# Copyright 2022-2023 Mark Isken, Jacob Norman
 
 import pandas as pd
 import matplotlib.pyplot as plt

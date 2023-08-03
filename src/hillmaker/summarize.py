@@ -7,17 +7,18 @@ or more category fields.
 # Copyright 2022 Mark Isken
 
 import logging
+from typing import Dict, List, Tuple
 
 import numpy as np
-
-# import pandas as pd
+import pandas as pd
 
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
 
 
-def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
-              nonstationary_stats=True, stationary_stats=True, verbosity=0):
+def summarize(bydt_dfs: Dict[pd.DataFrame],
+              percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99),
+              nonstationary_stats: bool = True, stationary_stats: bool = True, verbosity: int = 0):
     """
     Compute summary statistics. Calls specific procedures for stationary and nonstationary stats.
 
@@ -89,8 +90,9 @@ def summarize(bydt_dfs, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
     return summaries_all
 
 
-def summarize_nonstationary(bydt_df, catfield=None,
-                            percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), verbosity=0):
+def summarize_nonstationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None,
+                            percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99),
+                            verbosity: int = 0):
     """
     Compute summary statistics by category by time bin of day by day of week
 
@@ -162,8 +164,8 @@ def summarize_nonstationary(bydt_df, catfield=None,
     return summaries
 
 
-def summarize_stationary(bydt_df, catfield=None,
-                         percentiles=(0.25, 0.5, 0.75, 0.95, 0.99)):
+def summarize_stationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None,
+                         percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99)):
     """
     Compute summary statistics by category (no time of day or day of week)
 
