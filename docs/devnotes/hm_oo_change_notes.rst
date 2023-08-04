@@ -12,6 +12,10 @@ General
 
 In process of adding type hints
 
+Bug fixes
+=========
+
+Edge bins not implementing full bins option - see https://github.com/misken/hillmaker/issues/43. This underscores need for more testing.
 
 Planned features
 ================

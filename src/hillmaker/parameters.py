@@ -50,15 +50,15 @@ class Parameters(BaseModel):
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    totals: bool, default True
-        False=no totals, True=totals by datetime
+    totals: bool
+        False=no totals, True=totals by datetime. Default is True.
     cap : int, optional
-        Capacity of area being analyzed, default is None
+        Capacity of area being analyzed, default is None. Used only to add capacity line to occupancy plots.
     nonstationary_stats : bool, optional
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
-       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    no_censored_departures: bool, optional
+       If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
+    adjust_censored_departures: bool, optional
        If True, missing departure datetimes are replaced with datetime of end of analysis range. If False,
        record is ignored. Default is False.
     export_bydatetime_csv : bool, optional
@@ -97,7 +97,7 @@ class Parameters(BaseModel):
     totals: bool = True
     nonstationary_stats: bool = True
     stationary_stats: bool = True
-    no_censored_departures: bool = False
+    adjust_censored_departures: bool = False
     edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
     output_path: Union[str, Path] = Path('.')
     export_bydatetime_csv: bool = True

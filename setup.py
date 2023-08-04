@@ -21,7 +21,7 @@ setup(name='hillmaker',
       platforms='any',
       classifiers=[
           'Programming Language :: Python :: 3 ',
-          'Programming Language :: Python :: 3.8 ',
+          'Programming Language :: Python :: 3.10 ',
           'Development Status :: 4 - Beta',
           'Natural Language :: English',
           'Environment :: Console',
@@ -37,6 +37,6 @@ setup(name='hillmaker',
       project_urls={
           'Source': 'http://github.com/misken/hillmaker',
           'Examples': 'https://github.com/misken/hillmaker-examples',
-      }, install_requires=['pandas>=1.4.0', 'numpy>=1.22', 'tomli>=1.1.0'],
-      python_requires='>=3.9'
+      }, install_requires=['pandas>=1.4.0', 'numpy>=1.22', 'tomli>=1.1.0', 'matplotlib'],
+      python_requires='>=3.10'
       )

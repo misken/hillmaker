@@ -16,7 +16,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def summarize(bydt_dfs: Dict[pd.DataFrame],
+def summarize(bydt_dfs: Dict,
               percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99),
               nonstationary_stats: bool = True, stationary_stats: bool = True, verbosity: int = 0):
     """
@@ -59,7 +59,6 @@ def summarize(bydt_dfs: Dict[pd.DataFrame],
     """
 
     # Store main results bydatetime DataFrame
-
     summary_nonstationary_dfs = {}
     if nonstationary_stats:
 
@@ -219,7 +218,26 @@ def summarize_stationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None
     return summaries
 
 
-def summary_stats(group, percentiles=(0.25, 0.5, 0.75, 0.95, 0.99), stub=''):
+def summary_stats(group: pd.DataFrameGroupBy,
+                  percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99),
+                  stub: str = ''):
+    """
+    Compute summary statistics on a pandas `DataFrameGroupBy` object.
+
+    Parameters
+    ----------
+    group : pd.DataFrameGroupBy
+        The grouping is by category
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
+    stub : str
+        Used to create field names (e.g. '{stub}_mean')
+
+    Returns
+    -------
+    Dict whose keys are '{stub}_{statistic}'. Dict values are `DataFrame` objects.
+
+    """
     stats = {stub + 'count': group.count(), stub + 'mean': group.mean(),
              stub + 'min': group.min(),
              stub + 'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),

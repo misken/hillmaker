@@ -7,11 +7,9 @@ from pathlib import Path
 # f rom argparse import ArgumentParser, Namespace, SUPPRESS
 import logging
 # from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional
 
 import pandas as pd
-
-# from pydantic import BaseModel, validator, Field
 
 try:
     import tomllib
@@ -31,7 +29,7 @@ class Scenario:
     def __init__(
             self,
             params_dict: Optional[Dict] = None,
-            params_path: Optional[Union[str, Path]] = None,
+            params_path: Optional[str | Path] = None,
             **kwargs
     ):
         # Create empty dict for input parameters
@@ -185,7 +183,7 @@ def make_hills(scenario: Parameters) -> Dict:
         logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
 
     # Update departure timestamp for missing values if no_censored_departures=False
-    if not scenario.no_censored_departures:
+    if not scenario.adjust_censored_departures:
         # num_recs_uncensored = num_recs_missing_exit_ts
         if num_recs_missing_exit_ts > 0:
             msg = 'records with missing exit timestamps - end of analysis range used for occupancy purposes'
@@ -224,8 +222,7 @@ def make_hills(scenario: Parameters) -> Dict:
                                    scenario.bin_size_minutes,
                                    cat_to_exclude=scenario.cats_to_exclude,
                                    occ_weight_field=scenario.occ_weight_field,
-                                   edge_bins=scenario.edge_bins,
-                                   verbosity=scenario.verbosity)
+                                   edge_bins=scenario.edge_bins)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
@@ -396,8 +393,8 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
 #
 #     # Flatten toml config (we know there are no key clashes and only one nesting level)
 #     # Update args dict from config dict
-#     for outerkey, outerval in toml_config.items():
-#         for key, val in outerval.items():
+#     for outer_key, outer_val in toml_config.items():
+#         for key, val in outer_val.items():
 #             params_dict[key] = val
 #
 #     # Convert dict to updated pydantic model

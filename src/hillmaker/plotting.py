@@ -6,9 +6,12 @@ from matplotlib.dates import DateFormatter
 from pathlib import Path
 
 
-def make_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
-                   bin_size_minutes=60, cap=None, week_range='week',
-                   xlabel='Hour', ylabel='Patients', export_png=False):
+def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
+                   export_path: Path | str = Path('.'),
+                   bin_size_minutes: int = 60, cap: int = None,
+                   week_range: str = 'week',
+                   xlabel: str = 'Hour', ylabel: str = 'Patients',
+                   export_png: bool = False):
     """
     Exports day of week plot for occupancy, arrival, and departure statistics
 
@@ -52,7 +55,8 @@ def make_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
 
     # Create a list to use as the X-axis values
     num_bins = num_days * 1440 / bin_size_minutes
-    base_date_for_first_dow = '2015-01-05'  # TODO: This is a Monday. Make flexible so any dow can be "first".
+    # TODO: This is a Monday. Make flexible so any dow can be "first".
+    base_date_for_first_dow = '2015-01-05'
     timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
 
     # Choose appropriate major and minor tick locations
@@ -63,7 +67,7 @@ def make_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     ax1.set_xticks(major_tick_locations)
     ax1.set_xticks(minor_tick_locations, minor=True)
 
-    # Specify the mean occupancy and percentile values
+    # Specify the mean occupancy and percentile values. TODO - let user choose series to plot
     mean_occ = summary_df['mean']
     pctile_occ = summary_df['p95']
 

@@ -1,24 +1,30 @@
-# Copyright 2022 Mark Isken
+# Copyright 2022-2023 Mark Isken
 
 import math
 from datetime import datetime
-from datetime import timedelta
 import time
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Union
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 import numpy as np
+import pandas as pd
 from pandas import Timestamp
 
 
-def bin_of_day(dt: Union[Timestamp, datetime], bin_size_mins: int = 60):
+def bin_of_day(dt: Timestamp | np.datetime64, bin_size_mins: int = 60):
     """
     Compute bin of day based on bin size for a datetime.
     
     Parameters
     ----------
-    dt : pandas Timestamp object or a Python datetime object, default now.
-    bin_size_mins : Size of bin in minutes; default 30 minutes.
+    dt : pandas Timestamp or a numpy `datetime64`
+    bin_size_mins : int
+        Size of bin in minutes; default 30 minutes.
     
     Returns
     -------
@@ -26,7 +32,7 @@ def bin_of_day(dt: Union[Timestamp, datetime], bin_size_mins: int = 60):
     
     Examples
     --------
-    dt = datetime(2013,1,7,1,45)
+    dt = datetime(2013,1,8,1,45)
     bin = bin_of_day(dt, 30)
     # bin = 3
 
@@ -41,7 +47,7 @@ def bin_of_day(dt: Union[Timestamp, datetime], bin_size_mins: int = 60):
     return time_bin
 
 
-def bin_of_week(dt: Union[Timestamp, datetime], bin_size_mins: int = 60):
+def bin_of_week(dt: Timestamp | np.datetime64, bin_size_mins: int = 60):
     """
     Compute bin of week based on bin size for a pandas Timestamp object
     or a Python datetime object.
@@ -50,8 +56,9 @@ def bin_of_week(dt: Union[Timestamp, datetime], bin_size_mins: int = 60):
     
     Parameters
     ----------
-    dt : pandas Timestamp object or a Python datetime object, default now.
-    bin_size_mins : Size of bin in minutes; default 30 minutes.
+    dt : pandas Timestamp or a numpy `datetime64`
+    bin_size_mins : int
+        Size of bin in minutes; default 30 minutes.
     
     Returns
     -------
@@ -63,9 +70,6 @@ def bin_of_week(dt: Union[Timestamp, datetime], bin_size_mins: int = 60):
     bin = bin_of_week(dt, 30)
     # bin = 51
     """
-    # if dt is None:
-    #     dt = datetime.now()
-
     # Number of minutes from beginning of week (Monday is 0)
     minutes = (dt.weekday() * 1440) + (dt.hour * 60) + dt.minute
     # Convert minutes to bin
@@ -73,17 +77,23 @@ def bin_of_week(dt: Union[Timestamp, datetime], bin_size_mins: int = 60):
     return time_bin
 
 
-
-def stoprec_analysis_rltnshp(in_dt: Union[Timestamp, datetime],
-                             out_dt: Union[Timestamp, datetime],
-                             start_analysis: Union[Timestamp, datetime],
-                             end_analysis: Union[Timestamp, datetime]):
+def stoprec_relationship_type(in_dt: Union[Timestamp, np.datetime64],
+                              out_dt: Union[Timestamp, np.datetime64],
+                              start_analysis: Union[Timestamp, np.datetime64],
+                              end_analysis: Union[Timestamp, np.datetime64]):
     """
     Determines relationship type of stop record to analysis date range.
     
     Parameters
     ----------
-
+    in_dt : pandas Timestamp or a numpy `datetime64`
+        arrival datetime
+    out_dt : pandas Timestamp or a numpy `datetime64`
+        departure datetime
+    start_analysis : pandas Timestamp or a numpy `datetime64`
+        beginning of analysis period
+    end_analysis : pandas Timestamp or a numpy `datetime64`
+        end of analysis period
 
     Returns
     -------   
@@ -141,8 +151,8 @@ def stoprec_analysis_rltnshp(in_dt: Union[Timestamp, datetime],
         return 'none'
 
 
-def bin_of_analysis_range(dt: Union[Timestamp, datetime],
-                          start_analysis_range: Union[Timestamp, datetime],
+def bin_of_analysis_range(dt_np: np.datetime64,
+                          start_analysis_dt_np: np.datetime64,
                           bin_size_mins: int = 60):
     """
     Compute bin of span of analysis based on bin size for a datetime.
@@ -151,23 +161,27 @@ def bin_of_analysis_range(dt: Union[Timestamp, datetime],
 
     Parameters
     ----------
-    dt : array of numpy timedelta64
-    bin_size_mins : Size of bin in minutes; default 30 minutes.
+    dt_np : np.datetime64
+        Datetime for which the bin is desired
+    start_analysis_dt_np : np.datetime64
+        Datetime for which the bin is desired
+    bin_size_mins : int
+        Size of bin in minutes; default 30 minutes.
 
     Returns
     -------
-    array of integer <= (n-1) where n is number of bins in span of analysis.
+    int bin corresponding to dt
 
     Examples
     --------
     start = datetime(1996, 1, 1, 1, 0)
     dt = datetime(1996, 3, 1, 14, 30)
-    bin = bin_of_span(dt, 600)
+    bin = bin_of_analysis_range(dt, start, 60)
 
     """
 
     # Number of minutes from beginning of span
-    minutes = (dt - start_analysis_range).astype('timedelta64[s]') / 60.0
+    minutes = (dt_np - start_analysis_dt_np).astype('timedelta64[s]') / 60.0
     minutes = minutes.astype(np.int64)
     # Convert minutes to bin
     time_bin = np.floor(minutes / bin_size_mins).astype(np.int64)
@@ -176,6 +190,7 @@ def bin_of_analysis_range(dt: Union[Timestamp, datetime],
 
 
 class HillTimer:
+    """Timing hillmaker components"""
 
     def __enter__(self):
         self.start = time.process_time()
@@ -184,6 +199,7 @@ class HillTimer:
     def __exit__(self, *args):
         self.end = time.process_time()
         self.interval = self.end - self.start
+
 
 def toml_to_flatdict(toml_filepath: Union[str, Path]):
     """Convert toml input parameters file to flat dictionary"""
@@ -194,7 +210,7 @@ def toml_to_flatdict(toml_filepath: Union[str, Path]):
     # Fix up key names
     for key, val in flat_dict.items():
         if '.' in key:
-            new_key = key.split('.',)[1]
+            new_key = key.split('.', )[1]
             flat_dict[new_key] = val
             del flat_dict[key]
 
