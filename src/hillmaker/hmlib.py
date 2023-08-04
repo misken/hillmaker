@@ -207,7 +207,7 @@ def toml_to_flatdict(toml_filepath: Union[str, Path]):
         params_toml = tomllib.load(toml_file)
 
     flat_dict = pd.json_normalize(params_toml, max_level=1)
-    # Fix up key names
+    # Fix up key names - TOML uses dots for nested hierarchies
     for key, val in flat_dict.items():
         if '.' in key:
             new_key = key.split('.', )[1]

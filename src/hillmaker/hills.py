@@ -123,27 +123,22 @@ def setup_logger(verbosity: int):
     root_logger.addHandler(logger_handler)
 
 
-def make_hills(scenario: Parameters) -> Dict:
+def prep_scenario(scenario: Parameters, logger) -> Parameters:
     """
-    Compute occupancy, arrival, and departure statistics by category,
-    time bin of day and day of week.
+    Do some additional validation checking, pd.Timestamp -> np.datetime64 conversions and filtering of stop data.
 
-    Main function that first calls `bydatetime.make_bydatetime` to calculate occupancy, arrival
-    and departure values by date by time bin and then calls `summarize.summarize`
-    to compute the summary statistics.
+    Parameters
+    ----------
+    scenario : Parameters
+        Scenario for hillmaking
 
+    logger
 
     Returns
     -------
-    dict of DataFrames
-       The bydatetime DataFrames and all summary DataFrames.
+    Updated scenario Parameters object
+
     """
-
-    setup_logger(scenario.verbosity)
-
-    # This should inherit level from root logger
-    logger = logging.getLogger(__name__)
-
     # Leaving these input validation checks in for now, even though
     # the pydantic model takes care of them
     # Check if in and out fields are part of stops_df
@@ -171,10 +166,12 @@ def make_hills(scenario: Parameters) -> Dict:
         raise ValueError(f'Cannot convert {scenario.end_analysis_dt} to Timestamp\n{error}')
 
     # numpy datetime64 versions of analysis span end points
-    start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
-    end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
-    if start_analysis_dt_np > end_analysis_dt_np:
-        raise ValueError(f'end date {end_analysis_dt_np} is before start date {start_analysis_dt_np}')
+    # start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
+    scenario.start_analysis_dt = start_analysis_dt_ts.to_datetime64()
+    # end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
+    scenario.end_analysis_dt = end_analysis_dt_ts.to_datetime64()
+    if scenario.start_analysis_dt > scenario.end_analysis_dt:
+        raise ValueError(f'end date {scenario.end_analysis_dt} is before start date {scenario.start_analysis_dt}')
 
     # Looking for missing entry and departure timestamps
     num_recs_missing_entry_ts = scenario.stops_df[scenario.in_field].isna().sum()
@@ -208,16 +205,108 @@ def make_hills(scenario: Parameters) -> Dict:
                                               (scenario.stops_df[active_out_field] >= start_analysis_dt_ts)]
 
     # reset index of df to ensure sequential numbering
-    stops_df = scenario.stops_df.reset_index(drop=True)
+    scenario.stops_df = scenario.stops_df.reset_index(drop=True)
+
+    return scenario
+
+
+def make_hills(scenario: Parameters) -> Dict:
+    """
+    Compute occupancy, arrival, and departure statistics by category,
+    time bin of day and day of week.
+
+    Main function that first calls `bydatetime.make_bydatetime` to calculate occupancy, arrival
+    and departure values by date by time bin and then calls `summarize.summarize`
+    to compute the summary statistics.
+
+
+    Returns
+    -------
+    dict of DataFrames
+       The bydatetime DataFrames and all summary DataFrames.
+    """
+
+    setup_logger(scenario.verbosity)
+
+    # This should inherit level from root logger
+    logger = logging.getLogger(__name__)
+
+    # Leaving these input validation checks in for now, even though
+    # the pydantic model takes care of them
+    # Check if in and out fields are part of stops_df
+    scenario = prep_scenario(scenario, logger)
+
+    # if scenario.in_field not in list(scenario.stops_df):
+    #     raise ValueError(f'Bad in_field - {scenario.in_field} is not part of the stops dataframe')
+    #
+    # if scenario.out_field not in list(scenario.stops_df):
+    #     raise ValueError(f'Bad out_field - {scenario.out_field} is not part of the stops dataframe')
+    #
+    # # Check if catfield is part of stops_df
+    # if scenario.cat_field is not None:
+    #     if scenario.cat_field not in list(scenario.stops_df):
+    #         raise ValueError(f'Bad cat_field - {scenario.cat_field} is not part of the stops dataframe')
+
+    # pandas Timestamp versions of analysis span end points
+    # The pydantic model does NOT do these timestamp validations
+    # try:
+    #     start_analysis_dt_ts = pd.Timestamp(scenario.start_analysis_dt)
+    # except ValueError as error:
+    #     raise ValueError(f'Cannot convert {scenario.start_analysis_dt} to Timestamp\n{error}')
+    #
+    # try:
+    #     end_analysis_dt_ts = pd.Timestamp(scenario.end_analysis_dt).floor("d") + pd.Timedelta(86399, "s")
+    # except ValueError as error:
+    #     raise ValueError(f'Cannot convert {scenario.end_analysis_dt} to Timestamp\n{error}')
+    #
+    # # numpy datetime64 versions of analysis span end points
+    # start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
+    # end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
+    # if start_analysis_dt_np > end_analysis_dt_np:
+    #     raise ValueError(f'end date {end_analysis_dt_np} is before start date {start_analysis_dt_np}')
+
+    # # Looking for missing entry and departure timestamps
+    # num_recs_missing_entry_ts = scenario.stops_df[scenario.in_field].isna().sum()
+    # num_recs_missing_exit_ts = scenario.stops_df[scenario.out_field].isna().sum()
+    # if num_recs_missing_entry_ts > 0:
+    #     logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
+
+    # # Update departure timestamp for missing values if no_censored_departures=False
+    # if not scenario.adjust_censored_departures:
+    #     # num_recs_uncensored = num_recs_missing_exit_ts
+    #     if num_recs_missing_exit_ts > 0:
+    #         msg = 'records with missing exit timestamps - end of analysis range used for occupancy purposes'
+    #         logger.info(
+    #             f'{num_recs_missing_exit_ts} {msg}')
+    #         uncensored_out_field = f'{scenario.out_field}_uncensored'
+    #         uncensored_out_value = pd.Timestamp(scenario.end_analysis_dt).floor("d") + pd.Timedelta(1, "d")
+    #         scenario.stops_df[uncensored_out_field] = scenario.stops_df[scenario.out_field].fillna(
+    #             value=uncensored_out_value)
+    #         active_out_field = uncensored_out_field
+    #     else:
+    #         # Records with missing departures will be ignored
+    #         active_out_field = scenario.out_field
+    #         if num_recs_missing_exit_ts > 0:
+    #             logger.warning(f'{num_recs_missing_exit_ts} records with missing exit timestamps - records ignored')
+    # else:
+    #     active_out_field = scenario.out_field
+
+    # # Filter out records that don't overlap the analysis span or have missing entry timestamps
+    # scenario.stops_df = scenario.stops_df.loc[(scenario.stops_df[scenario.in_field] < end_analysis_dt_ts) &
+    #                                           (~scenario.stops_df[scenario.in_field].isna()) &
+    #                                           (scenario.stops_df[active_out_field] >= start_analysis_dt_ts)]
+
+    # # reset index of df to ensure sequential numbering
+    # stops_df = scenario.stops_df.reset_index(drop=True)
 
     # Create the bydatetime DataFrame
     with HillTimer() as t:
         starttime = t.start
-        bydt_dfs = make_bydatetime(stops_df,
+        bydt_dfs = make_bydatetime(scenario.stops_df,
                                    scenario.in_field,
                                    active_out_field,
-                                   start_analysis_dt_np,
-                                   end_analysis_dt_np,
+                                   scenario.start_analysis_dt,
+                                   scenario.end_analysis_dt,
                                    scenario.cat_field,
                                    scenario.bin_size_minutes,
                                    cat_to_exclude=scenario.cats_to_exclude,

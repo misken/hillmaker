@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+from pandas.core.groupby import DataFrameGroupBy
 
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
@@ -218,7 +219,7 @@ def summarize_stationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None
     return summaries
 
 
-def summary_stats(group: pd.DataFrameGroupBy,
+def summary_stats(group: DataFrameGroupBy,
                   percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99),
                   stub: str = ''):
     """
