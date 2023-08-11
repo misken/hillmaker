@@ -23,7 +23,7 @@ scenario01 = hm.Scenario(stops_df = stops_df,
                          cat_field = cat_field_name)
 
 
-scenario_dict = scenario01.scenario_params.dict()
+scenario_dict = scenario01.params.dict()
 print(scenario_dict)
 
 scenario01.make_hills()
