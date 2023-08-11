@@ -16,7 +16,7 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib
 
-from hillmaker.parameters import Parameters
+from hillmaker.scenario import Scenario
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
@@ -44,18 +44,91 @@ def setup_logger(verbosity: int):
     root_logger.addHandler(logger_handler)
 
 
-
-
-
-def make_hills(scenario: Parameters) -> Dict:
+def make_hills(scenario_name, stops_df, in_field, out_field,
+               start_analysis_dt, end_analysis_dt,
+               cat_field=None,
+               bin_size_minutes=60,
+               percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
+               cats_to_exclude=None,
+               occ_weight_field=None,
+               totals=1,
+               cap=None,
+               nonstationary_stats=True,
+               stationary_stats=True,
+               no_censored_departures=False,
+               export_bydatetime_csv=True,
+               export_summaries_csv=True,
+               export_dow_png=False,
+               export_week_png=False,
+               xlabel=None,
+               ylabel=None,
+               output_path=Path('.'),
+               edge_bins=1,
+               verbosity=0):
     """
-    Compute occupancy, arrival, and departure statistics by category,
-    time bin of day and day of week.
+    Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
     Main function that first calls `bydatetime.make_bydatetime` to calculate occupancy, arrival
     and departure values by date by time bin and then calls `summarize.summarize`
     to compute the summary statistics.
 
+    Parameters
+    ----------
+
+    scenario_name : str
+        Used in output filenames
+    stops_df : DataFrame
+        Base data containing one row per visit
+    in_field : str
+        Column name corresponding to the arrival times
+    out_field : str
+        Column name corresponding to the departure times
+    start_analysis_dt : datetime-like, str
+        Starting datetime for the analysis (must be convertible to pandas Timestamp)
+    end_analysis_dt : datetime-like, str
+        Ending datetime for the analysis (must be convertible to pandas Timestamp)
+    cat_field : str, optional
+        Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
+        Default is None
+    bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day, default is 60. Use a value that
+        divides into 1440 with no remainder
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
+    cats_to_exclude : list, optional
+        Category values to ignore, default is None
+    occ_weight_field : str, optional
+        Column name corresponding to the weights to use for occupancy incrementing, default is None
+        which corresponds to a weight of 1.0.
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
+    totals: int, default 1
+        0=no totals, 1=totals by datetime
+    cap : int, optional
+        Capacity of area being analyzed, default is None
+    nonstationary_stats : bool, optional
+       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
+    stationary_stats : bool, optional
+       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
+    no_censored_departures: bool, optional
+       If True, missing departure datetimes are replaced with datetime of end of analysis range. If False,
+       record is ignored. Default is False.
+    export_bydatetime_csv : bool, optional
+       If True, bydatetime DataFrames are exported to csv files. Default is True.
+    export_summaries_csv : bool, optional
+       If True, summary DataFrames are exported to csv files. Default is True.
+    export_dow_png : bool, optional
+       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+    export_week_png : bool, optional
+       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+    xlabel : str
+        x-axis label, default='Hour'
+    ylabel : str
+        y-axis label, default='Patients'
+    output_path : str or Path, optional
+        Destination path for exported csv and png files, default is current directory
+    verbosity : int, optional
+        Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
 
     Returns
     -------
@@ -63,26 +136,7 @@ def make_hills(scenario: Parameters) -> Dict:
        The bydatetime DataFrames and all summary DataFrames.
     """
 
-    setup_logger(scenario.verbosity)
 
-    # This should inherit level from root logger
-    logger = logging.getLogger(__name__)
-
-    # Leaving these input validation checks in for now, even though
-    # the pydantic model takes care of them
-    # Check if in and out fields are part of stops_df
-    scenario = prep_scenario(scenario, logger)
-
-    # if scenario.in_field not in list(scenario.stops_df):
-    #     raise ValueError(f'Bad in_field - {scenario.in_field} is not part of the stops dataframe')
-    #
-    # if scenario.out_field not in list(scenario.stops_df):
-    #     raise ValueError(f'Bad out_field - {scenario.out_field} is not part of the stops dataframe')
-    #
-    # # Check if catfield is part of stops_df
-    # if scenario.cat_field is not None:
-    #     if scenario.cat_field not in list(scenario.stops_df):
-    #         raise ValueError(f'Bad cat_field - {scenario.cat_field} is not part of the stops dataframe')
 
     # pandas Timestamp versions of analysis span end points
     # The pydantic model does NOT do these timestamp validations
@@ -139,16 +193,16 @@ def make_hills(scenario: Parameters) -> Dict:
     # Create the bydatetime DataFrame
     with HillTimer() as t:
         starttime = t.start
-        bydt_dfs = make_bydatetime(scenario.stops_df,
-                                   scenario.in_field,
-                                   active_out_field,
-                                   scenario.start_analysis_dt,
-                                   scenario.end_analysis_dt,
-                                   scenario.cat_field,
-                                   scenario.bin_size_minutes,
-                                   cat_to_exclude=scenario.cats_to_exclude,
-                                   occ_weight_field=scenario.occ_weight_field,
-                                   edge_bins=scenario.edge_bins)
+        bydt_dfs = make_bydatetime(stops_df,
+                                   in_field,
+                                   out_field,
+                                   start_analysis_dt,
+                                   end_analysis_dt,
+                                   cat_field,
+                                   bin_size_minutes,
+                                   cat_to_exclude=cats_to_exclude,
+                                   occ_weight_field=occ_weight_field,
+                                   edge_bins=edge_bins)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 

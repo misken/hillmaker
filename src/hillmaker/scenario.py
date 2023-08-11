@@ -26,8 +26,8 @@ class VerbosityEnum(IntEnum):
     DEBUG = 2
 
 
-class Parameters(BaseModel):
-    """pydantic model for input parameters
+class Scenario(BaseModel):
+    """pydantic model for creating scenario objects from input parameters
 
     Parameters
     ----------
@@ -74,9 +74,9 @@ class Parameters(BaseModel):
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is True.
     export_dow_png : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, day of week plots are exported for occupancy, arrival, and departure. Default is True.
     export_week_png : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, full week plots are exported for occupancy, arrival, and departure. Default is True.
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str
@@ -102,9 +102,7 @@ class Parameters(BaseModel):
     # Optional parameters
     cat_field: str = None
     bin_size_minutes: int = 60
-    cats_to_exclude: List[str] = None        if self.start_analysis_dt > self.end_analysis_dt:
-            raise ValueError(
-                f'end date {self.end_analysis_dt} is before start date {self.start_analysis_dt}')
+    cats_to_exclude: List[str] = None
     occ_weight_field: str = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
     totals: bool = True
@@ -117,8 +115,8 @@ class Parameters(BaseModel):
     export_summaries_csv: bool = True
     make_dow_plot: bool = True
     make_week_plot: bool = True
-    export_dow_png: bool = False
-    export_week_png: bool = False
+    export_dow_png: bool = True
+    export_week_png: bool = True
     cap: int = None
     xlabel: str = 'Hour'
     ylabel: str = 'Patients'
@@ -156,22 +154,19 @@ class Parameters(BaseModel):
     # def __str__(self):
     #     """Pretty string representation of scenario parameters"""
     #     # TODO - write str method for Scenario class
-    #     return str(self)
+    #     return str(self.par)
 
     # This is v1 pydantic which is now deprecated in favor of ConfigDict (see before field declarations)
     # class Config:
     #     arbitrary_types_allowed = True
 
 
-class Scenario:
+def create_scenario(params_dict: Optional[Dict] = None,
+                    params_path: Optional[str | Path] = None, **kwargs):
+
     """User facing class to gather inputs for a hillmaker scenario"""
 
-    def __init__(
-            self,
-            params_dict: Optional[Dict] = None,
-            params_path: Optional[str | Path] = None,
-            **kwargs
-    ):
+
         # Create empty dict for input parameters
         params = {}
 
@@ -195,14 +190,19 @@ class Scenario:
         # Get application settings
         # app_settings: Settings = Settings()
 
-        params_model = Parameters(**params)
-        self.params = params_model
-        self.hills = {}
+        # Create Pydantic model to parse and validate inputs
+        # params_model = Parameters(**params)
+        #
+        # # For now let's store both the Pydantic model and a dictionary version as class attributes
+        # # Not sure which is better way to store in the scenario class
+        # self.params_dict = params_model.model_dump()
+        # self.params_model = params_model
+        # self.hills = {}
 
     # For now, the only method is make_hills which simply passes on the parameters model
     # to the module level make_hills function. This should make it easy to also call make_hills directly.
     def make_hills(self):
-        self.hills = make_hills(self.params)
+        self.hills = make_hills(self)
 
     def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
         """
@@ -214,7 +214,7 @@ class Scenario:
             Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
             Default='occupancy'
         day_of_week : str
-            Either of 'week', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'. Default='week'
+            Eiactive_out_fieldther of 'week', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'. Default='week'
 
         Returns
         -------
@@ -306,4 +306,4 @@ class Scenario:
     def __str__(self):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
-        return str(self.params.dict())
+        return str(self.params.model_dump())
