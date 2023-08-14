@@ -6,13 +6,15 @@ from enum import IntEnum
 
 import pandas as pd
 from pydantic import BaseModel, field_validator, model_validator, confloat, FieldValidationInfo, ConfigDict
-
-from hillmaker import make_hills
+import hillmaker as hm
 
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
+
+# This should inherit level from root logger
+logger = logging.getLogger(__name__)
 
 
 class EdgeBinsEnum(IntEnum):
@@ -66,17 +68,18 @@ class Scenario(BaseModel):
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
        If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    adjust_censored_departures: bool, optional
-       If True, missing departure datetimes are replaced with datetime of end of analysis range. If False,
-       record is ignored. Default is False.
     export_bydatetime_csv : bool, optional
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is True.
-    export_dow_png : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is True.
-    export_week_png : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is True.
+    make_dow_plot : bool, optional
+       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
+    make_week_plot : bool, optional
+       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
+    export_dow_plot : bool, optional
+       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+    export_week_plot : bool, optional
+       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str
@@ -85,6 +88,11 @@ class Scenario(BaseModel):
         Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
+
+    Attributes
+    ----------
+    hills : dict (initialized to None)
+        Stores results of `make_hills`.
 
 
     """
@@ -105,22 +113,21 @@ class Scenario(BaseModel):
     cats_to_exclude: List[str] = None
     occ_weight_field: str = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
-    totals: bool = True
     nonstationary_stats: bool = True
     stationary_stats: bool = True
-    adjust_censored_departures: bool = False
     edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
     output_path: str | Path = Path('.')
     export_bydatetime_csv: bool = True
     export_summaries_csv: bool = True
     make_dow_plot: bool = True
     make_week_plot: bool = True
-    export_dow_png: bool = True
-    export_week_png: bool = True
+    export_dow_plot: bool = False
+    export_week_plot: bool = False
     cap: int = None
     xlabel: str = 'Hour'
     ylabel: str = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
+    #hills: dict = None
 
     # Ensure required fields and submitted optional fields exist
     @field_validator('in_field', 'out_field', 'cat_field', 'occ_weight_field')
@@ -129,15 +136,6 @@ class Scenario(BaseModel):
             raise ValueError(f'{v} is not a column in the dataframe')
         return v
 
-    # Don't need the following. Pydantic will make sure it's convertible to a date or datetime which we know
-    # can be converted to a pd.Timestamp. We just need to convert it ourselves.
-    # @field_validator('start_analysis_dt', 'end_analysis_dt')
-    # def convertible_to_pd_timestamp(cls, v: date | datetime | pd.Timestamp, info: FieldValidationInfo):
-    #     try:
-    #         start_analysis_dt_ts = pd.Timestamp(v)
-    #     except ValueError as error:
-    #         raise ValueError(f'Cannot convert {v} to Timestamp\n{error}')
-    # End date >= start date
     @field_validator('end_analysis_dt')
     def date_relationship(cls, v: str, info: FieldValidationInfo):
         if v <= info.data['start_analysis_dt']:
@@ -161,48 +159,14 @@ class Scenario(BaseModel):
     #     arbitrary_types_allowed = True
 
 
-def create_scenario(params_dict: Optional[Dict] = None,
-                    params_path: Optional[str | Path] = None, **kwargs):
 
-    """User facing class to gather inputs for a hillmaker scenario"""
-
-
-        # Create empty dict for input parameters
-        params = {}
-
-        # If params_dict is not None, merge into params
-        if params_dict is not None:
-            params.update(params_dict)
-
-        # If params_path is not None, merge into params
-        if params_path is not None:
-            with open(params_path, "rb") as f:
-                params_toml_dict = tomllib.load(f)
-                params.update(params_toml_dict)
-
-        # Args passed to function get ultimate say
-        if len(kwargs) > 0:
-            params.update(kwargs)
-
-        # Now, from the params dictionary, create pydantic Parameters model
-        # Be nice to construct model so that some default values
-        # can be based on app settings
-        # Get application settings
-        # app_settings: Settings = Settings()
-
-        # Create Pydantic model to parse and validate inputs
-        # params_model = Parameters(**params)
-        #
-        # # For now let's store both the Pydantic model and a dictionary version as class attributes
-        # # Not sure which is better way to store in the scenario class
-        # self.params_dict = params_model.model_dump()
-        # self.params_model = params_model
-        # self.hills = {}
 
     # For now, the only method is make_hills which simply passes on the parameters model
     # to the module level make_hills function. This should make it easy to also call make_hills directly.
     def make_hills(self):
-        self.hills = make_hills(self)
+        inputs_dict = self.model_dump()
+        self.hills = hm.make_hills(**inputs_dict)
+        return self
 
     def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
         """
@@ -214,7 +178,7 @@ def create_scenario(params_dict: Optional[Dict] = None,
             Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
             Default='occupancy'
         day_of_week : str
-            Eiactive_out_fieldther of 'week', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'. Default='week'
+            Either of 'week', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'. Default='week'
 
         Returns
         -------
@@ -307,3 +271,37 @@ def create_scenario(params_dict: Optional[Dict] = None,
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
         return str(self.params.model_dump())
+
+def _create_scenario(params_dict: Optional[Dict] = None,
+                    params_path: Optional[str | Path] = None, **kwargs):
+
+    """Function to gather inputs for a hillmaker scenario - will likely be removed"""
+
+
+    # Create empty dict for input parameters
+    params = {}
+
+    # If params_dict is not None, merge into params
+    if params_dict is not None:
+        params.update(params_dict)
+
+    # If params_path is not None, merge into params
+    if params_path is not None:
+        with open(params_path, "rb") as f:
+            params_toml_dict = tomllib.load(f)
+            params.update(params_toml_dict)
+
+    # Args passed to function get ultimate say
+    if len(kwargs) > 0:
+        params.update(kwargs)
+
+    # Now, from the params dictionary, create pydantic Parameters model
+    # Be nice to construct model so that some default values
+    # can be based on app settings
+    # Get application settings
+    # app_settings: Settings = Settings()
+
+    # Create Pydantic model to parse and validate inputs
+    scenario = Scenario(**params)
+
+    return scenario
