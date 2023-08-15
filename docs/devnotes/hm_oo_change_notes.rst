@@ -10,6 +10,9 @@ https://datascience.statnett.no/2020/05/11/how-we-validate-data-using-pydantic/
 
 Mired in a mess of trying to figure out the API for Scenario and related pydantic model and legacy functions like make_datetime and make_hills. Be nice to still have these usable but how best to do parameter validation in that case.
 
+- the Scenario class holds all of the input parameters as well as a `hills` attribute that is populated by `hillmaker.make_hills()`.
+- the Scenario.make_hills()` method is a wrapper for the module level `make_hills()` function. By doing this, the legacy interface to `make_hills()` is maintained (a set of kwargs).
+- if `hillmaker.make_hills()` is called directly, a `Scenario` instance
 
 General
 ========
