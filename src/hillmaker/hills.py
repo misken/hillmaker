@@ -379,32 +379,32 @@ def process_command_line(argv=None):
 
     # Add arguments
     required.add_argument(
-        '--scenario', type=str,
+        'scenario', type=str,
         help="Used in output filenames"
     )
 
     required.add_argument(
-        '--stop_data_csv', type=str,
+        'stop_data_csv', type=str,
         help="Path to csv file containing the stop data to be processed"
     )
 
     required.add_argument(
-        '--in_field', type=str,
+        'in_field', type=str,
         help="Column name corresponding to the arrival times"
     )
 
     required.add_argument(
-        '--out_field', type=str,
+        'out_field', type=str,
         help="Column name corresponding to the departure times"
     )
 
     required.add_argument(
-        '--start_analysis_dt', type=str,
+        'start_analysis_dt', type=str,
         help="Starting datetime for the analysis (must be convertible to pandas Timestamp)"
     )
 
     required.add_argument(
-        '--end_analysis_dt', type=str,
+        'end_analysis_dt', type=str,
         help="Ending datetime for the analysis (must be convertible to pandas Timestamp)"
     )
 
@@ -503,7 +503,7 @@ def process_command_line(argv=None):
 
     # Do the parsing and return the populated namespace with the input arg values
     # If argv == None, then ``parse_args`` will use ``sys.argv[1:]``.
-    args = parser.parse_args(argv)
+    args, unknown = parser.parse_known_args(argv)
     return args
 
 def update_args(args, toml_config):
