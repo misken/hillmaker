@@ -167,14 +167,14 @@ def make_hills(scenario_name=None,
         logger.warning(f'{num_recs_missing_exit_ts} records with missing exit timestamps - records ignored')
 
     # Create mutable copy of stops_df containing only necessary fields
-    stops_working_df = pd.DataFrame(stops_df[in_field], stops_df[out_field])
+    stops_working_df = pd.DataFrame({in_field: stops_df[in_field], out_field: stops_df[out_field]})
     if cat_field is not None:
         stops_working_df[cat_field] = stops_df[cat_field]
 
     # Filter out records that don't overlap the analysis span or have missing entry and/or exit timestamps
     stops_working_df = stops_working_df.loc[(stops_working_df[in_field] < end_analysis_dt_ts) &
-                                            (~stops_working_df[stops_working_df[in_field]].isna()) &
-                                            (~stops_working_df[stops_working_df[out_field]].isna()) &
+                                            (~stops_working_df[in_field].isna()) &
+                                            (~stops_working_df[out_field].isna()) &
                                             (stops_working_df[out_field] >= start_analysis_dt_ts)]
 
     # reset index of df to ensure sequential numbering
@@ -186,8 +186,8 @@ def make_hills(scenario_name=None,
         bydt_dfs = make_bydatetime(stops_working_df,
                                    in_field,
                                    out_field,
-                                   start_analysis_dt,
-                                   end_analysis_dt,
+                                   start_analysis_dt_np,
+                                   end_analysis_dt_np,
                                    cat_field,
                                    bin_size_minutes,
                                    cat_to_exclude=cats_to_exclude,
