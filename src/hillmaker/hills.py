@@ -283,6 +283,9 @@ def make_hills(scenario_name=None,
     else:
         hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
 
+    hills['settings'] = {'scenario_name': scenario.scenario_name,
+                         'cat_field': scenario.cat_field}
+
     # All done
     endtime = t.end
     logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
@@ -290,7 +293,7 @@ def make_hills(scenario_name=None,
     return hills
 
 
-def get_plot(hills: dict, scenario_name: str, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
+def get_plot(hills: dict, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
     """
     Get plot object for specified flow metric and whether full week or specified day of week.
 
@@ -298,8 +301,6 @@ def get_plot(hills: dict, scenario_name: str, flow_metric: str = 'occupancy', da
     ----------
     hills : dict
         Created by `make_hills`
-    scenario_name : str
-        Same scenario name used in call to `make_hills`
     flow_metric : str
         Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
         Default='occupancy'
@@ -311,8 +312,11 @@ def get_plot(hills: dict, scenario_name: str, flow_metric: str = 'occupancy', da
     plot object from matplotlib
 
     """
+    scenario_name = hills['settings']['scenario_name']
+
     flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
     flow_metric_str = flow_metrics[flow_metric[0].lower()]
+
     if day_of_week.lower() != 'week':
         day_of_week_str = day_of_week[:3]
     else:
@@ -354,16 +358,18 @@ def get_summary_df(hills: dict, flow_metric: str = 'occupancy',
 
     flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
     flow_metric_key = flow_metrics[flow_metric[0].lower()]
+    cat_field = hills['settings']['cat_field']
+
     if stationary:
         time_key = 'stationary'
-        if by_category and hills['cat_field'] is not None:
-            cat_key = f'{hills["cat_field"]}_{stationary_stub}'.rstrip('_')
+        if by_category and cat_field is not None:
+            cat_key = f'{cat_field}_{stationary_stub}'.rstrip('_')
         else:
             cat_key = f'{stationary_stub}'
     else:
         time_key = 'nonstationary'
-        if by_category and hills['cat_field'] is not None:
-            cat_key = f'{hills["cat_field"]}_{nonstationary_stub}'.rstrip('_')
+        if by_category and cat_field is not None:
+            cat_key = f'{cat_field}_{nonstationary_stub}'.rstrip('_')
         else:
             cat_key = f'{nonstationary_stub}'
 
@@ -393,9 +399,10 @@ def get_bydatetime_df(hills: dict, by_category: bool = True):
 
     """
     bydatetime_stub = 'bydatetime'
+    cat_field = hills['settings']['cat_field']
 
-    if by_category and hills['cat_field'] is not None:
-        cat_key = f'{hills["cat_field"]}_{bydatetime_stub}'.rstrip('_')
+    if by_category and cat_field is not None:
+        cat_key = f'{cat_field}_{bydatetime_stub}'.rstrip('_')
     else:
         cat_key = f'{bydatetime_stub}'
 

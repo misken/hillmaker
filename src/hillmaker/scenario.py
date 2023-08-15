@@ -127,7 +127,7 @@ class Scenario(BaseModel):
     xlabel: str | None = 'Hour'
     ylabel: str | None = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
-    hills: dict = None
+    hills: dict | None = None
 
     # Ensure required fields and submitted optional fields exist
     @field_validator('in_field', 'out_field', 'cat_field', 'occ_weight_field')
@@ -149,13 +149,6 @@ class Scenario(BaseModel):
             raise ValueError('bin_size_minutes must divide into 1440 with no remainder')
         return v
 
-    # def __str__(self):
-    #     """Pretty string representation of scenario parameters"""
-    #     # TODO - write str method for Scenario class
-    #     return str(self.par)
-
-    # For now, the only method is make_hills which simply passes on the parameters model
-    # to the module level make_hills function. This should make it easy to also call make_hills directly.
     def make_hills(self):
         """
         Wrapper for module level `hillmaker.make_hills()` function.
@@ -191,23 +184,8 @@ class Scenario(BaseModel):
 
         """
 
-        plot = hm.hills.get_plot(self.hills, self.scenario_name, flow_metric, day_of_week)
+        plot = hm.hills.get_plot(self.hills, flow_metric, day_of_week)
         return plot
-
-        # flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
-        # flow_metric_str = flow_metrics[flow_metric[0].lower()]
-        # if day_of_week.lower() != 'week':
-        #     day_of_week_str = day_of_week[:3].lower()
-        # else:
-        #     day_of_week_str = 'week'
-        #
-        # plot_name = f'{self.scenario_name}_{flow_metric_str}_plot_{day_of_week_str}'
-        # try:
-        #     plot = self.hills['plots'][plot_name]
-        #     return plot
-        # except KeyError as error:
-        #     print(f'The plot {error} does not exist.')
-        #     return None
 
     def get_summary_df(self, flow_metric: str = 'occupancy',
                        by_category: bool = True, stationary: bool = False):
@@ -253,12 +231,12 @@ class Scenario(BaseModel):
     def __str__(self):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
-        return str(self.params.model_dump())
+        return str(self.model_dump())
 
 
-def _create_scenario(params_dict: Optional[Dict] = None,
-                     params_path: Optional[str | Path] = None, **kwargs):
-    """Function to gather inputs for a hillmaker scenario - will likely be removed"""
+def create_scenario(params_dict: Optional[Dict] = None,
+                    toml_path: Optional[str | Path] = None, **kwargs):
+    """Function to create a `Scenario` from a dict, a TOML file, and/or keyword args """
 
     # Create empty dict for input parameters
     params = {}
@@ -268,8 +246,8 @@ def _create_scenario(params_dict: Optional[Dict] = None,
         params.update(params_dict)
 
     # If params_path is not None, merge into params
-    if params_path is not None:
-        with open(params_path, "rb") as f:
+    if toml_path is not None:
+        with open(toml_path, "rb") as f:
             params_toml_dict = tomllib.load(f)
             params.update(params_toml_dict)
 
