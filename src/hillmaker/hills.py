@@ -20,6 +20,7 @@ from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 from hillmaker.plotting import make_hill_plot
+from hillmaker.scenario import Scenario
 
 
 def setup_logger(verbosity: int):
@@ -141,16 +142,33 @@ def make_hills(scenario_name=None,
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
 
+    # Create scenario instance and to use pydantic validation
+    scenario = Scenario(scenario_name=scenario_name, stops_df=stops_df,
+                        in_field=in_field, out_field=out_field,
+                        start_analysis_dt=start_analysis_dt, end_analysis_dt=end_analysis_dt,
+                        cat_field=cat_field, bin_size_minutes=bin_size_minutes,
+                        cats_to_exclude=cats_to_exclude, occ_weight_field=occ_weight_field,
+                        edge_bins=edge_bins,
+                        stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
+                        percentiles=percentiles, cap=cap,
+                        make_dow_plot=make_dow_plot, make_week_plot=make_week_plot,
+                        export_bydatetime_csv=export_bydatetime_csv,
+                        export_summaries_csv=export_summaries_csv,
+                        export_dow_plot=export_dow_plot,
+                        export_week_plot=export_week_plot,
+                        xlabel=xlabel, ylabel=ylabel,
+                        output_path=output_path)
+
     # Create pandas Timestamps for start and end of the analysis span
     try:
-        start_analysis_dt_ts = pd.Timestamp(start_analysis_dt)
+        start_analysis_dt_ts = pd.Timestamp(scenario.start_analysis_dt)
     except ValueError as error:
-        raise ValueError(f'Cannot convert {start_analysis_dt} to Timestamp\n{error}')
+        raise ValueError(f'Cannot convert {scenario.start_analysis_dt} to Timestamp\n{error}')
 
     try:
-        end_analysis_dt_ts = pd.Timestamp(end_analysis_dt).floor("d") + pd.Timedelta(86399, "s")
+        end_analysis_dt_ts = pd.Timestamp(scenario.end_analysis_dt).floor("d") + pd.Timedelta(86399, "s")
     except ValueError as error:
-        raise ValueError(f'Cannot convert {end_analysis_dt} to Timestamp\n{error}')
+        raise ValueError(f'Cannot convert {scenario.end_analysis_dt} to Timestamp\n{error}')
 
     # numpy datetime64 versions of analysis span end points
     start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
@@ -159,17 +177,17 @@ def make_hills(scenario_name=None,
         raise ValueError(f'end date {end_analysis_dt_np} is before start date {start_analysis_dt_np}')
 
     # Looking for missing entry and departure timestamps
-    num_recs_missing_entry_ts = stops_df[in_field].isna().sum()
-    num_recs_missing_exit_ts = stops_df[out_field].isna().sum()
+    num_recs_missing_entry_ts = stops_df[scenario.in_field].isna().sum()
+    num_recs_missing_exit_ts = stops_df[scenario.out_field].isna().sum()
     if num_recs_missing_entry_ts > 0:
         logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
     if num_recs_missing_exit_ts > 0:
         logger.warning(f'{num_recs_missing_exit_ts} records with missing exit timestamps - records ignored')
 
     # Create mutable copy of stops_df containing only necessary fields
-    stops_working_df = pd.DataFrame({in_field: stops_df[in_field], out_field: stops_df[out_field]})
+    stops_working_df = pd.DataFrame({in_field: scenario.stops_df[in_field], out_field: scenario.stops_df[out_field]})
     if cat_field is not None:
-        stops_working_df[cat_field] = stops_df[cat_field]
+        stops_working_df[scenario.cat_field] = stops_df[scenario.cat_field]
 
     # Filter out records that don't overlap the analysis span or have missing entry and/or exit timestamps
     stops_working_df = stops_working_df.loc[(stops_working_df[in_field] < end_analysis_dt_ts) &
@@ -184,67 +202,67 @@ def make_hills(scenario_name=None,
     with HillTimer() as t:
         starttime = t.start
         bydt_dfs = make_bydatetime(stops_working_df,
-                                   in_field,
-                                   out_field,
+                                   scenario.in_field,
+                                   scenario.out_field,
                                    start_analysis_dt_np,
                                    end_analysis_dt_np,
-                                   cat_field,
-                                   bin_size_minutes,
-                                   cat_to_exclude=cats_to_exclude,
-                                   occ_weight_field=occ_weight_field,
-                                   edge_bins=edge_bins)
+                                   scenario.cat_field,
+                                   scenario.bin_size_minutes,
+                                   cat_to_exclude=scenario.cats_to_exclude,
+                                   occ_weight_field=scenario.occ_weight_field,
+                                   edge_bins=scenario.edge_bins)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
     # Create the summary stats DataFrames
     summary_dfs = {}
-    if nonstationary_stats or stationary_stats:
+    if scenario.nonstationary_stats or scenario.stationary_stats:
         with HillTimer() as t:
             summary_dfs = summarize(bydt_dfs,
-                                    nonstationary_stats=nonstationary_stats,
-                                    stationary_stats=stationary_stats,
-                                    percentiles=percentiles,
-                                    verbosity=verbosity)
+                                    nonstationary_stats=scenario.nonstationary_stats,
+                                    stationary_stats=scenario.stationary_stats,
+                                    percentiles=scenario.percentiles,
+                                    verbosity=scenario.verbosity)
 
         logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
 
     # Export results to csv if requested
-    if export_bydatetime_csv:
+    if scenario.export_bydatetime_csv:
         with HillTimer() as t:
-            export_bydatetime(bydt_dfs, scenario_name, output_path)
+            export_bydatetime(bydt_dfs, scenario.scenario_name, scenario.output_path)
 
-        logger.info(f"By datetime exported to csv in {output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"By datetime exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
-    if export_summaries_csv:
+    if scenario.export_summaries_csv:
         with HillTimer() as t:
-            if nonstationary_stats:
-                export_summaries(summary_dfs, scenario_name, output_path, 'nonstationary')
-            if stationary_stats:
-                export_summaries(summary_dfs, scenario_name, output_path, 'stationary')
+            if scenario.nonstationary_stats:
+                export_summaries(summary_dfs, scenario.scenario_name, scenario.output_path, 'nonstationary')
+            if scenario.stationary_stats:
+                export_summaries(summary_dfs, scenario.scenario_name, scenario.output_path, 'stationary')
 
-        logger.info(f"Summaries exported to csv in {output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"Summaries exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
     # Create and export full week plots if requested
     plots = {}
-    if make_week_plot:
+    if scenario.make_week_plot:
         with HillTimer() as t:
             for metric in summary_dfs['nonstationary']['dow_binofday']:
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
 
                 week_range_str = 'week'
-                plot_key = f'{scenario_name}_{metric}_plot_{week_range_str}'
+                plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
 
-                plot = make_hill_plot(fullwk_df, scenario_name, metric, export_path=output_path,
-                                      bin_size_minutes=bin_size_minutes, cap=cap,
-                                      xlabel=xlabel, ylabel=ylabel,
-                                      export_png=export_week_plot)
+                plot = make_hill_plot(fullwk_df, scenario.scenario_name, metric, export_path=scenario.output_path,
+                                      bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
+                                      xlabel=scenario.xlabel, ylabel=scenario.ylabel,
+                                      export_png=scenario.export_week_plot)
                 plots[plot_key] = plot
 
         logger.info(f"Full week plots created (seconds): {t.interval:.4f}")
 
     # Create and export individual day of week plots if requested
-    if make_dow_plot:
+    if scenario.make_dow_plot:
         with HillTimer() as t:
             for metric in summary_dfs['nonstationary']['dow_binofday']:
                 fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
@@ -252,11 +270,10 @@ def make_hills(scenario_name=None,
                 for dow in fullwk_df['dow_name'].unique():
                     dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
                     week_range_str = dow
-                    plot_key = f'{scenario_name}_{metric}_plot_{week_range_str}'
-                    plot = make_hill_plot(dow_df, scenario_name, metric, export_path=output_path,
-                                          bin_size_minutes=bin_size_minutes, cap=cap, week_range=dow,
-                                          xlabel=xlabel,
-                                          ylabel=ylabel, export_png=export_dow_plot)
+                    plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
+                    plot = make_hill_plot(dow_df, scenario.scenario_name, metric, export_path=scenario.output_path,
+                                          bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap, week_range=dow,
+                                          xlabel=scenario.xlabel, ylabel=scenario.ylabel, export_png=export_dow_plot)
                     plots[plot_key] = plot
 
         logger.info(f"Individual day of week plots created (seconds): {t.interval:.4f}")
@@ -271,6 +288,123 @@ def make_hills(scenario_name=None,
     logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
 
     return hills
+
+
+def get_plot(hills: dict, scenario_name: str, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
+    """
+    Get plot object for specified flow metric and whether full week or specified day of week.
+
+    Parameters
+    ----------
+    hills : dict
+        Created by `make_hills`
+    scenario_name : str
+        Same scenario name used in call to `make_hills`
+    flow_metric : str
+        Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
+        Default='occupancy'
+    day_of_week : str
+        Either of 'week', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'. Default='week'
+
+    Returns
+    -------
+    plot object from matplotlib
+
+    """
+    flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
+    flow_metric_str = flow_metrics[flow_metric[0].lower()]
+    if day_of_week.lower() != 'week':
+        day_of_week_str = day_of_week[:3]
+    else:
+        day_of_week_str = 'week'
+
+    plot_name = f'{scenario_name}_{flow_metric_str}_plot_{day_of_week_str}'
+    try:
+        plot = hills['plots'][plot_name]
+        return plot
+    except KeyError as error:
+        print(f'The plot {error} does not exist.')
+        return None
+
+
+def get_summary_df(hills: dict, flow_metric: str = 'occupancy',
+                   by_category: bool = True, stationary: bool = False):
+    """
+    Get summary dataframe
+
+    Parameters
+    ----------
+    hills : dict
+        Created by `make_hills`
+    flow_metric : str
+        Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
+        Default='occupancy'
+    by_category : bool
+        Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+    stationary : bool
+        Default=False corresponds to the standard nonstationary statistics (i.e. by TOD and DOW)
+
+    Returns
+    -------
+    DataFrame
+
+    """
+    nonstationary_stub = 'dow_binofday'
+    stationary_stub = ''
+
+    flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
+    flow_metric_key = flow_metrics[flow_metric[0].lower()]
+    if stationary:
+        time_key = 'stationary'
+        if by_category and hills['cat_field'] is not None:
+            cat_key = f'{hills["cat_field"]}_{stationary_stub}'.rstrip('_')
+        else:
+            cat_key = f'{stationary_stub}'
+    else:
+        time_key = 'nonstationary'
+        if by_category and hills['cat_field'] is not None:
+            cat_key = f'{hills["cat_field"]}_{nonstationary_stub}'.rstrip('_')
+        else:
+            cat_key = f'{nonstationary_stub}'
+
+    try:
+        df = hills['summaries'][time_key][cat_key][flow_metric_key]
+        return df
+    except KeyError as error:
+        print(f'Key does not exist.')
+        return None
+
+
+def get_bydatetime_df(hills: dict, by_category: bool = True):
+    """
+    Get summary dataframe
+
+    Parameters
+    ----------
+    hills : dict
+        Created by `make_hills`
+    by_category : bool
+        Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
+
+    Returns
+    -------
+    DataFrame
+
+    """
+    bydatetime_stub = 'bydatetime'
+
+    if by_category and hills['cat_field'] is not None:
+        cat_key = f'{hills["cat_field"]}_{bydatetime_stub}'.rstrip('_')
+    else:
+        cat_key = f'{bydatetime_stub}'
+
+    try:
+        df = hills['bydatetime'][cat_key]
+        return df
+    except KeyError as error:
+        print(f'Key does not exist.')
+        return None
 
 
 def export_bydatetime(bydt_dfs, scenario_name, export_path):
@@ -343,5 +477,3 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
                 df.to_csv(csv_wpath, index=True, float_format='%.6f')
             else:
                 df.to_csv(csv_wpath, index=False, float_format='%.6f')
-
-

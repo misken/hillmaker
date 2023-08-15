@@ -110,8 +110,8 @@ class Scenario(BaseModel):
     # Optional parameters
     cat_field: str = None
     bin_size_minutes: int = 60
-    cats_to_exclude: List[str] = None
-    occ_weight_field: str = None
+    cats_to_exclude: List[str] | None = None
+    occ_weight_field: str | None = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
     nonstationary_stats: bool = True
     stationary_stats: bool = True
@@ -123,11 +123,11 @@ class Scenario(BaseModel):
     make_week_plot: bool = True
     export_dow_plot: bool = False
     export_week_plot: bool = False
-    cap: int = None
-    xlabel: str = 'Hour'
-    ylabel: str = 'Patients'
+    cap: int | None = None
+    xlabel: str | None = 'Hour'
+    ylabel: str | None = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
-    #hills: dict = None
+    hills: dict = None
 
     # Ensure required fields and submitted optional fields exist
     @field_validator('in_field', 'out_field', 'cat_field', 'occ_weight_field')
@@ -154,19 +154,24 @@ class Scenario(BaseModel):
     #     # TODO - write str method for Scenario class
     #     return str(self.par)
 
-    # This is v1 pydantic which is now deprecated in favor of ConfigDict (see before field declarations)
-    # class Config:
-    #     arbitrary_types_allowed = True
-
-
-
-
     # For now, the only method is make_hills which simply passes on the parameters model
     # to the module level make_hills function. This should make it easy to also call make_hills directly.
     def make_hills(self):
+        """
+        Wrapper for module level `hillmaker.make_hills()` function.
+
+        Returns
+        -------
+        dict stored in `hills` attribute of Scenario object
+
+        """
+        # Get dict version of pydantic model
         inputs_dict = self.model_dump()
+        # Remove output related attributes
+        inputs_dict.pop('hills', None)
+        # Pass remaining parameters to hillmaker.make_hills()
         self.hills = hm.make_hills(**inputs_dict)
-        return self
+        # return self
 
     def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
         """
@@ -178,105 +183,82 @@ class Scenario(BaseModel):
             Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
             Default='occupancy'
         day_of_week : str
-            Either of 'week', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'. Default='week'
+            Either of 'week', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'. Default='week'
 
         Returns
         -------
         plot object from matplotlib
 
         """
-        flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
-        flow_metric_str = flow_metrics[flow_metric[0].lower()]
-        if day_of_week.lower() != 'week':
-            day_of_week_str = day_of_week[:3].lower()
-        else:
-            day_of_week_str = 'week'
 
-        plot_name = f'{self.params.scenario_name}_{flow_metric_str}_plot_{day_of_week_str}'
-        try:
-            plot = self.hills['plots'][plot_name]
-            return plot
-        except KeyError as error:
-            print(f'The plot {error} does not exist.')
-            return None
+        plot = hm.hills.get_plot(self.hills, self.scenario_name, flow_metric, day_of_week)
+        return plot
 
-    def prep_scenario(self) :
+        # flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}
+        # flow_metric_str = flow_metrics[flow_metric[0].lower()]
+        # if day_of_week.lower() != 'week':
+        #     day_of_week_str = day_of_week[:3].lower()
+        # else:
+        #     day_of_week_str = 'week'
+        #
+        # plot_name = f'{self.scenario_name}_{flow_metric_str}_plot_{day_of_week_str}'
+        # try:
+        #     plot = self.hills['plots'][plot_name]
+        #     return plot
+        # except KeyError as error:
+        #     print(f'The plot {error} does not exist.')
+        #     return None
+
+    def get_summary_df(self, flow_metric: str = 'occupancy',
+                       by_category: bool = True, stationary: bool = False):
         """
-        Do additional validation checking, pd.Timestamp -> np.datetime64 conversions and filtering stop data.
+        Get summary dataframe
 
         Parameters
         ----------
+        flow_metric : str
+            Either of 'arrivals', 'departures', 'occupancy' ('a', 'd', and 'o' are sufficient).
+            Default='occupancy'
+        by_category : bool
+            Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+        stationary : bool
+            Default=False corresponds to the standard nonstationary statistics (i.e. by TOD and DOW)
+
+        Returns
+        -------
+        DataFrame
+
+        """
+        df = hm.hills.get_summary_df(self.hills, flow_metric='o', by_category=by_category, stationary=stationary)
+        return df
+
+    def get_bydatetime_df(self, by_category: bool = True):
+        """
+        Get bydatetime dataframe
+
+        Parameters
+        ----------
+        by_category : bool
+            Default=True corresponds to category specific statistics. A value of False gives overall statistics.
 
 
         Returns
         -------
-        Updated Scenario object
+        DataFrame
 
         """
-
-        try:
-            start_analysis_dt_ts = pd.Timestamp(self.params.start_analysis_dt)
-        except ValueError as error:
-            raise ValueError(f'Cannot convert {self.params.start_analysis_dt} to Timestamp\n{error}')
-
-        try:
-            end_analysis_dt_ts = pd.Timestamp(self.params.end_analysis_dt).floor("d") + pd.Timedelta(86399, "s")
-        except ValueError as error:
-            raise ValueError(f'Cannot convert {self.params.end_analysis_dt} to Timestamp\n{error}')
-
-        # numpy datetime64 versions of analysis span end points
-        # start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
-        self.params.start_analysis_dt = start_analysis_dt_ts.to_datetime64()
-        # end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
-        self.params.end_analysis_dt = end_analysis_dt_ts.to_datetime64()
-
-        # Looking for missing entry and departure timestamps
-        num_recs_missing_entry_ts = self.stops_df[self.in_field].isna().sum()
-        num_recs_missing_exit_ts = self.stops_df[self.out_field].isna().sum()
-        if num_recs_missing_entry_ts > 0:
-            logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
-
-        # Update departure timestamp for missing values if no_censored_departures=False
-        if not self.adjust_censored_departures:
-            # num_recs_uncensored = num_recs_missing_exit_ts
-            if num_recs_missing_exit_ts > 0:
-                msg = 'records with missing exit timestamps - end of analysis range used for occupancy purposes'
-                logger.info(
-                    f'{num_recs_missing_exit_ts} {msg}')
-                uncensored_out_field = f'{self.out_field}_uncensored'
-                uncensored_out_value = pd.Timestamp(self.end_analysis_dt).floor("d") + pd.Timedelta(1, "d")
-                self.stops_df[uncensored_out_field] = self.stops_df[self.out_field].fillna(
-                    value=uncensored_out_value)
-                active_out_field = uncensored_out_field
-            else:
-                # Records with missing departures will be ignored
-                active_out_field = self.out_field
-                if num_recs_missing_exit_ts > 0:
-                    logger.warning(
-                        f'{num_recs_missing_exit_ts} records with missing exit timestamps - records ignored')
-        else:
-            active_out_field = self.out_field
-
-        # Filter out records that don't overlap the analysis span or have missing entry timestamps
-        self.stops_df = self.stops_df.loc[(self.stops_df[self.in_field] < end_analysis_dt_ts) &
-                                          (~self.stops_df[self.in_field].isna()) &
-                                          (self.stops_df[active_out_field] >= start_analysis_dt_ts)]
-
-        # reset index of df to ensure sequential numbering
-        self.stops_df = self.stops_df.reset_index(drop=True)
-
-        return 0
+        df = hm.hills.get_bydatetime_df(self.hills, by_category=by_category)
+        return df
 
     def __str__(self):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
         return str(self.params.model_dump())
 
+
 def _create_scenario(params_dict: Optional[Dict] = None,
-                    params_path: Optional[str | Path] = None, **kwargs):
-
+                     params_path: Optional[str | Path] = None, **kwargs):
     """Function to gather inputs for a hillmaker scenario - will likely be removed"""
-
 
     # Create empty dict for input parameters
     params = {}
