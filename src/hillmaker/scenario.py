@@ -225,15 +225,14 @@ class Scenario(BaseModel):
         # Filter out records that don't overlap the analysis span or have missing entry and/or exit timestamps
         stops_preprocessed_df = \
             stops_preprocessed_df.loc[(stops_preprocessed_df[self.in_field] < self.end_analysis_dt) &
-                                                (~stops_preprocessed_df[self.in_field].isna()) &
-                                                (~stops_preprocessed_df[self.out_field].isna()) &
-                                                (stops_preprocessed_df[self.out_field] >= self.start_analysis_dt)]
+                                      (~stops_preprocessed_df[self.in_field].isna()) &
+                                      (~stops_preprocessed_df[self.out_field].isna()) &
+                                      (stops_preprocessed_df[self.out_field] >= self.start_analysis_dt)]
 
         # reset index of df to ensure sequential numbering
         stops_preprocessed_df = stops_preprocessed_df.reset_index(drop=True)
         self.stops_preprocessed_df = stops_preprocessed_df
         return self
-
 
     def compute_hills_stats(self):
         """

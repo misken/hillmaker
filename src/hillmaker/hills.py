@@ -290,47 +290,53 @@ def make_hills(scenario_name=None,
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
 
-    # Create the bydatetime DataFrame
+    # # Create the bydatetime DataFrame
+    # with HillTimer() as t:
+    #     starttime = t.start
+    #     bydt_dfs = make_bydatetime(scenario.stops_preprocessed_df,
+    #                                scenario.in_field,
+    #                                scenario.out_field,
+    #                                scenario.start_analysis_dt,
+    #                                scenario.end_analysis_dt,
+    #                                scenario.cat_field,
+    #                                scenario.bin_size_minutes,
+    #                                cat_to_exclude=scenario.cats_to_exclude,
+    #                                occ_weight_field=scenario.occ_weight_field,
+    #                                edge_bins=scenario.edge_bins)
+    #
+    # logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
+    #
+    # # Create the summary stats DataFrames
+    # summary_dfs = {}
+    # if scenario.nonstationary_stats or scenario.stationary_stats:
+    #     with HillTimer() as t:
+    #         summary_dfs = summarize(bydt_dfs,
+    #                                 nonstationary_stats=scenario.nonstationary_stats,
+    #                                 stationary_stats=scenario.stationary_stats,
+    #                                 percentiles=scenario.percentiles,
+    #                                 verbosity=scenario.verbosity)
+    #
+    #     logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
+
+    # Compute stats
     with HillTimer() as t:
         starttime = t.start
-        bydt_dfs = make_bydatetime(scenario.stops_preprocessed_df,
-                                   scenario.in_field,
-                                   scenario.out_field,
-                                   scenario.start_analysis_dt,
-                                   scenario.end_analysis_dt,
-                                   scenario.cat_field,
-                                   scenario.bin_size_minutes,
-                                   cat_to_exclude=scenario.cats_to_exclude,
-                                   occ_weight_field=scenario.occ_weight_field,
-                                   edge_bins=scenario.edge_bins)
-
-    logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
-
-    # Create the summary stats DataFrames
-    summary_dfs = {}
-    if scenario.nonstationary_stats or scenario.stationary_stats:
-        with HillTimer() as t:
-            summary_dfs = summarize(bydt_dfs,
-                                    nonstationary_stats=scenario.nonstationary_stats,
-                                    stationary_stats=scenario.stationary_stats,
-                                    percentiles=scenario.percentiles,
-                                    verbosity=scenario.verbosity)
-
-        logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
+        hills = compute_hills_stats(scenario_obj=scenario)
+    logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
 
     # Export results to csv if requested
     if scenario.export_bydatetime_csv:
         with HillTimer() as t:
-            export_bydatetime(bydt_dfs, scenario.scenario_name, scenario.output_path)
+            export_bydatetime(hills['bydatetime'], scenario.scenario_name, scenario.output_path)
 
         logger.info(f"By datetime exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
     if scenario.export_summaries_csv:
         with HillTimer() as t:
             if scenario.nonstationary_stats:
-                export_summaries(summary_dfs, scenario.scenario_name, scenario.output_path, 'nonstationary')
+                export_summaries(hills['summaries'], scenario.scenario_name, scenario.output_path, 'nonstationary')
             if scenario.stationary_stats:
-                export_summaries(summary_dfs, scenario.scenario_name, scenario.output_path, 'stationary')
+                export_summaries(hills['summaries'], scenario.scenario_name, scenario.output_path, 'stationary')
 
         logger.info(f"Summaries exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
@@ -338,8 +344,8 @@ def make_hills(scenario_name=None,
     plots = {}
     if scenario.make_week_plot:
         with HillTimer() as t:
-            for metric in summary_dfs['nonstationary']['dow_binofday']:
-                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
+            for metric in hills['summaries']['nonstationary']['dow_binofday']:
+                fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
 
                 week_range_str = 'week'
@@ -356,8 +362,8 @@ def make_hills(scenario_name=None,
     # Create and export individual day of week plots if requested
     if scenario.make_dow_plot:
         with HillTimer() as t:
-            for metric in summary_dfs['nonstationary']['dow_binofday']:
-                fullwk_df = summary_dfs['nonstationary']['dow_binofday'][metric]
+            for metric in hills['summaries']['nonstationary']['dow_binofday']:
+                fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
                 fullwk_df = fullwk_df.reset_index()
                 for dow in fullwk_df['dow_name'].unique():
                     dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
@@ -371,12 +377,9 @@ def make_hills(scenario_name=None,
         logger.info(f"Individual day of week plots created (seconds): {t.interval:.4f}")
 
     if len(plots) > 0:
-        hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs, 'plots': plots}
-    else:
-        hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs}
+        hills['plots'] = plots
 
-    hills['settings'] = {'scenario_name': scenario.scenario_name,
-                         'cat_field': scenario.cat_field}
+    hills['settings'] = {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}
 
     # All done
     endtime = t.end
