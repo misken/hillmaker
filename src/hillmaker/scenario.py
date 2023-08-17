@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from enum import IntEnum
 
 import pandas as pd
+import numpy as np
 from pydantic import BaseModel, field_validator, model_validator, confloat, FieldValidationInfo, ConfigDict
 import hillmaker as hm
 
@@ -69,13 +70,13 @@ class Scenario(BaseModel):
     stationary_stats : bool, optional
        If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
     export_bydatetime_csv : bool, optional
-       If True, bydatetime DataFrames are exported to csv files. Default is True.
+       If True, bydatetime DataFrames are exported to csv files. Default is False.
     export_summaries_csv : bool, optional
-       If True, summary DataFrames are exported to csv files. Default is True.
+       If True, summary DataFrames are exported to csv files. Default is False.
     make_dow_plot : bool, optional
-       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
+       If True, day of week plots are created for occupancy, arrival, and departure. Default is False.
     make_week_plot : bool, optional
-       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
+       If True, full week plots are created for occupancy, arrival, and departure. Default is False.
     export_dow_plot : bool, optional
        If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
     export_week_plot : bool, optional
@@ -91,6 +92,10 @@ class Scenario(BaseModel):
 
     Attributes
     ----------
+    stops_preprocessed_df : DataFrame (initialized to None)
+        Preprocessed dataframe that only contains necessary fields and does not include records with missing
+            timestamps for the entry and/or exit time. This `DataFrame` is the one used for hill making.
+
     hills : dict (initialized to None)
         Stores results of `make_hills`.
 
@@ -105,8 +110,8 @@ class Scenario(BaseModel):
     out_field: str
     # TODO - what if a pandas Timestamp or numpy datetime64 is passed in?
     # See https://github.com/pydantic/pydantic/discussions/6972
-    start_analysis_dt: date | datetime | pd.Timestamp
-    end_analysis_dt: date | datetime | pd.Timestamp
+    start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
+    end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     # Optional parameters
     cat_field: str = None
     bin_size_minutes: int = 60
@@ -117,16 +122,18 @@ class Scenario(BaseModel):
     stationary_stats: bool = True
     edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
     output_path: str | Path = Path('.')
-    export_bydatetime_csv: bool = True
-    export_summaries_csv: bool = True
-    make_dow_plot: bool = True
-    make_week_plot: bool = True
+    export_bydatetime_csv: bool = False
+    export_summaries_csv: bool = False
+    make_dow_plot: bool = False
+    make_week_plot: bool = False
     export_dow_plot: bool = False
     export_week_plot: bool = False
     cap: int | None = None
     xlabel: str | None = 'Hour'
     ylabel: str | None = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
+    # Attributes
+    stops_preprocessed_df: pd.DataFrame | None = None
     hills: dict | None = None
 
     # Ensure required fields and submitted optional fields exist
@@ -136,18 +143,110 @@ class Scenario(BaseModel):
             raise ValueError(f'{v} is not a column in the dataframe')
         return v
 
-    @field_validator('end_analysis_dt')
-    def date_relationship(cls, v: str, info: FieldValidationInfo):
-        if v <= info.data['start_analysis_dt']:
-            raise ValueError(f'end date must be > start date')
-        return v
+    @field_validator('start_analysis_dt', 'end_analysis_dt')
+    def validate_start_end_date(cls, v: date | datetime, info: FieldValidationInfo):
+        """
+        Ensure start and end dates for analysis are convertible to numpy datetime64 and do the conversion.
 
-    # Ensure bin_size_minutes divides into 1440 with no remainder
+        Parameters
+        ----------
+        v
+        info
+
+        Returns
+        -------
+
+        """
+
+        try:
+            analysis_dt_ts = pd.Timestamp(v)
+            analysis_dt_np = analysis_dt_ts.to_datetime64()
+            return analysis_dt_np
+        except ValueError as error:
+            raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
+
     @field_validator('bin_size_minutes')
     def bin_size_minutes_divides(cls, v: int):
+        """
+        Ensure bin_size_minutes divides into 1440 with no remainder
+
+        Parameters
+        ----------
+        v : int
+
+        Returns
+        -------
+        int
+        """
         if 1440 % v > 0:
             raise ValueError('bin_size_minutes must divide into 1440 with no remainder')
         return v
+
+    @model_validator(mode='after')
+    def date_relationship(self) -> 'Scenario':
+        """
+        Start date for analysis must be before end date.
+
+        Returns
+        -------
+        Scenario
+
+        """
+        if self.end_analysis_dt <= self.start_analysis_dt:
+            raise ValueError(f'end date must be > start date')
+        return self
+
+    @model_validator(mode='after')
+    def preprocess_stops_df(self) -> 'Scenario':
+        """
+        Create preprocessed dataframe that only contains necessary fields and does not include records with missing
+        timestamps for the entry and/or exit time.
+
+        Returns
+        -------
+        Scenario - `stops_preprocessed_df` is populated
+
+        """
+
+        # Count missing timestamps
+        num_recs_missing_entry_ts = self.stops_df[self.in_field].isna().sum()
+        num_recs_missing_exit_ts = self.stops_df[self.out_field].isna().sum()
+        if num_recs_missing_entry_ts > 0:
+            logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
+        if num_recs_missing_exit_ts > 0:
+            logger.warning(f'{num_recs_missing_exit_ts} records with missing exit timestamps - records ignored')
+
+        # Create mutable copy of stops_df containing only necessary fields
+        stops_preprocessed_df = pd.DataFrame(
+            {self.in_field: self.stops_df[self.in_field], self.out_field: self.stops_df[self.out_field]})
+        if self.cat_field is not None:
+            stops_preprocessed_df[self.cat_field] = self.stops_df[self.cat_field]
+
+        # Filter out records that don't overlap the analysis span or have missing entry and/or exit timestamps
+        stops_preprocessed_df = \
+            stops_preprocessed_df.loc[(stops_preprocessed_df[self.in_field] < self.end_analysis_dt) &
+                                                (~stops_preprocessed_df[self.in_field].isna()) &
+                                                (~stops_preprocessed_df[self.out_field].isna()) &
+                                                (stops_preprocessed_df[self.out_field] >= self.start_analysis_dt)]
+
+        # reset index of df to ensure sequential numbering
+        stops_preprocessed_df = stops_preprocessed_df.reset_index(drop=True)
+        self.stops_preprocessed_df = stops_preprocessed_df
+        return self
+
+
+    def compute_hills_stats(self):
+        """
+        Computes the bydatetime and summary statistics (no plotting or exporting).
+
+        Returns
+        -------
+        dict stored in `hills` attribute of Scenario object
+
+        """
+
+        hills = hm.hills.compute_hills_stats(scenario_obj=self)
+        self.hills = hills
 
     def make_hills(self):
         """
@@ -159,11 +258,15 @@ class Scenario(BaseModel):
 
         """
         # Get dict version of pydantic model
-        inputs_dict = self.model_dump()
-        # Remove output related attributes
-        inputs_dict.pop('hills', None)
-        # Pass remaining parameters to hillmaker.make_hills()
-        self.hills = hm.make_hills(**inputs_dict)
+        # inputs_dict = self.model_dump()
+        # # Remove output related attributes
+        # non_input_attributes = ['hills', 'stops_preprocessed_df']
+        # for att in non_input_attributes:
+        #     inputs_dict.pop(att, None)
+        #
+        # # Pass remaining parameters to hillmaker.make_hills()
+        # self.hills = hm.make_hills(**inputs_dict)
+        self.hills = hm.make_hills(scenario_obj=self)
         # return self
 
     def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):

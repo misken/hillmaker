@@ -13,7 +13,7 @@ def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
                    xlabel: str = 'Hour', ylabel: str = 'Patients',
                    export_png: bool = False):
     """
-    Exports day of week plot for occupancy, arrival, and departure statistics
+    Makes and optionally exports day of week plot for occupancy, arrival, and departure statistics
 
     Takes output DataFrames of `summarize.summarize` and plots mean and percentile
     values for occupancy, arrival, and departure categories. Designed to be run in
