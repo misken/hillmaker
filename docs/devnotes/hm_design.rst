@@ -12,17 +12,25 @@ Config files
 ----------------
 https://stackoverflow.com/questions/65283208/toml-vs-yaml-vs-strictyaml
 
+TUI or GUI
+-----------
+
+Gooey, dearPyGui
+Textual and rich
+
 
 
 Possible classes
 ================
 
 
-Scenario
+HillsScenario
 --------
 
 An *scenario* is the basic unit of analysis and is defined by an input
 dataset (stop data) and a set of input parameter values.
+
+https://www.bugbytes.io/posts/introduction-to-pydantic/
 
 Properties
 ^^^^^^^^^^

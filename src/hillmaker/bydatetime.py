@@ -1,18 +1,18 @@
 """
 The :mod:`hillmaker.bydatetime` module includes functions for computing occupancy,
-arrival, and departure statistics by time bin of day and date.
+arrival, and departures by time bin of day and date.
 """
 
-# Copyright 2022 Mark Isken
+# Copyright 2022-2023 Mark Isken
 
 import logging
+from typing import List
 
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from pandas import Series
 from pandas import Timestamp
-from datetime import datetime
 from pandas.tseries.offsets import Minute
 
 import hillmaker.hmlib as hmlib
@@ -28,16 +28,18 @@ LATE_END_ANALYSIS_TOLERANCE = 48.0
 logger = logging.getLogger(__name__)
 
 
-def make_bydatetime(stops_df, infield, outfield,
-                    start_analysis_np, end_analysis_np, catfield=None,
-                    bin_size_minutes=60,
-                    cat_to_exclude=None,
-                    totals=1,
-                    occ_weight_field=None,
-                    edge_bins=1,
-                    verbosity=0):
+
+def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
+                    start_analysis_np: np.datetime64 | Timestamp,
+                    end_analysis_np: np.datetime64 | Timestamp,
+                    catfield: str | List[str] = None,
+                    bin_size_minutes: int = 60,
+                    cat_to_exclude: List[str] = None,
+                    occ_weight_field: str = None,
+                    edge_bins: int = 1):
+
     """
-    Create bydatetime tablefrom which summary statistics can be computed.
+    Create bydatetime table from which summary statistics can be computed.
 
     Parameters
     ----------
@@ -66,19 +68,12 @@ def make_bydatetime(stops_df, infield, outfield,
     cat_to_exclude: list of str, default=None
         Categories to ignore
 
-    edge_bins: int, default=1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
-
-    totals: int, default=1
-        0=no totals, 1=totals by datetime
-
     occ_weight_field : str, optional
         Column name corresponding to the weights to use for occupancy incrementing.
         If omitted, occupancy weights of 1.0 are used (i.e. pure occupancy)
 
-    verbosity : int, default=0
-        The verbosity level. The default is 0 where 0=logging.WARNING, 1=logging.INFO and
-        2=logging.DEBUG.
+    edge_bins: int, default=1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
 
     Returns
     -------
@@ -107,12 +102,12 @@ def make_bydatetime(stops_df, infield, outfield,
 
     # Check for mismatch between analysis dates and dates in stops_df
     check_date_ranges(start_analysis_np, end_analysis_np, min_intime, max_outtime)
-    logger.info(f'start analysis: {np.datetime_as_string(start_analysis_np, unit="D")}, end analysis: {np.datetime_as_string(end_analysis_np, unit="D")}')
-
+    logger.info(
+        f'start analysis: {np.datetime_as_string(start_analysis_np, unit="D")}, end analysis: {np.datetime_as_string(end_analysis_np, unit="D")}')
 
     # Occupancy weights
     # If no occ weight field specified, create fake one containing 1.0 as values.
-    # Avoids having to check during dataframe iteration whether or not to use
+    # Avoids having to check during dataframe iteration whether to use
     # default occupancy weight.
     if occ_weight_field is None:
         occ_weight_vec = np.ones(len(stops_df.index), dtype=np.float64)
@@ -131,10 +126,10 @@ def make_bydatetime(stops_df, infield, outfield,
             catfield = [catfield]
     else:
         # No category field, create fake category field containing a single value
-        totlist = [TOTAL_STR] * len(stops_df)
-        totseries = Series(totlist, dtype=str, name=CONST_FAKE_CATFIELD_NAME)
-        totfield_df = DataFrame({CONST_FAKE_CATFIELD_NAME: totseries})
-        stops_df = pd.concat([stops_df, totfield_df], axis=1)
+        tot_list = [TOTAL_STR] * len(stops_df)
+        tot_series = Series(tot_list, dtype=str, name=CONST_FAKE_CATFIELD_NAME)
+        tot_field_df = DataFrame({CONST_FAKE_CATFIELD_NAME: tot_series})
+        stops_df = pd.concat([stops_df, tot_field_df], axis=1)
         catfield = [CONST_FAKE_CATFIELD_NAME]
         #do_totals = False
 
@@ -174,19 +169,19 @@ def make_bydatetime(stops_df, infield, outfield,
 
         # Compute inbin and outbin fraction arrays
         entry_bin_frac = in_bin_occ_frac(entry_bin, in_ts_np, out_ts_np,
-                                         start_analysis_np, bin_size_minutes, edge_bins=1)
+                                         start_analysis_np, bin_size_minutes, edge_bins=edge_bins)
         exit_bin_frac = out_bin_occ_frac(exit_bin, in_ts_np, out_ts_np,
-                                         start_analysis_np, bin_size_minutes, edge_bins=1)
+                                         start_analysis_np, bin_size_minutes, edge_bins=edge_bins)
 
-        # Create list of occupancy incrementor arrays
+        # Create list of occupancy incrementer arrays
         list_of_inc_arrays = [make_occ_inc(entry_bin[i], exit_bin[i],
                                            entry_bin_frac[i], exit_bin_frac[i],
                                            occ_weight[i]) for i in range(num_stop_recs)]
 
         # Create array of stop record types
         rec_type = cat_df.apply(lambda x:
-                                hmlib.stoprec_analysis_rltnshp(x[infield], x[outfield],
-                                                               start_analysis_np, end_analysis_np), axis=1).to_numpy()
+                                hmlib.stoprec_relationship_type(x[infield], x[outfield],
+                                                                start_analysis_np, end_analysis_np), axis=1).to_numpy()
 
         # Do the occupancy incrementing
         rec_counts = update_occ_incs(entry_bin, exit_bin, list_of_inc_arrays, rec_type, num_bins)
@@ -216,7 +211,7 @@ def make_bydatetime(stops_df, infield, outfield,
                                         (cat_df[infield] <= end_analysis_np)].index.size
 
         num_departures_stops = cat_df.loc[(cat_df[outfield] >= start_analysis_np) &
-                                        (cat_df[outfield] <= end_analysis_np)].index.size
+                                          (cat_df[outfield] <= end_analysis_np)].index.size
 
         logger.info(f'cat {cat} num_arrivals_hm {num_arrivals_hm:.0f} num_arrivals_stops {num_arrivals_stops}')
         logger.info(
@@ -267,13 +262,14 @@ def make_bydatetime(stops_df, infield, outfield,
 
     return bydt_dfs
 
-def check_date_ranges(start_analysis, end_analysis, min_in_date, max_out_date):
+
+def check_date_ranges(start_analysis_dt, end_analysis_dt, min_in_date, max_out_date):
     """
 
     Parameters
     ----------
-    start_analysis
-    end_analysis
+    start_analysis_dt
+    end_analysis_dt
     min_in_date
     max_out_date
 
@@ -282,14 +278,15 @@ def check_date_ranges(start_analysis, end_analysis, min_in_date, max_out_date):
 
     """
 
-    start_analysis_early_hrs = (min_in_date - start_analysis) / pd.Timedelta(1, unit="h")
-    end_analysis_late_hrs = (end_analysis - max_out_date) / pd.Timedelta(1, unit="h")
+    start_analysis_early_hrs = (min_in_date - start_analysis_dt) / pd.Timedelta(1, unit="h")
+    end_analysis_late_hrs = (end_analysis_dt - max_out_date) / pd.Timedelta(1, unit="h")
 
     if start_analysis_early_hrs > EARLY_START_ANALYSIS_TOLERANCE:
         logger.warning(f'Analysis starts {start_analysis_early_hrs:.2f} hours before first arrival')
 
     if end_analysis_late_hrs > LATE_END_ANALYSIS_TOLERANCE:
         logger.warning(f'Analysis ends {end_analysis_late_hrs:.2f} hours after last departure')
+
 
 def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_minutes, catfield=None):
     """
@@ -298,7 +295,6 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt, bin_size_mi
     results_arrays: dict of ndarrays
     """
 
-    bydt_dfs = {}
     rng_bydt = Series(pd.date_range(start_analysis_dt, end_analysis_dt, freq=Minute(bin_size_minutes)))
 
     dfs = []
@@ -371,23 +367,36 @@ def update_occ(occ, entry_bin, rec_type, list_of_inc_arrays):
                 raise LookupError(f'pos {pos} occ_inc {occ_inc}\n{error}')
 
 
-def in_bin_occ_frac(entry_bin, in_dt_np, out_dt_np, start_analysis_dt_np, bin_size_minutes, edge_bins=1):
+def in_bin_occ_frac(entry_bin: int,
+                    in_dt_np: np.datetime64,
+                    out_dt_np: np.datetime64,
+                    start_analysis_dt_np: np.datetime64,
+                    bin_size_minutes: int,
+                    edge_bins: int = 1):
     """
-    Computes fractional occupancy in inbin and outbin.
+    Computes fractional occupancy in arrival (entry) bin.
 
     Parameters
     ----------
-    in_dt_np: entry time (numpy datetime74[s])
-    bin_size_minutes: bin size in minutes
-    edge_bins: 1=fractional, 2=whole bin
+    entry_bin : int
+        bin in which entity arrives
+    in_dt_np : numpy datetime64[s]
+        entry time
+    out_dt_np : numpy datetime64[s]
+        exit time
+    start_analysis_dt_np : numpy datetime64[s]
+        datetime to start computing metrics
+    bin_size_minutes : int
+        bin size in minutes
+    edge_bins : int
+        1=fractional, 2=whole bin
 
     Returns
     -------
-    [inbin frac, outbin frac] where each is a real number in [0.0,1.0]
+    Entry bin fraction in [0.0,1.0]
 
     """
 
-    # inbin occupancy
     if edge_bins == 1:
         rel_in_time_secs = (in_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
         rel_out_time_secs = (out_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
@@ -400,27 +409,37 @@ def in_bin_occ_frac(entry_bin, in_dt_np, out_dt_np, start_analysis_dt_np, bin_si
 
     return inbin_occ_frac
 
+
 # This is new and untested.
-def out_bin_occ_frac(exit_bin, in_ts, out_ts, start_analysis_np, bin_size_minutes, edge_bins=1):
+def out_bin_occ_frac(exit_bin: int, in_dt_np, out_dt_np, start_analysis_dt_np,
+                     bin_size_minutes: int, edge_bins: int = 1):
     """
-    Computes fractional occupancy in inbin and outbin.
+    Computes fractional occupancy in departure (exit) bin.
 
     Parameters
     ----------
-    in_ts: entry time (Timestamp)
-    bin_size_minutes: bin size in minutes
-    edge_bins: 1=fractional, 2=whole bin
+    exit_bin : int
+        bin in which entity arrives
+    in_dt_np : numpy datetime64[s]
+        entry time
+    out_dt_np : numpy datetime64[s]
+        exit time
+    start_analysis_dt_np : numpy datetime64[s]
+        datetime to start computing metrics
+    bin_size_minutes : int
+        bin size in minutes
+    edge_bins : int
+        1=fractional, 2=whole bin
 
     Returns
     -------
-    [inbin frac, outbin frac] where each is a real number in [0.0,1.0]
+    Exit bin fraction in [0.0,1.0]
 
     """
 
-    # inbin occupancy
     if edge_bins == 1:
-        rel_in_time_secs = (in_ts - start_analysis_np).astype('timedelta64[s]').astype(np.float64)
-        rel_out_time_secs = (out_ts - start_analysis_np).astype('timedelta64[s]').astype(np.float64)
+        rel_in_time_secs = (in_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
+        rel_out_time_secs = (out_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
         rel_left_bin_edge_secs = exit_bin * bin_size_minutes * 60
         rel_left_edge_secs = np.maximum(rel_in_time_secs, rel_left_bin_edge_secs)
         out_bin_seconds = (rel_out_time_secs - rel_left_edge_secs)
@@ -432,7 +451,7 @@ def out_bin_occ_frac(exit_bin, in_ts, out_ts, start_analysis_np, bin_size_minute
 
 
 def make_occ_inc(in_bin: int, out_bin: int,
-                 in_frac: float, out_frac:float, occ_weight:float):
+                 in_frac: float, out_frac: float, occ_weight: float):
     """Create array of occupancy increments for a single stop
 
     Parameters
@@ -461,7 +480,7 @@ def make_occ_inc(in_bin: int, out_bin: int,
 
 def update_occ_incs(in_bins, out_bins, list_of_inc_arrays, rec_types, num_bins):
     """
-    Update the in_bin, out_bin, and occupancy incrementor array for each
+    Update the in_bin, out_bin, and occupancy incrementer array for each
     stop record based on the record type.
 
     Stops that fall entirely within the analysis range (type='inner') are unchanged.
@@ -475,7 +494,7 @@ def update_occ_incs(in_bins, out_bins, list_of_inc_arrays, rec_types, num_bins):
     out_bins: List[int]
         Exit bin for each stop
     list_of_inc_arrays: List[ndarray]
-        Occupancy incrementor array for each stop
+        Occupancy incrementer array for each stop
     rec_types: List[str]
         Record type for each stop
     num_bins: int
@@ -531,7 +550,7 @@ def update_occ_incs(in_bins, out_bins, list_of_inc_arrays, rec_types, num_bins):
 
 if __name__ == '__main__':
     # Required inputs
-    scenario = 'sslittle_ex01'
+    scenario = 'ss_little_ex01'
     in_fld_name = 'InRoomTS'
     out_fld_name = 'OutRoomTS'
     # cat_fld_name = 'PatType'
@@ -543,9 +562,9 @@ if __name__ == '__main__':
     output_path = './output/'
 
     # Create dfs
-    file_stopdata = './data/ShortStay.csv'
-    ss_df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
+    file_stop_data = './data/ShortStay.csv'
+    ss_df = pd.read_csv(file_stop_data, parse_dates=[in_fld_name, out_fld_name])
 
-    dfs = make_bydatetime(ss_df, in_fld_name, out_fld_name, Timestamp(start_analysis), Timestamp(end_analysis))
+    bydate_dfs = make_bydatetime(ss_df, in_fld_name, out_fld_name, Timestamp(start_analysis), Timestamp(end_analysis))
 
-    print(dfs.keys())
+    print(bydate_dfs.keys())

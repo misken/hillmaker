@@ -1,16 +1,22 @@
-# Copyright 2022 Mark Isken, Jacob Norman
+# Copyright 2022-2023 Mark Isken, Jacob Norman
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 from pathlib import Path
 
+def make_plots(hills: dict):
+    pass
 
-def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
-                     bin_size_minutes=60, cap=None, week_range='full week',
-                     xlabel='Hour', ylabel='Patients'):
+
+def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
+                   export_path: Path | str = Path('.'),
+                   bin_size_minutes: int = 60, cap: int = None,
+                   week_range: str = 'week',
+                   xlabel: str = 'Hour', ylabel: str = 'Patients',
+                   export_png: bool = False):
     """
-    Exports day of week plot for occupancy, arrival, and departure statistics
+    Makes and optionally exports day of week plot
 
     Takes output DataFrames of `summarize.summarize` and plots mean and percentile
     values for occupancy, arrival, and departure categories. Designed to be run in
@@ -18,7 +24,6 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
 
     Parameters
     ----------
-
     summary_df : DataFrame
         Single summary df from the output of `summarize.summarize`
     scenario_name : str
@@ -33,12 +38,14 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     cap : int, optional
         Capacity of area being analyzed, default is None
     week_range : str
-        Week range of summary df. Default is 'full week', can also take the form of
-        the first three characters of a day of week name (ex: 'Tue')
+        Week range of summary df. Default is 'week', can also take the form of
+        the first three characters of a day of week name (ex: 'tue')
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str
         y-axis label, default='Patients'
+    export_png : bool, default is False
+        If True, plot is exported to png file to `export_path`
     """
 
     plt.style.use('seaborn-darkgrid')
@@ -50,7 +57,8 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
 
     # Create a list to use as the X-axis values
     num_bins = num_days * 1440 / bin_size_minutes
-    base_date_for_first_dow = '01/05/2015'  # Pick any date with associated DOW you want to appear first on plot
+    # TODO: This is a Monday. Make flexible so any dow can be "first".
+    base_date_for_first_dow = '2015-01-05'
     timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
 
     # Choose appropriate major and minor tick locations
@@ -61,7 +69,7 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     ax1.set_xticks(major_tick_locations)
     ax1.set_xticks(minor_tick_locations, minor=True)
 
-    # Specify the mean occupancy and percentile values
+    # Specify the mean occupancy and percentile values. TODO - let user choose series to plot
     mean_occ = summary_df['mean']
     pctile_occ = summary_df['p95']
 
@@ -111,10 +119,13 @@ def export_hill_plot(summary_df, scenario_name, metric, export_path=Path('.'),
     ax1.legend(loc='best', frameon=True, facecolor='w')
 
     # save figure
-    week_range_str = week_range.lower().replace(' ', '_')
-    plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
-    png_wpath = Path(export_path, plot_png)
-    plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
+    if export_png:
+        week_range_str = week_range.lower().replace(' ', '_')
+        plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
+        png_wpath = Path(export_path, plot_png)
+        plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
 
     # Suppress plot output in notebook
     plt.close()
+
+    return fig1

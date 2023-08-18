@@ -7,24 +7,28 @@ import hillmaker as hm
 file_stopdata = './fixtures/ShortStay2_10pct.csv'
 
 # Required inputs
-scenario = 'sstest_60'
-in_fld_name = 'InRoomTS'
-out_fld_name = 'OutRoomTS'
-cat_fld_name = 'PatType'
-start = '1/1/1996'
-end = '3/30/1996 23:45'
+scenario_name = 'ss_example_1'
+in_field_name = 'InRoomTS'
+out_field_name = 'OutRoomTS'
+start_date = '1996-01-01'
+end_date = pd.Timestamp('9/30/1996')
 
 # Optional inputs
-verbose=1
-tot_fld_name = 'SSU'
-bin_mins = 60
+
+cat_field_name = 'PatType'
+verbosity = 1 # INFO level logging
+output_path = './output'
+bin_size_minutes = 60
 
 
-df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 
-hm.make_hills(scenario, df, in_fld_name, out_fld_name,
-              start, end, cat_field=cat_fld_name,
-              bin_size_minutes=bin_mins,
-              output_path='./output', verbosity=verbose,
-              export_dow_png=True, export_week_png=True)
+df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
+
+hm.make_hills(scenario_name=scenario_name, stops_df=df,
+              in_field=in_field_name, out_field=out_field_name,
+              start_analysis_dt=start_date, end_analysis_dt=end_date,
+              cat_field=cat_field_name,
+              bin_size_minutes=bin_size_minutes,
+              output_path='./output', verbosity=verbosity)
+
 
