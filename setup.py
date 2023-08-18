@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 # Copyright 2022-23 Mark Isken
-=======
-# Copyright 2023 Mark Isken
->>>>>>> oo
+
 #
 from setuptools import find_packages, setup
 
