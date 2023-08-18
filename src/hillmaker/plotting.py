@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 from pathlib import Path
 
+def make_plots(hills: dict):
+    pass
+
 
 def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
                    export_path: Path | str = Path('.'),
@@ -13,7 +16,7 @@ def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
                    xlabel: str = 'Hour', ylabel: str = 'Patients',
                    export_png: bool = False):
     """
-    Exports day of week plot for occupancy, arrival, and departure statistics
+    Makes and optionally exports day of week plot
 
     Takes output DataFrames of `summarize.summarize` and plots mean and percentile
     values for occupancy, arrival, and departure categories. Designed to be run in
@@ -21,7 +24,6 @@ def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
 
     Parameters
     ----------
-
     summary_df : DataFrame
         Single summary df from the output of `summarize.summarize`
     scenario_name : str

@@ -5,6 +5,7 @@ from setuptools import find_packages, setup
 
 # read the contents of your README file
 from pathlib import Path
+
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
@@ -32,12 +33,11 @@ setup(name='hillmaker',
           'Topic :: Scientific/Engineering :: Information Analysis',
       ],
       entry_points={
-          'console_scripts': ['hillmaker=hillmaker.hills:main'],
+          'console_scripts': ['hillmaker=hillmaker.console:main'],
       },
       project_urls={
           'Source': 'http://github.com/misken/hillmaker',
           'Examples': 'https://github.com/misken/hillmaker-examples',
-      }, install_requires=['pandas>=1.4.0', 
-          'numpy>=1.22', 'tomli>=1.1.0', 'matplotlib', 'pydantic'],
+      }, install_requires=['pandas>=1.4.0', 'numpy>=1.22', 'tomli>=1.1.0', 'matplotlib', 'pydantic>=2.1.1'],
       python_requires='>=3.10'
       )
