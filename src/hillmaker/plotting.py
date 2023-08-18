@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 from pathlib import Path
 
+def make_plots(hills: dict):
+    pass
+
 
 def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
                    export_path: Path | str = Path('.'),
@@ -21,7 +24,6 @@ def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
 
     Parameters
     ----------
-
     summary_df : DataFrame
         Single summary df from the output of `summarize.summarize`
     scenario_name : str

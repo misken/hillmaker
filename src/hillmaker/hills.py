@@ -180,8 +180,8 @@ def make_hills(scenario_name=None,
                stationary_stats=True,
                export_bydatetime_csv=True,
                export_summaries_csv=True,
-               make_dow_plot=True,
-               make_week_plot=True,
+               make_all_dow_plots=True,
+               make_all_week_plots=True,
                export_dow_plot=False,
                export_week_plot=False,
                xlabel=None,
@@ -237,9 +237,9 @@ def make_hills(scenario_name=None,
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is True.
-    make_dow_plot : bool, optional
+    make_all_dow_plots : bool, optional
        If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
-    make_week_plot : bool, optional
+    make_all_week_plots : bool, optional
        If True, full week plots are created for occupancy, arrival, and departure. Default is True.
     export_dow_plot : bool, optional
        If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
@@ -275,7 +275,7 @@ def make_hills(scenario_name=None,
                             edge_bins=edge_bins,
                             stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
                             percentiles=percentiles, cap=cap,
-                            make_dow_plot=make_dow_plot, make_week_plot=make_week_plot,
+                            make_all_dow_plots=make_all_dow_plots, make_all_week_plots=make_all_week_plots,
                             export_bydatetime_csv=export_bydatetime_csv,
                             export_summaries_csv=export_summaries_csv,
                             export_dow_plot=export_dow_plot,
@@ -290,39 +290,12 @@ def make_hills(scenario_name=None,
     # This should inherit level from root logger
     logger = logging.getLogger(__name__)
 
-    # # Create the bydatetime DataFrame
-    # with HillTimer() as t:
-    #     starttime = t.start
-    #     bydt_dfs = make_bydatetime(scenario.stops_preprocessed_df,
-    #                                scenario.in_field,
-    #                                scenario.out_field,
-    #                                scenario.start_analysis_dt,
-    #                                scenario.end_analysis_dt,
-    #                                scenario.cat_field,
-    #                                scenario.bin_size_minutes,
-    #                                cat_to_exclude=scenario.cats_to_exclude,
-    #                                occ_weight_field=scenario.occ_weight_field,
-    #                                edge_bins=scenario.edge_bins)
-    #
-    # logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
-    #
-    # # Create the summary stats DataFrames
-    # summary_dfs = {}
-    # if scenario.nonstationary_stats or scenario.stationary_stats:
-    #     with HillTimer() as t:
-    #         summary_dfs = summarize(bydt_dfs,
-    #                                 nonstationary_stats=scenario.nonstationary_stats,
-    #                                 stationary_stats=scenario.stationary_stats,
-    #                                 percentiles=scenario.percentiles,
-    #                                 verbosity=scenario.verbosity)
-    #
-    #     logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
-
     # Compute stats
     with HillTimer() as t:
         starttime = t.start
         hills = compute_hills_stats(scenario_obj=scenario)
-    logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
+
+    logger.info(f"bydatetime and summaries by datetime created (seconds): {t.interval:.4f}")
 
     # Export results to csv if requested
     if scenario.export_bydatetime_csv:
@@ -342,7 +315,7 @@ def make_hills(scenario_name=None,
 
     # Create and export full week plots if requested
     plots = {}
-    if scenario.make_week_plot:
+    if scenario.make_all_week_plots:
         with HillTimer() as t:
             for metric in hills['summaries']['nonstationary']['dow_binofday']:
                 fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
@@ -354,13 +327,13 @@ def make_hills(scenario_name=None,
                 plot = make_hill_plot(fullwk_df, scenario.scenario_name, metric, export_path=scenario.output_path,
                                       bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
                                       xlabel=scenario.xlabel, ylabel=scenario.ylabel,
-                                      export_png=scenario.export_week_plot)
+                                      export_png=scenario.export_all_week_plots)
                 plots[plot_key] = plot
 
         logger.info(f"Full week plots created (seconds): {t.interval:.4f}")
 
     # Create and export individual day of week plots if requested
-    if scenario.make_dow_plot:
+    if scenario.make_all_dow_plots:
         with HillTimer() as t:
             for metric in hills['summaries']['nonstationary']['dow_binofday']:
                 fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
@@ -376,9 +349,11 @@ def make_hills(scenario_name=None,
 
         logger.info(f"Individual day of week plots created (seconds): {t.interval:.4f}")
 
+    # Add plots to the hills dict
     if len(plots) > 0:
         hills['plots'] = plots
 
+    # Add settings to hills dict
     hills['settings'] = {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}
 
     # All done
@@ -407,6 +382,13 @@ def get_plot(hills: dict, flow_metric: str = 'occupancy', day_of_week: str = 'we
     plot object from matplotlib
 
     """
+    try:
+        if 'plots' not in hills.keys():
+            raise KeyError
+    except KeyError as error:
+        print(f'No plots exist.')
+        return None
+
     scenario_name = hills['settings']['scenario_name']
 
     flow_metrics = {'a': 'arrivals', 'd': 'departures', 'o': 'occupancy'}

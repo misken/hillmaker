@@ -1,6 +1,15 @@
+import sys
 from argparse import ArgumentParser, Namespace, SUPPRESS
 
+import pandas as pd
+
 from hillmaker.hills import Scenario
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 
 def process_command_line(argv=None):
     """
@@ -9,19 +18,17 @@ def process_command_line(argv=None):
     Parameters
     ----------
     argv : list of arguments, or `None` for ``sys.argv[1:]``.
+
     Returns
     ----------
     Namespace representing the argument list.
-    """
-
-    """
 
     """
 
     # Create the parser
     parser = ArgumentParser(prog='hillmaker',
-                                     description='Occupancy analysis by time of day and day of week',
-                                     add_help=False)
+                            description='Occupancy analysis by time of day and day of week',
+                            add_help=False)
 
     required = parser.add_argument_group('required arguments (either on command line or via config file)')
     optional = parser.add_argument_group('optional arguments')
@@ -83,11 +90,6 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--no_totals', action='store_true',
-        help="Use to suppress totals (default is False)"
-    )
-
-    optional.add_argument(
         '--output_path', type=str, default='.',
         help="Destination path for exported csv files, default is current directory."
     )
@@ -138,11 +140,6 @@ def process_command_line(argv=None):
         default=[],  # default if nothing is provided
     )
 
-    optional.add_argument(
-        '--no_censored_departures', action='store_true',
-        help="If set (true), records with missing departure timestamps are ignored. By default, such records are assumed to be still in the system at the end_analysis_dt."
-    )
-
     # Add back help
     optional.add_argument(
         '-h',
@@ -155,6 +152,35 @@ def process_command_line(argv=None):
     # If argv == None, then ``parse_args`` will use ``sys.argv[1:]``.
     args = parser.parse_args(argv)
     return args
+
+
+def update_args(args, toml_config):
+    """
+    Update args namespace values from toml_config dictionary
+
+    Parameters
+    ----------
+    args : namespace
+    toml_config : dict from loading TOML config file
+
+    Returns
+    -------
+    Updated args namespace
+    """
+
+    # Convert args namespace to a dict
+    args_dict = vars(args)
+
+    # Flatten toml config (we know there are no key clashes and only one nesting level)
+    # Update args dict from config dict
+    for outerkey, outerval in toml_config.items():
+        for key, val in outerval.items():
+            args_dict[key] = val
+
+    # Convert dict to updated namespace
+    args = Namespace(**args_dict)
+    return args
+
 
 def main(argv=None):
     """
@@ -182,18 +208,20 @@ def main(argv=None):
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
     # Make hills
-    if export_week_png:
+    if args.export_week_png:
         make_week_plot = True
     else:
         make_week_plot = False
 
-    if export_dow_png:
+    if args.export_dow_png:
         make_dow_plot = True
     else:
         make_dow_plot = False
 
-    scenario = Scenario(args.scenario, stops_df, args.in_field, args.out_field,
-                        args.start_analysis_dt, args.end_analysis_dt, cat_field=args.cat_field,
+    scenario = Scenario(scenario_name=args.scenario, stops_df=stops_df,
+                        in_field=args.in_field, out_field=args.out_field,
+                        start_analysis_dt=args.start_analysis_dt, end_analysis_dt=args.end_analysis_dt,
+                        cat_field=args.cat_field,
                         output_path=args.output_path, verbosity=args.verbosity,
                         cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
                         make_week_plot=make_week_plot, make_dow_plot=make_dow_plot,

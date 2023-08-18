@@ -73,13 +73,13 @@ class Scenario(BaseModel):
        If True, bydatetime DataFrames are exported to csv files. Default is False.
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is False.
-    make_dow_plot : bool, optional
-       If True, day of week plots are created for occupancy, arrival, and departure. Default is False.
-    make_week_plot : bool, optional
-       If True, full week plots are created for occupancy, arrival, and departure. Default is False.
-    export_dow_plot : bool, optional
+    make_all_dow_plots : bool, optional
+       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
+    make_all_week_plots : bool, optional
+       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
+    export_all_dow_plots : bool, optional
        If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
-    export_week_plot : bool, optional
+    export_all_week_plots : bool, optional
        If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
     xlabel : str
         x-axis label, default='Hour'
@@ -124,10 +124,10 @@ class Scenario(BaseModel):
     output_path: str | Path = Path('.')
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
-    make_dow_plot: bool = False
-    make_week_plot: bool = False
-    export_dow_plot: bool = False
-    export_week_plot: bool = False
+    make_all_dow_plots: bool = True
+    make_all_week_plots: bool = True
+    export_all_dow_plots: bool = False
+    export_all_week_plots: bool = False
     cap: int | None = None
     xlabel: str | None = 'Hour'
     ylabel: str | None = 'Patients'
