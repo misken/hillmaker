@@ -113,7 +113,7 @@ class Scenario(BaseModel):
     start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     # Optional parameters
-    cat_field: str = None
+    cat_field: str | None = None
     bin_size_minutes: int = 60
     cats_to_exclude: List[str] | None = None
     occ_weight_field: str | None = None

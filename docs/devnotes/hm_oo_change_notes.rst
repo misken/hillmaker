@@ -4,6 +4,7 @@ Scenario class
 Added a Scenario class that contains
 
 - make_hills() method
+- compute_hill_stats() method
 - get_plot(self, flow_metric='occupancy', day_of_week='week') method
 - get_summary_df and get_bydatetime_df were added as methods
 - the class methods are just wrappers that call the module level functions. This allows us to not break the existing API and allow hillmaker to be used in an OO or non-OO way.

@@ -1,12 +1,70 @@
 # Copyright 2022-2023 Mark Isken, Jacob Norman
-
+import logging
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 from pathlib import Path
 
-def make_plots(hills: dict):
-    pass
+from hillmaker.scenario import Scenario
+from hillmaker.hmlib import HillTimer
+
+
+def make_week_dow_plots(scenario: Scenario, hills: dict):
+    """
+    Create weekly and all dow plots for arrivals, departures, and occupancy
+
+    Parameters
+    ----------
+    scenario : Scenario
+    hills : dict
+
+    Returns
+    -------
+    dict of matplotlib plot objects
+
+    """
+    # Logging
+    # This should inherit level from root logger
+    logger = logging.getLogger(__name__)
+
+    # Create and export full week plots if requested
+    plots = {}
+    if scenario.make_all_week_plots:
+        with HillTimer() as t:
+            for metric in hills['summaries']['nonstationary']['dow_binofday']:
+                fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
+                fullwk_df = fullwk_df.reset_index()
+
+                week_range_str = 'week'
+                plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
+
+                plot = make_hill_plot(fullwk_df, scenario.scenario_name, metric, export_path=scenario.output_path,
+                                      bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
+                                      xlabel=scenario.xlabel, ylabel=scenario.ylabel,
+                                      export_png=scenario.export_all_week_plots)
+                plots[plot_key] = plot
+
+        logger.info(f"Full week plots created (seconds): {t.interval:.4f}")
+
+    # Create and export individual day of week plots if requested
+    if scenario.make_all_dow_plots:
+        with HillTimer() as t:
+            for metric in hills['summaries']['nonstationary']['dow_binofday']:
+                fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
+                fullwk_df = fullwk_df.reset_index()
+                for dow in fullwk_df['dow_name'].unique():
+                    dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
+                    week_range_str = dow
+                    plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
+                    plot = make_hill_plot(dow_df, scenario.scenario_name, metric, export_path=scenario.output_path,
+                                          bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap, week_range=dow,
+                                          xlabel=scenario.xlabel, ylabel=scenario.ylabel,
+                                          export_png=scenario.export_all_dow_plots)
+                    plots[plot_key] = plot
+
+        logger.info(f"Individual day of week plots created (seconds): {t.interval:.4f}")
+
+    return plots
 
 
 def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,

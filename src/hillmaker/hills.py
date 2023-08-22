@@ -4,11 +4,11 @@
 
 
 from pathlib import Path
-# f rom argparse import ArgumentParser, Namespace, SUPPRESS
+from datetime import datetime, date
 import logging
-# from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, List
 
+import numpy as np
 import pandas as pd
 
 try:
@@ -19,8 +19,8 @@ except ModuleNotFoundError:
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
-from hillmaker.plotting import make_hill_plot
-from hillmaker.scenario import Scenario
+from hillmaker.plotting import make_week_dow_plots
+from hillmaker.scenario import Scenario, VerbosityEnum
 
 
 def setup_logger(verbosity: int):
@@ -166,30 +166,31 @@ def compute_hills_stats(scenario_name=None,
     return hills
 
 
-def make_hills(scenario_name=None,
-               stops_df=None,
-               in_field=None, out_field=None,
-               start_analysis_dt=None, end_analysis_dt=None,
-               cat_field=None,
-               bin_size_minutes=60,
-               percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
-               cats_to_exclude=None,
-               occ_weight_field=None,
-               cap=None,
-               nonstationary_stats=True,
-               stationary_stats=True,
-               export_bydatetime_csv=True,
-               export_summaries_csv=True,
-               make_all_dow_plots=True,
-               make_all_week_plots=True,
-               export_dow_plot=False,
-               export_week_plot=False,
-               xlabel=None,
-               ylabel=None,
-               output_path=Path('.'),
-               edge_bins=1,
-               verbosity=0,
-               scenario_obj=None):
+def make_hills(scenario_name: str = None,
+               stops_df: pd.DataFrame = None,
+               in_field: str = None, out_field: str = None,
+               start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64 = None,
+               end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64 = None,
+               cat_field: str =None,
+               bin_size_minutes: int = 60,
+               percentiles: Tuple | List = (0.25, 0.5, 0.75, 0.95, 0.99),
+               cats_to_exclude: str | None = None,
+               occ_weight_field: str | None = None,
+               cap: int | None = None,
+               nonstationary_stats: bool = True,
+               stationary_stats: bool = True,
+               export_bydatetime_csv: bool = True,
+               export_summaries_csv: bool = True,
+               make_all_dow_plots: bool = True,
+               make_all_week_plots: bool = True,
+               export_dow_plot: bool = False,
+               export_week_plot: bool = False,
+               xlabel: str | None = None,
+               ylabel: str | None = None,
+               output_path: str | Path = Path('.'),
+               edge_bins: int = 1,
+               verbosity: int = VerbosityEnum.WARNING,
+               scenario_obj: Scenario | None = None):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -313,44 +314,9 @@ def make_hills(scenario_name=None,
 
         logger.info(f"Summaries exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
-    # Create and export full week plots if requested
-    plots = {}
-    if scenario.make_all_week_plots:
-        with HillTimer() as t:
-            for metric in hills['summaries']['nonstationary']['dow_binofday']:
-                fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
-                fullwk_df = fullwk_df.reset_index()
-
-                week_range_str = 'week'
-                plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
-
-                plot = make_hill_plot(fullwk_df, scenario.scenario_name, metric, export_path=scenario.output_path,
-                                      bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
-                                      xlabel=scenario.xlabel, ylabel=scenario.ylabel,
-                                      export_png=scenario.export_all_week_plots)
-                plots[plot_key] = plot
-
-        logger.info(f"Full week plots created (seconds): {t.interval:.4f}")
-
-    # Create and export individual day of week plots if requested
-    if scenario.make_all_dow_plots:
-        with HillTimer() as t:
-            for metric in hills['summaries']['nonstationary']['dow_binofday']:
-                fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
-                fullwk_df = fullwk_df.reset_index()
-                for dow in fullwk_df['dow_name'].unique():
-                    dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
-                    week_range_str = dow
-                    plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
-                    plot = make_hill_plot(dow_df, scenario.scenario_name, metric, export_path=scenario.output_path,
-                                          bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap, week_range=dow,
-                                          xlabel=scenario.xlabel, ylabel=scenario.ylabel, export_png=export_dow_plot)
-                    plots[plot_key] = plot
-
-        logger.info(f"Individual day of week plots created (seconds): {t.interval:.4f}")
-
-    # Add plots to the hills dict
-    if len(plots) > 0:
+    # Plots
+    if scenario.make_all_week_plots or scenario.make_all_dow_plots:
+        plots = make_week_dow_plots(scenario, hills)
         hills['plots'] = plots
 
     # Add settings to hills dict
