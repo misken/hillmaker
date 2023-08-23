@@ -1,13 +1,16 @@
 from datetime import datetime, date
 from pathlib import Path
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Tuple
 from enum import IntEnum
 
 import pandas as pd
 import numpy as np
 from pydantic import BaseModel, field_validator, model_validator, confloat, FieldValidationInfo, ConfigDict
-import hillmaker as hm
+
+# import hillmaker as hm
+from hillmaker.hills import compute_hills_stats, make_hills, get_plot, get_summary_df, get_bydatetime_df
+
 
 try:
     import tomllib
@@ -61,8 +64,6 @@ class Scenario(BaseModel):
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    totals: bool
-        False=no totals, True=totals by datetime. Default is True.
     cap : int, optional
         Capacity of area being analyzed, default is None. Used only to add capacity line to occupancy plots.
     nonstationary_stats : bool, optional
@@ -244,7 +245,7 @@ class Scenario(BaseModel):
 
         """
 
-        hills = hm.hills.compute_hills_stats(scenario_obj=self)
+        hills = compute_hills_stats(self)
         self.hills = hills
 
     def make_hills(self):
@@ -264,8 +265,8 @@ class Scenario(BaseModel):
         #     inputs_dict.pop(att, None)
         #
         # # Pass remaining parameters to hillmaker.make_hills()
-        # self.hills = hm.make_hills(**inputs_dict)
-        self.hills = hm.make_hills(scenario_obj=self)
+
+        self.hills = make_hills(self)
         # return self
 
     def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
@@ -286,7 +287,7 @@ class Scenario(BaseModel):
 
         """
 
-        plot = hm.hills.get_plot(self.hills, flow_metric, day_of_week)
+        plot = get_plot(self.hills, flow_metric, day_of_week)
         return plot
 
     def get_summary_df(self, flow_metric: str = 'occupancy',
@@ -309,7 +310,7 @@ class Scenario(BaseModel):
         DataFrame
 
         """
-        df = hm.hills.get_summary_df(self.hills, flow_metric='o', by_category=by_category, stationary=stationary)
+        df = get_summary_df(self.hills, flow_metric=flow_metric, by_category=by_category, stationary=stationary)
         return df
 
     def get_bydatetime_df(self, by_category: bool = True):
@@ -327,43 +328,10 @@ class Scenario(BaseModel):
         DataFrame
 
         """
-        df = hm.hills.get_bydatetime_df(self.hills, by_category=by_category)
+        df = get_bydatetime_df(self.hills, by_category=by_category)
         return df
 
     def __str__(self):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
         return str(self.model_dump())
-
-
-def create_scenario(params_dict: Optional[Dict] = None,
-                    toml_path: Optional[str | Path] = None, **kwargs):
-    """Function to create a `Scenario` from a dict, a TOML file, and/or keyword args """
-
-    # Create empty dict for input parameters
-    params = {}
-
-    # If params_dict is not None, merge into params
-    if params_dict is not None:
-        params.update(params_dict)
-
-    # If params_path is not None, merge into params
-    if toml_path is not None:
-        with open(toml_path, "rb") as f:
-            params_toml_dict = tomllib.load(f)
-            params.update(params_toml_dict)
-
-    # Args passed to function get ultimate say
-    if len(kwargs) > 0:
-        params.update(kwargs)
-
-    # Now, from the params dictionary, create pydantic Parameters model
-    # Be nice to construct model so that some default values
-    # can be based on app settings
-    # Get application settings
-    # app_settings: Settings = Settings()
-
-    # Create Pydantic model to parse and validate inputs
-    scenario = Scenario(**params)
-
-    return scenario

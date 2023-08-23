@@ -22,9 +22,6 @@ output_path = "./output"
 # Floats and ints are specified in the normal way as values
 # Dates are specified as shown above
 
-# Booleans must be lower case - true or false
-no_censored_departures = true
-
 # For arguments that take lists, the entries look
 # just like Python lists and following the other rules above
 

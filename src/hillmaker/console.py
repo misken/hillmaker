@@ -3,7 +3,8 @@ from argparse import ArgumentParser, Namespace, SUPPRESS
 
 import pandas as pd
 
-from hillmaker.hills import Scenario
+from hillmaker.utils import update_params_from_toml
+from hillmaker import Scenario
 
 try:
     import tomllib
@@ -154,14 +155,14 @@ def process_command_line(argv=None):
     return args
 
 
-def update_args(args, toml_config):
+def update_args_from_toml(args, toml_dict):
     """
     Update args namespace values from toml_config dictionary
 
     Parameters
     ----------
     args : namespace
-    toml_config : dict from loading TOML config file
+    toml_dict : dict from loading TOML config file
 
     Returns
     -------
@@ -173,9 +174,7 @@ def update_args(args, toml_config):
 
     # Flatten toml config (we know there are no key clashes and only one nesting level)
     # Update args dict from config dict
-    for outerkey, outerval in toml_config.items():
-        for key, val in outerval.items():
-            args_dict[key] = val
+    args_dict = update_params_from_toml(args_dict, toml_dict)
 
     # Convert dict to updated namespace
     args = Namespace(**args_dict)
@@ -199,7 +198,7 @@ def main(argv=None):
         # Read inputs from config file
         with open(args.config, mode="rb") as toml_file:
             toml_config = tomllib.load(toml_file)
-            args = update_args(args, toml_config)
+            args = update_args_from_toml(args, toml_config)
 
     # Make sure all required args are specified
     check_for_required_args(args)

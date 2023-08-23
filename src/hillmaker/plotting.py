@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 from pathlib import Path
 
-from hillmaker.scenario import Scenario
+#from hillmaker.scenario import Scenario
 from hillmaker.hmlib import HillTimer
 
 
-def make_week_dow_plots(scenario: Scenario, hills: dict):
+def make_week_dow_plots(scenario: 'Scenario', hills: dict):
     """
     Create weekly and all dow plots for arrivals, departures, and occupancy
 

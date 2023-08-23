@@ -4,12 +4,7 @@
 
 
 from pathlib import Path
-from datetime import datetime, date
 import logging
-from typing import Dict, Optional, Tuple, List
-
-import numpy as np
-import pandas as pd
 
 try:
     import tomllib
@@ -20,7 +15,6 @@ from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize
 from hillmaker.hmlib import HillTimer
 from hillmaker.plotting import make_week_dow_plots
-from hillmaker.scenario import Scenario, VerbosityEnum
 
 
 def setup_logger(verbosity: int):
@@ -44,20 +38,7 @@ def setup_logger(verbosity: int):
     root_logger.addHandler(logger_handler)
 
 
-def compute_hills_stats(scenario_name=None,
-                        stops_df=None,
-                        in_field=None, out_field=None,
-                        start_analysis_dt=None, end_analysis_dt=None,
-                        cat_field=None,
-                        bin_size_minutes=60,
-                        percentiles=(0.25, 0.5, 0.75, 0.95, 0.99),
-                        cats_to_exclude=None,
-                        occ_weight_field=None,
-                        nonstationary_stats=True,
-                        stationary_stats=True,
-                        edge_bins=1,
-                        verbosity=0,
-                        scenario_obj=None):
+def compute_hills_stats(scenario):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -68,63 +49,15 @@ def compute_hills_stats(scenario_name=None,
     Parameters
     ----------
 
-    scenario_name : str
-        Used in output filenames
-    stops_df : DataFrame
-        Base data containing one row per visit
-    in_field : str
-        Column name corresponding to the arrival times
-    out_field : str
-        Column name corresponding to the departure times
-    start_analysis_dt : datetime-like, str
-        Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis_dt : datetime-like, str
-        Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    cat_field : str, optional
-        Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
-        Default is None
-    bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day, default is 60. Use a value that
-        divides into 1440 with no remainder
-    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
-        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    cats_to_exclude : list, optional
-        Category values to ignore, default is None
-    occ_weight_field : str, optional
-        Column name corresponding to the weights to use for occupancy incrementing, default is None
-        which corresponds to a weight of 1.0.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
-    nonstationary_stats : bool, optional
-       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    stationary_stats : bool, optional
-       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    verbosity : int, optional
-        Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
-    scenario_obj : Scenario (default is None)
-        If this function is called from the `Scenario.compute_hills_stats()` method, then this parameter will be
-        populated with the `Scenario` object. If calling the module level `hills.compute_hills_stats() function,
-        then just ignore this input. This is here just to preserve legacy access to module level functions for those
-        who don't want to use the object oriented API.
+
+    scenario : Scenario
+
 
     Returns
     -------
     dict of DataFrames
        The bydatetime DataFrames and all summary DataFrames.
     """
-
-    if scenario_obj is None:
-        # Create scenario instance so that validation and preprocessing get done
-        scenario = Scenario(scenario_name=scenario_name, stops_df=stops_df,
-                            in_field=in_field, out_field=out_field,
-                            start_analysis_dt=start_analysis_dt, end_analysis_dt=end_analysis_dt,
-                            cat_field=cat_field, bin_size_minutes=bin_size_minutes,
-                            cats_to_exclude=cats_to_exclude, occ_weight_field=occ_weight_field,
-                            edge_bins=edge_bins,
-                            stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
-                            percentiles=percentiles, verbosity=verbosity)
-    else:
-        scenario = scenario_obj
 
     # Logging
     setup_logger(scenario.verbosity)
@@ -133,7 +66,6 @@ def compute_hills_stats(scenario_name=None,
 
     # Create the bydatetime DataFrame
     with HillTimer() as t:
-        starttime = t.start
         bydt_dfs = make_bydatetime(scenario.stops_preprocessed_df,
                                    scenario.in_field,
                                    scenario.out_field,
@@ -166,31 +98,7 @@ def compute_hills_stats(scenario_name=None,
     return hills
 
 
-def make_hills(scenario_name: str = None,
-               stops_df: pd.DataFrame = None,
-               in_field: str = None, out_field: str = None,
-               start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64 = None,
-               end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64 = None,
-               cat_field: str =None,
-               bin_size_minutes: int = 60,
-               percentiles: Tuple | List = (0.25, 0.5, 0.75, 0.95, 0.99),
-               cats_to_exclude: str | None = None,
-               occ_weight_field: str | None = None,
-               cap: int | None = None,
-               nonstationary_stats: bool = True,
-               stationary_stats: bool = True,
-               export_bydatetime_csv: bool = True,
-               export_summaries_csv: bool = True,
-               make_all_dow_plots: bool = True,
-               make_all_week_plots: bool = True,
-               export_dow_plot: bool = False,
-               export_week_plot: bool = False,
-               xlabel: str | None = None,
-               ylabel: str | None = None,
-               output_path: str | Path = Path('.'),
-               edge_bins: int = 1,
-               verbosity: int = VerbosityEnum.WARNING,
-               scenario_obj: Scenario | None = None):
+def make_hills(scenario):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -201,90 +109,14 @@ def make_hills(scenario_name: str = None,
     Parameters
     ----------
 
-    scenario_name : str
-        Used in output filenames
-    stops_df : DataFrame
-        Base data containing one row per visit
-    in_field : str
-        Column name corresponding to the arrival times
-    out_field : str
-        Column name corresponding to the departure times
-    start_analysis_dt : datetime-like, str
-        Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis_dt : datetime-like, str
-        Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    cat_field : str, optional
-        Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
-        Default is None
-    bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day, default is 60. Use a value that
-        divides into 1440 with no remainder
-    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
-        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    cats_to_exclude : list, optional
-        Category values to ignore, default is None
-    occ_weight_field : str, optional
-        Column name corresponding to the weights to use for occupancy incrementing, default is None
-        which corresponds to a weight of 1.0.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
-    cap : int, optional
-        Capacity of area being analyzed, default is None
-    nonstationary_stats : bool, optional
-       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    stationary_stats : bool, optional
-       If True, overall, non time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    export_bydatetime_csv : bool, optional
-       If True, bydatetime DataFrames are exported to csv files. Default is True.
-    export_summaries_csv : bool, optional
-       If True, summary DataFrames are exported to csv files. Default is True.
-    make_all_dow_plots : bool, optional
-       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
-    make_all_week_plots : bool, optional
-       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
-    export_dow_plot : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
-    export_week_plot : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
-    xlabel : str
-        x-axis label, default='Hour'
-    ylabel : str
-        y-axis label, default='Patients'
-    output_path : str or Path, optional
-        Destination path for exported csv and png files, default is current directory
-    verbosity : int, optional
-        Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
-    scenario_obj : Scenario (default is None)
-        If this function is called from the `Scenario.compute_hills_stats()` method, then this parameter will be
-        populated with the `Scenario` object. If calling the module level `hills.compute_hills_stats() function,
-        then just ignore this input. This is here just to preserve legacy access to module level functions for those
-        who don't want to use the object oriented API.
+    scenario : Scenario
+
 
     Returns
     -------
     dict of DataFrames and plots
        The bydatetime DataFrames, all summary DataFrames and any plots created.
     """
-
-    if scenario_obj is None:
-        # Create scenario instance so that validation and preprocessing get done
-        scenario = Scenario(scenario_name=scenario_name, stops_df=stops_df,
-                            in_field=in_field, out_field=out_field,
-                            start_analysis_dt=start_analysis_dt, end_analysis_dt=end_analysis_dt,
-                            cat_field=cat_field, bin_size_minutes=bin_size_minutes,
-                            cats_to_exclude=cats_to_exclude, occ_weight_field=occ_weight_field,
-                            edge_bins=edge_bins,
-                            stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
-                            percentiles=percentiles, cap=cap,
-                            make_all_dow_plots=make_all_dow_plots, make_all_week_plots=make_all_week_plots,
-                            export_bydatetime_csv=export_bydatetime_csv,
-                            export_summaries_csv=export_summaries_csv,
-                            export_dow_plot=export_dow_plot,
-                            export_week_plot=export_week_plot,
-                            xlabel=xlabel, ylabel=ylabel,
-                            output_path=output_path, verbosity=verbosity)
-    else:
-        scenario = scenario_obj
 
     # Logging
     setup_logger(scenario.verbosity)
@@ -294,7 +126,7 @@ def make_hills(scenario_name: str = None,
     # Compute stats
     with HillTimer() as t:
         starttime = t.start
-        hills = compute_hills_stats(scenario_obj=scenario)
+        hills = compute_hills_stats(scenario)
 
     logger.info(f"bydatetime and summaries by datetime created (seconds): {t.interval:.4f}")
 
@@ -351,7 +183,7 @@ def get_plot(hills: dict, flow_metric: str = 'occupancy', day_of_week: str = 'we
     try:
         if 'plots' not in hills.keys():
             raise KeyError
-    except KeyError as error:
+    except KeyError:
         print(f'No plots exist.')
         return None
 
@@ -420,7 +252,7 @@ def get_summary_df(hills: dict, flow_metric: str = 'occupancy',
         df = hills['summaries'][time_key][cat_key][flow_metric_key]
         return df
     except KeyError as error:
-        print(f'Key does not exist.')
+        print(f'Key does not exist.\n{error}')
         return None
 
 
@@ -453,7 +285,7 @@ def get_bydatetime_df(hills: dict, by_category: bool = True):
         df = hills['bydatetime'][cat_key]
         return df
     except KeyError as error:
-        print(f'Key does not exist.')
+        print(f'Key does not exist.\n{error}')
         return None
 
 

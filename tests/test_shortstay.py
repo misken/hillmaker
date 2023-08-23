@@ -1,5 +1,3 @@
-
-
 import pandas as pd
 
 import hillmaker as hm
@@ -16,19 +14,16 @@ end_date = pd.Timestamp('9/30/1996')
 # Optional inputs
 
 cat_field_name = 'PatType'
-verbosity = 1 # INFO level logging
+verbosity = 1  # INFO level logging
 output_path = './output'
 bin_size_minutes = 60
 
-
-
 df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
 
+# Use legacy function interface
 hm.make_hills(scenario_name=scenario_name, stops_df=df,
               in_field=in_field_name, out_field=out_field_name,
               start_analysis_dt=start_date, end_analysis_dt=end_date,
               cat_field=cat_field_name,
               bin_size_minutes=bin_size_minutes,
               output_path='./output', verbosity=verbosity)
-
-
