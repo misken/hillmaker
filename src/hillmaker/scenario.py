@@ -102,7 +102,7 @@ class Scenario(BaseModel):
 
 
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra='forbid')
 
     # Required parameters
     scenario_name: str
@@ -114,6 +114,7 @@ class Scenario(BaseModel):
     start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     # Optional parameters
+    # stop_data_csv: str | Path | None = None
     cat_field: str | None = None
     bin_size_minutes: int = 60
     cats_to_exclude: List[str] | None = None

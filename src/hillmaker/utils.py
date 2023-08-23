@@ -64,6 +64,8 @@ def create_scenario(params_dict: Optional[Dict] = None,
         # Read in stop data to DataFrame
         stops_df = pd.read_csv(params['stop_data_csv'], parse_dates=[params['in_field'], params['out_field']])
         params['stops_df'] = stops_df
+        # Remove the csv key
+        params.pop('stop_data_csv', None)
 
     # Args passed to function get ultimate say
     if len(kwargs) > 0:
