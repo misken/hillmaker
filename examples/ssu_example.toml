@@ -1,5 +1,5 @@
 [scenario_data]
-scenario = "ssu_test_01"
+scenario_name = "ssu_test_01"
 stop_data_csv = "../data/ShortStay.csv"
 
 [fields]
@@ -21,9 +21,6 @@ output_path = "./output"
 # Strings should be surrounded in double quotes
 # Floats and ints are specified in the normal way as values
 # Dates are specified as shown above
-
-# Booleans must be lower case - true or false
-no_censored_departures = true
 
 # For arguments that take lists, the entries look
 # just like Python lists and following the other rules above
