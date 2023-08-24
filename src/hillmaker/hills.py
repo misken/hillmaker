@@ -48,10 +48,7 @@ def compute_hills_stats(scenario):
 
     Parameters
     ----------
-
-
     scenario : Scenario
-
 
     Returns
     -------
@@ -151,8 +148,8 @@ def make_hills(scenario):
         plots = make_week_dow_plots(scenario, hills)
         hills['plots'] = plots
 
-    # Add settings to hills dict
-    hills['settings'] = {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}
+    # Add settings to hills dict - now done in compute_hill_stats
+    # hills['settings'] = {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}
 
     # All done
     endtime = t.end
@@ -344,11 +341,12 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
         for metric in ['occupancy', 'arrivals', 'departures']:
 
             df = df_dict[metric]
-            file_summary_csv = scenario_name + '_' + metric
+            file_summary_csv_stem = f'{scenario_name}_{metric}'
             if len(d) > 0:
-                file_summary_csv = file_summary_csv + '_' + d + '.csv'
+                file_summary_csv = f'{file_summary_csv_stem}_{d}.csv'
             else:
-                file_summary_csv = file_summary_csv + '.csv'
+                # Stationary overall
+                file_summary_csv = f'{file_summary_csv_stem}.csv'
 
             Path(export_path).mkdir(parents=True, exist_ok=True)
             csv_wpath = Path(export_path, file_summary_csv)

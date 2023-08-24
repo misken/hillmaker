@@ -116,8 +116,8 @@ def make_hills(scenario_name: str,
                         make_all_dow_plots=make_all_dow_plots, make_all_week_plots=make_all_week_plots,
                         export_bydatetime_csv=export_bydatetime_csv,
                         export_summaries_csv=export_summaries_csv,
-                        export_dow_plot=export_dow_plot,
-                        export_week_plot=export_week_plot,
+                        export_all_dow_plots=export_dow_plot,
+                        export_all_week_plots=export_week_plot,
                         xlabel=xlabel, ylabel=ylabel,
                         output_path=output_path, verbosity=verbosity)
 

@@ -9,7 +9,7 @@ scenario_name = 'ss_example_1'
 in_field_name = 'InRoomTS'
 out_field_name = 'OutRoomTS'
 start_date = '1996-01-01'
-end_date = pd.Timestamp('9/30/1996')
+end_date = pd.Timestamp('3/30/1996')
 
 # Optional inputs
 
@@ -26,4 +26,5 @@ hm.make_hills(scenario_name=scenario_name, stops_df=df,
               start_analysis_dt=start_date, end_analysis_dt=end_date,
               cat_field=cat_field_name,
               bin_size_minutes=bin_size_minutes,
-              output_path='./output', verbosity=verbosity)
+              output_path='./output', verbosity=verbosity,
+              export_summaries_csv=True)
