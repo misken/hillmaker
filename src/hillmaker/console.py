@@ -36,7 +36,7 @@ def process_command_line(argv=None):
 
     # Add arguments
     required.add_argument(
-        '--scenario', type=str,
+        '--scenario_name', type=str,
         help="Used in output filenames"
     )
 
@@ -96,13 +96,13 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--export_week_png', action='store_true',
+        '--export_all_week_plots', action='store_true',
         help="If set (true), weekly plots are exported to OUTPUT_PATH"
 
     )
 
     optional.add_argument(
-        '--export_dow_png', action='store_true',
+        '--export_all_dow_plots', action='store_true',
         help="If set (true), individual day of week plots are exported to OUTPUT_PATH"
     )
 
@@ -207,24 +207,25 @@ def main(argv=None):
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
     # Make hills
-    if args.export_week_png:
+    if args.export_all_week_plots:
         make_week_plot = True
     else:
         make_week_plot = False
 
-    if args.export_dow_png:
+    if args.export_all_dow_plots:
         make_dow_plot = True
     else:
         make_dow_plot = False
 
-    scenario = Scenario(scenario_name=args.scenario, stops_df=stops_df,
+    scenario = Scenario(scenario_name=args.scenario_name, stops_df=stops_df,
                         in_field=args.in_field, out_field=args.out_field,
                         start_analysis_dt=args.start_analysis_dt, end_analysis_dt=args.end_analysis_dt,
                         cat_field=args.cat_field,
                         output_path=args.output_path, verbosity=args.verbosity,
                         cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
-                        make_week_plot=make_week_plot, make_dow_plot=make_dow_plot,
-                        export_week_png=args.export_week_png, export_dow_png=args.export_dow_png,
+                        make_all_week_plots=make_week_plot, make_all_dow_plots=make_dow_plot,
+                        export_all_week_plots=args.export_all_week_plots,
+                        export_all_dow_plots=args.export_all_dow_plots,
                         cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel)
 
     scenario.make_hills()
@@ -244,7 +245,8 @@ def check_for_required_args(args):
     """
 
     # Make sure all required args are present
-    required_args = ['scenario', 'stop_data_csv', 'in_field', 'out_field', 'start_analysis_dt', 'start_analysis_dt']
+    required_args = ['scenario_name', 'stop_data_csv', 'in_field', 'out_field',
+                     'start_analysis_dt', 'start_analysis_dt']
     # Convert args namespace to a dict
     args_dict = vars(args)
     for req_arg in required_args:
