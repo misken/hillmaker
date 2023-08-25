@@ -32,7 +32,8 @@ def make_hills(scenario_name: str,
                ylabel: str | None = None,
                output_path: str | Path = Path('.'),
                edge_bins: int = 1,
-               verbosity: int = VerbosityEnum.WARNING):
+               verbosity: int = VerbosityEnum.WARNING,
+               los_units: str = 'hours'):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -96,6 +97,11 @@ def make_hills(scenario_name: str,
         Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
+    los_units : str, optional
+        The time units to length of stay analysis.
+        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
+        value allowed is 'seoonds', largest is 'days'. The default
+        is 'hours'.
 
 
     Returns
@@ -119,7 +125,7 @@ def make_hills(scenario_name: str,
                         export_all_dow_plots=export_dow_plot,
                         export_all_week_plots=export_week_plot,
                         xlabel=xlabel, ylabel=ylabel,
-                        output_path=output_path, verbosity=verbosity)
+                        output_path=output_path, verbosity=verbosity, los_units=los_units)
 
     hills = hm.hills.make_hills(scenario)
     return hills

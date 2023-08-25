@@ -11,7 +11,6 @@ from pydantic import BaseModel, field_validator, model_validator, confloat, Fiel
 # import hillmaker as hm
 from hillmaker.hills import compute_hills_stats, make_hills, get_plot, get_summary_df, get_bydatetime_df
 
-
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -90,6 +89,11 @@ class Scenario(BaseModel):
         Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
+    los_units : str, optional
+        The time units to length of stay analysis.
+        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
+        value allowed is 'seoonds', largest is 'days'. The default
+        is 'hours'.
 
     Attributes
     ----------
@@ -134,6 +138,7 @@ class Scenario(BaseModel):
     xlabel: str | None = 'Hour'
     ylabel: str | None = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
+    los_units: str = 'hours'
     # Attributes
     stops_preprocessed_df: pd.DataFrame | None = None
     hills: dict | None = None
@@ -184,6 +189,27 @@ class Scenario(BaseModel):
             raise ValueError('bin_size_minutes must divide into 1440 with no remainder')
         return v
 
+    @field_validator('bin_size_minutes')
+    def los_units_strings(cls, v: str):
+        """
+        Ensure los_units is a valid time unit string
+
+        Parameters
+        ----------
+        v : str
+
+        Returns
+        -------
+        str
+        """
+        allowable = ['days', 'day',
+                     'hours', 'hour', 'hr', 'h',
+                     'minutes', 'minute', 'min', 'm',
+                     'seconds', 'second', 'sec']
+        if v not in allowable:
+            raise ValueError(f'{v} is not a valid time unit code. Must be one of {allowable}')
+        return v
+
     @model_validator(mode='after')
     def date_relationship(self) -> 'Scenario':
         """
@@ -230,6 +256,11 @@ class Scenario(BaseModel):
                                       (~stops_preprocessed_df[self.in_field].isna()) &
                                       (~stops_preprocessed_df[self.out_field].isna()) &
                                       (stops_preprocessed_df[self.out_field] >= self.start_analysis_dt)]
+
+        # Compute additional fields used for analysis
+        los_field_name = f'los_{self.los_units}'
+        stops_preprocessed_df[los_field_name] = (stops_preprocessed_df[self.out_field] -
+                                                 stops_preprocessed_df[self.in_field]) / pd.Timedelta(1, self.los_units)
 
         # reset index of df to ensure sequential numbering
         stops_preprocessed_df = stops_preprocessed_df.reset_index(drop=True)

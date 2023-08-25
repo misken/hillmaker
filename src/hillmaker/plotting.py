@@ -218,9 +218,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         divides into 1440 with no remainder
     cap : int, optional
         Capacity of area being analyzed, default is None
-    week_range : str
-        Week range of summary df. Default is 'week', can also take the form of
-        the first three characters of a day of week name (ex: 'tue')
+    first_dow : str
+        The first three characters of a day of week name (ex: 'tue') which appears first in the plot.
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str
@@ -300,8 +299,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     ax1.legend(loc='best', frameon=True, facecolor='w')
 
     # save figure
-    if export_png:
-        week_range_str = week_range.lower().replace(' ', '_')
+    if export_path is not None:
+        week_range_str = 'week'
         plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
         png_wpath = Path(export_path, plot_png)
         plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
