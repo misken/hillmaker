@@ -1,12 +1,15 @@
 # Copyright 2022-2023 Mark Isken, Jacob Norman
 import logging
+from typing import Tuple, List
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 from pathlib import Path
 
 # from hillmaker.scenario import Scenario
-from hillmaker.hmlib import HillTimer
+from hillmaker.hmlib import HillTimer, pctile_field_name
+
 
 
 def make_week_dow_plots(scenario: 'Scenario', hills: dict):
@@ -193,6 +196,9 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
 
                         bin_size_minutes: int = 60,
                         cap: int = None,
+                        percentiles: Tuple | List = (0.95,),
+                        pctile_colors: Tuple | List = ('grey'),
+                        pctile_linestyles: Tuple | List = ('-'),
                         first_dow: str = 'Mon',
                         xlabel: str = 'Hour',
                         ylabel: str = 'Patients',
@@ -218,14 +224,20 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         divides into 1440 with no remainder
     cap : int, optional
         Capacity of area being analyzed, default is None
+    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+        Which percentiles to plot. Default is (0.95)
+    pctile_colors : list of color codes (e.g. ['blue', 'green'] or list('gb')
+        line color for each percentile series plotted
+    pctile_linestyles : list of line styles (e.g. ['-', '--'])
+        line style for each percentile series plotted
     first_dow : str
         The first three characters of a day of week name (ex: 'tue') which appears first in the plot.
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str
         y-axis label, default='Patients'
-    export_png : bool, default is False
-        If True, plot is exported to png file to `export_path`
+    export_path : str or None, default is None
+        If not None, plot is exported to `export_path`
     """
 
     plt.style.use('seaborn-darkgrid')
@@ -235,10 +247,11 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     # infer number of days being plotted
     num_days = len(summary_df) / (60 / bin_size_minutes * 24)
 
-    # Create a list to use as the X-axis values
+    # Create a list of dates to use as the X-axis values
     num_bins = num_days * 1440 / bin_size_minutes
-    # TODO: This is a Monday. Make flexible so any dow can be "first".
-    base_date_for_first_dow = '2015-01-05'
+    base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
+                  'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
+    base_date_for_first_dow = base_dates[first_dow]
     timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
 
     # Choose appropriate major and minor tick locations
@@ -250,7 +263,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     ax1.set_xticks(minor_tick_locations, minor=True)
 
     # Specify the mean occupancy and percentile values. TODO - let user choose series to plot
-    mean_occ = summary_df['mean']
+    series_mean = summary_df['mean']
     pctile_occ = summary_df['p95']
 
     # Styling of bars, lines, plot area
@@ -261,10 +274,15 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     pctile_line_style = '-'
     pctile_color = 'grey'
 
+    # Color cycler example
+    # with plt.rc_context({'axes.prop_cycle': plt.cycler(color=['red', 'blue'])}):
+    #     plt.cycler(color=['red', 'blue']):
+    #     ax.plot(df)
+
     # Add data to the plot
     # Mean occupancy as bars - here's the GOTCHA involving the bar width
     bar_width = 1 / (1440 / bin_size_minutes)
-    ax1.bar(timestamps, mean_occ, label=f'Mean {metric}', width=bar_width, color=bar_color)
+    ax1.bar(timestamps, series_mean, label=f'Mean {metric}', width=bar_width, color=bar_color)
 
     # Some percentile as a line
     ax1.plot(timestamps, pctile_occ, linestyle=pctile_line_style, label=f'95th %ile {metric}', color=pctile_color)

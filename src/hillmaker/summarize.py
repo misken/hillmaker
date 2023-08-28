@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 from pandas.core.groupby import DataFrameGroupBy
 
+from hillmaker.hmlib import pctile_field_name
+
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
 
@@ -221,7 +223,7 @@ def summarize_stationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None
 
 def summary_stats(group: DataFrameGroupBy,
                   percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99),
-                  stub: str = ''):
+                  ):
     """
     Compute summary statistics on a pandas `DataFrameGroupBy` object.
 
@@ -231,25 +233,23 @@ def summary_stats(group: DataFrameGroupBy,
         The grouping is by category
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    stub : str
-        Used to create field names (e.g. '{stub}_mean')
 
     Returns
     -------
     Dict whose keys are '{stub}_{statistic}'. Dict values are `DataFrame` objects.
 
     """
-    stats = {stub + 'count': group.count(), stub + 'mean': group.mean(),
-             stub + 'min': group.min(),
-             stub + 'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
-             stub + 'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
-             stub + 'skew': group.skew(), 'kurt': group.kurt()}
+    stats = {'count': group.count(), 'mean': group.mean(),
+             'min': group.min(),
+             'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
+             'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
+             'skew': group.skew(), 'kurt': group.kurt()}
 
     if percentiles is not None:
         pctile_vals = group.quantile(percentiles)
 
         for p in percentiles:
-            pctile_name = f'{stub}p{int(100 * p):d}'
+            pctile_name = pctile_field_name(p)
             stats[pctile_name] = pctile_vals[p]
 
     return stats
