@@ -12,9 +12,9 @@ tests/output/
 
 
 # examples
-examples/scripts/output
-examples/notebooks/output
-examples/notebooks/.ipynb_checkpoints
-examples/notebooks/*.html
+examples/scripts/output/
+examples/notebooks/output/
+examples/notebooks/.ipynb_checkpoints/
+#examples/notebooks/*.html
 
 
