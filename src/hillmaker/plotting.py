@@ -1,15 +1,15 @@
 # Copyright 2022-2023 Mark Isken, Jacob Norman
 import logging
 from typing import Tuple, List
+from pathlib import Path
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
-from pathlib import Path
+from cycler import cycler
 
 # from hillmaker.scenario import Scenario
 from hillmaker.hmlib import HillTimer, pctile_field_name
-
 
 
 def make_week_dow_plots(scenario: 'Scenario', hills: dict):
@@ -193,16 +193,18 @@ def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
 
 
 def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
-
                         bin_size_minutes: int = 60,
                         cap: int = None,
-                        percentiles: Tuple | List = (0.95,),
-                        pctile_colors: Tuple | List = ('grey'),
-                        pctile_linestyles: Tuple | List = ('-'),
-                        first_dow: str = 'Mon',
+                        plot_style: str = 'ggplot',
+                        figsize: tuple = (15, 10),
+                        bar_color_mean: str = 'steelblue',
+                        percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                        pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
+                        pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
+                        pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
                         xlabel: str = 'Hour',
                         ylabel: str = 'Patients',
-                        export_path: Path | str | None = None,):
+                        export_path: Path | str | None = None, ):
     """
     Makes and optionally exports week plot for occupancy, arrivals, or departures.
 
@@ -216,22 +218,27 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     scenario_name : str
         Used in output filenames
     metric : str
-        Name of make_hills summary df being plotted
-    export_path : str or Path, optional
-        Destination path for exported png files, default is current directory
+        One of 'occupancy', 'arrivals', 'departures'
+    plot_style : str
+        Matplotlib built in style name. Default is 'ggplot'.
+    figsize : Tuple
+        Figure size. Default is (15, 10)
+    bar_color_mean : str
+        Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+        Which percentiles to plot. Default is (0.95)
+    pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb')
+        Line color for each percentile series plotted. Order should match order of percentiles list.
+        Default is ('black', 'grey').
+    pctile_linestyle : List or tuple of line styles (e.g. ['-', '--'])
+        Line style for each percentile series plotted. Default is ('-', '--').
+    pctile_linewidth : List or tuple of line widths in points (e.g. [1.0, 0.75])
+        Line width for each percentile series plotted. Default is (0.75, 0.75).
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60. Use a value that
         divides into 1440 with no remainder
     cap : int, optional
         Capacity of area being analyzed, default is None
-    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
-        Which percentiles to plot. Default is (0.95)
-    pctile_colors : list of color codes (e.g. ['blue', 'green'] or list('gb')
-        line color for each percentile series plotted
-    pctile_linestyles : list of line styles (e.g. ['-', '--'])
-        line style for each percentile series plotted
-    first_dow : str
-        The first three characters of a day of week name (ex: 'tue') which appears first in the plot.
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str
@@ -240,17 +247,20 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         If not None, plot is exported to `export_path`
     """
 
-    plt.style.use('seaborn-darkgrid')
-    fig1 = plt.figure(figsize=(15, 10))
+    plt.style.use(plot_style)
+    # with plt.style.context(plot_style):
+    # Create empty sized figure
+    fig1 = plt.figure(figsize=figsize)
     ax1 = fig1.add_subplot(1, 1, 1)
 
     # infer number of days being plotted
     num_days = len(summary_df) / (60 / bin_size_minutes * 24)
 
-    # Create a list of dates to use as the X-axis values
+    # Create a list to use as the X-axis values
     num_bins = num_days * 1440 / bin_size_minutes
     base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
                   'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
+    first_dow = 'mon'  # TODO - Need to resort series for plotting based on first_dow
     base_date_for_first_dow = base_dates[first_dow]
     timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
 
@@ -262,30 +272,21 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     ax1.set_xticks(major_tick_locations)
     ax1.set_xticks(minor_tick_locations, minor=True)
 
-    # Specify the mean occupancy and percentile values. TODO - let user choose series to plot
-    series_mean = summary_df['mean']
-    pctile_occ = summary_df['p95']
-
-    # Styling of bars, lines, plot area
-    # Style the bars for mean occupancy
-    bar_color = 'steelblue'
-
-    # Style the line for the occupancy percentile
-    pctile_line_style = '-'
-    pctile_color = 'grey'
-
-    # Color cycler example
-    # with plt.rc_context({'axes.prop_cycle': plt.cycler(color=['red', 'blue'])}):
-    #     plt.cycler(color=['red', 'blue']):
-    #     ax.plot(df)
-
     # Add data to the plot
     # Mean occupancy as bars - here's the GOTCHA involving the bar width
     bar_width = 1 / (1440 / bin_size_minutes)
-    ax1.bar(timestamps, series_mean, label=f'Mean {metric}', width=bar_width, color=bar_color)
+    ax1.bar(timestamps, summary_df['mean'], label=f'Mean {metric}', width=bar_width, color=bar_color_mean)
 
-    # Some percentile as a line
-    ax1.plot(timestamps, pctile_occ, linestyle=pctile_line_style, label=f'95th %ile {metric}', color=pctile_color)
+    # Percentiles as lines
+    # Style the line for the occupancy percentile
+    cycler_pctiles = (
+                cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
+    ax1.set_prop_cycle(cycler_pctiles)
+    # with plt.rc_context({'axes.prop_cycle': cycler_pctiles}):
+    for p in percentiles:
+        pct_name = pctile_field_name(p)
+        label = f'{pct_name[1:]}th %ile {metric}'
+        ax1.plot(timestamps, summary_df[pct_name], label=label)
 
     # establish capacity horizontal line if supplied
     if cap is not None and metric == 'occupancy':
@@ -306,7 +307,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     # Add other chart elements
 
     # Set plot and axis titles
-    sup_title = fig1.suptitle(f'{metric.title()} by Time of Day - {week_range.title()}\n{scenario_name.title()}',
+    week_range_str = 'week'
+    sup_title = fig1.suptitle(f'{metric.title()} by Time of Day - {week_range_str.title()}\n{scenario_name.title()}',
                               x=0.125, y=0.95, horizontalalignment='left', verticalalignment='top', fontsize=16)
 
     ax1.set_title('All category types', loc='left', style='italic')
@@ -318,7 +320,6 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
 
     # save figure
     if export_path is not None:
-        week_range_str = 'week'
         plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
         png_wpath = Path(export_path, plot_png)
         plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')

@@ -130,8 +130,8 @@ class Scenario(BaseModel):
     output_path: str | Path = Path('.')
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
-    make_all_dow_plots: bool = True
-    make_all_week_plots: bool = True
+    make_all_dow_plots: bool = False
+    make_all_week_plots: bool = False
     export_all_dow_plots: bool = False
     export_all_week_plots: bool = False
     cap: int | None = None
