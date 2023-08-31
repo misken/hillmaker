@@ -202,6 +202,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
                         pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                         pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                         pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
+                        cap_color: str = 'r',
                         xlabel: str = 'Hour',
                         ylabel: str = 'Patients',
                         export_path: Path | str | None = None, ):
@@ -239,6 +240,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         divides into 1440 with no remainder
     cap : int, optional
         Capacity of area being analyzed, default is None
+    cap_color : str
+        matplotlib color code, default='r'
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str
@@ -260,7 +263,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     num_bins = num_days * 1440 / bin_size_minutes
     base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
                   'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
-    first_dow = 'mon'  # TODO - Need to resort series for plotting based on first_dow
+    first_dow = 'mon'  # TODO - Generalize to have Sunday or Monday to be first day plotted
     base_date_for_first_dow = base_dates[first_dow]
     timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
 
@@ -289,8 +292,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         ax1.plot(timestamps, summary_df[pct_name], label=label)
 
     # establish capacity horizontal line if supplied
-    if cap is not None and metric == 'occupancy':
-        plt.axhline(cap, color='r', linestyle='--', label='Capacity')
+    if cap is not None and metric.lower()[0] == 'o':
+        plt.axhline(cap, color=cap_color, linestyle='--', label='Capacity')
 
     # Create formatter variables
     day_fmt = '' if num_days == 1 else '%a'
