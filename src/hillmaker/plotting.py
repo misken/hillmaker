@@ -209,6 +209,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
                         suptitle_properties: None | Dict = None,
                         title: str = 'All categories',
                         title_properties: None | Dict = None,
+                        legend_properties: None | Dict = None,
                         export_path: Path | str | None = None, ):
     f"""
     Makes and optionally exports week plot for occupancy, arrivals, or departures.
@@ -253,12 +254,13 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     suptitle : str, optional
         super title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
     suptitle_properties : None or dict, optional
-        Dict of `suptitle` properties
-        
+        Dict of `suptitle` properties, default=None   
     title : str, optional
         title for plot, default = 'All categories'
     title_properties : None or dict, optional
-        Dict of `title` properties
+        Dict of `title` properties, default=None
+    legend_properties : None or dict, optional
+        Dict of `legend` properties, default=None
 
     export_path : str or None, default is None
         If not None, plot is exported to `export_path`
@@ -327,20 +329,20 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
 
         # Be nice to have application and session level defaults - style sheets for app level?
         if suptitle_properties is None:
-            suptitle_properties = {'x': 0.125, 'y': 0.95,
-                                   'horizontalalignment': 'left', 'verticalalignment': 'top',
-                                   'fontsize': 16}
+            suptitle_properties = {}
         sup_title = fig1.suptitle(suptitle, **suptitle_properties)
 
         if title_properties is None:
-            title_properties = {'loc': 'left', 'style': 'italic'}
+            title_properties = {}
         ax1.set_title(title, **title_properties)
 
         ax1.set_xlabel(xlabel)
         ax1.set_ylabel(ylabel)
 
         # Legend
-        ax1.legend(loc='best', frameon=True, facecolor='w')
+        if legend_properties is None:
+            legend_properties = {}
+        ax1.legend(**legend_properties)
 
         # save figure
         if export_path is not None:
