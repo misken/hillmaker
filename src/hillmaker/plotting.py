@@ -1,6 +1,6 @@
 # Copyright 2022-2023 Mark Isken, Jacob Norman
 import logging
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 from pathlib import Path
 
 import pandas as pd
@@ -205,8 +205,12 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
                         cap_color: str = 'r',
                         xlabel: str = 'Hour',
                         ylabel: str = 'Patients',
+                        suptitle: str = 'Occupancy by time of day and day of week',
+                        suptitle_properties: None | Dict = None,
+                        title: str = 'All categories',
+                        title_properties: None | Dict = None,
                         export_path: Path | str | None = None, ):
-    """
+    f"""
     Makes and optionally exports week plot for occupancy, arrivals, or departures.
 
     Takes output DataFrames of `summarize.summarize` and plots mean and percentile
@@ -220,18 +224,18 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         Used in output filenames
     metric : str
         One of 'occupancy', 'arrivals', 'departures'
-    plot_style : str
+    plot_style : str, optional
         Matplotlib built in style name. Default is 'ggplot'.
-    figsize : Tuple
+    figsize : Tuple, optional
         Figure size. Default is (15, 10)
-    bar_color_mean : str
+    bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
     percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
-    pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb')
+    pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
         Line color for each percentile series plotted. Order should match order of percentiles list.
         Default is ('black', 'grey').
-    pctile_linestyle : List or tuple of line styles (e.g. ['-', '--'])
+    pctile_linestyle : List or tuple of line styles (e.g. ['-', '--']), optional
         Line style for each percentile series plotted. Default is ('-', '--').
     pctile_linewidth : List or tuple of line widths in points (e.g. [1.0, 0.75])
         Line width for each percentile series plotted. Default is (0.75, 0.75).
@@ -240,94 +244,111 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         divides into 1440 with no remainder
     cap : int, optional
         Capacity of area being analyzed, default is None
-    cap_color : str
+    cap_color : str, optional
         matplotlib color code, default='r'
-    xlabel : str
+    xlabel : str, optional
         x-axis label, default='Hour'
-    ylabel : str
+    ylabel : str, optional
         y-axis label, default='Patients'
+    suptitle : str, optional
+        super title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
+    suptitle_properties : None or dict, optional
+        Dict of `suptitle` properties
+        
+    title : str, optional
+        title for plot, default = 'All categories'
+    title_properties : None or dict, optional
+        Dict of `title` properties
+
     export_path : str or None, default is None
         If not None, plot is exported to `export_path`
     """
 
-    plt.style.use(plot_style)
-    # with plt.style.context(plot_style):
-    # Create empty sized figure
-    fig1 = plt.figure(figsize=figsize)
-    ax1 = fig1.add_subplot(1, 1, 1)
+    with plt.style.context(plot_style):
+        # Create empty sized figure
+        fig1 = plt.figure(figsize=figsize)
+        ax1 = fig1.add_subplot(1, 1, 1)
 
-    # infer number of days being plotted
-    num_days = len(summary_df) / (60 / bin_size_minutes * 24)
+        # infer number of days being plotted
+        num_days = len(summary_df) / (60 / bin_size_minutes * 24)
 
-    # Create a list to use as the X-axis values
-    num_bins = num_days * 1440 / bin_size_minutes
-    base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
-                  'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
-    first_dow = 'mon'  # TODO - Generalize to have Sunday or Monday to be first day plotted
-    base_date_for_first_dow = base_dates[first_dow]
-    timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
+        # Create a list to use as the X-axis values
+        num_bins = num_days * 1440 / bin_size_minutes
+        base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
+                      'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
+        first_dow = 'mon'  # TODO - Generalize to have Sunday or Monday to be first day plotted
+        base_date_for_first_dow = base_dates[first_dow]
+        timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
 
-    # Choose appropriate major and minor tick locations
-    major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 12:00:00', periods=7, freq='24H').tolist()
-    minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 06:00:00', periods=42, freq='4H').tolist()
+        # Choose appropriate major and minor tick locations
+        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 12:00:00', periods=7, freq='24H').tolist()
+        minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 06:00:00', periods=42, freq='4H').tolist()
 
-    # Set the tick locations for the axes object
-    ax1.set_xticks(major_tick_locations)
-    ax1.set_xticks(minor_tick_locations, minor=True)
+        # Set the tick locations for the axes object
+        ax1.set_xticks(major_tick_locations)
+        ax1.set_xticks(minor_tick_locations, minor=True)
 
-    # Add data to the plot
-    # Mean occupancy as bars - here's the GOTCHA involving the bar width
-    bar_width = 1 / (1440 / bin_size_minutes)
-    ax1.bar(timestamps, summary_df['mean'], label=f'Mean {metric}', width=bar_width, color=bar_color_mean)
+        # Add data to the plot
+        # Mean occupancy as bars - here's the GOTCHA involving the bar width
+        bar_width = 1 / (1440 / bin_size_minutes)
+        ax1.bar(timestamps, summary_df['mean'], label=f'Mean {metric}', width=bar_width, color=bar_color_mean)
 
-    # Percentiles as lines
-    # Style the line for the occupancy percentile
-    cycler_pctiles = (
-                cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
-    ax1.set_prop_cycle(cycler_pctiles)
-    # with plt.rc_context({'axes.prop_cycle': cycler_pctiles}):
-    for p in percentiles:
-        pct_name = pctile_field_name(p)
-        label = f'{pct_name[1:]}th %ile {metric}'
-        ax1.plot(timestamps, summary_df[pct_name], label=label)
+        # Percentiles as lines
+        # Style the line for the occupancy percentile
+        cycler_pctiles = (
+                    cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
+        ax1.set_prop_cycle(cycler_pctiles)
 
-    # establish capacity horizontal line if supplied
-    if cap is not None and metric.lower()[0] == 'o':
-        plt.axhline(cap, color=cap_color, linestyle='--', label='Capacity')
+        for p in percentiles:
+            pct_name = pctile_field_name(p)
+            label = f'{pct_name[1:]}th %ile {metric}'
+            ax1.plot(timestamps, summary_df[pct_name], label=label)
 
-    # Create formatter variables
-    day_fmt = '' if num_days == 1 else '%a'
-    dayofweek_formatter = DateFormatter(day_fmt)
-    qtrday_formatter = DateFormatter('%H')
+        # establish capacity horizontal line if supplied
+        if cap is not None and metric.lower()[0] == 'o':
+            plt.axhline(cap, color=cap_color, linestyle='--', label='Capacity')
 
-    # Format the tick labels
-    ax1.xaxis.set_major_formatter(dayofweek_formatter)
-    ax1.xaxis.set_minor_formatter(qtrday_formatter)
+        # Create formatter variables
+        day_fmt = '' if num_days == 1 else '%a'
+        dayofweek_formatter = DateFormatter(day_fmt)
+        qtrday_formatter = DateFormatter('%H')
 
-    # Slide the major tick labels underneath the default location by 20 points
-    ax1.tick_params(which='major', pad=20)
+        # Format the tick labels
+        ax1.xaxis.set_major_formatter(dayofweek_formatter)
+        ax1.xaxis.set_minor_formatter(qtrday_formatter)
 
-    # Add other chart elements
+        # Slide the major tick labels underneath the default location by 20 points
+        ax1.tick_params(which='major', pad=20)
 
-    # Set plot and axis titles
-    week_range_str = 'week'
-    sup_title = fig1.suptitle(f'{metric.title()} by Time of Day - {week_range_str.title()}\n{scenario_name.title()}',
-                              x=0.125, y=0.95, horizontalalignment='left', verticalalignment='top', fontsize=16)
+        # Add other chart elements
 
-    ax1.set_title('All category types', loc='left', style='italic')
-    ax1.set_xlabel(xlabel)
-    ax1.set_ylabel(ylabel)
+        # Set plot and axis titles
+        week_range_str = 'week'
 
-    # Legend
-    ax1.legend(loc='best', frameon=True, facecolor='w')
+        # Be nice to have application and session level defaults - style sheets for app level?
+        if suptitle_properties is None:
+            suptitle_properties = {'x': 0.125, 'y': 0.95,
+                                   'horizontalalignment': 'left', 'verticalalignment': 'top',
+                                   'fontsize': 16}
+        sup_title = fig1.suptitle(suptitle, **suptitle_properties)
 
-    # save figure
-    if export_path is not None:
-        plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
-        png_wpath = Path(export_path, plot_png)
-        plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
+        if title_properties is None:
+            title_properties = {'loc': 'left', 'style': 'italic'}
+        ax1.set_title(title, **title_properties)
 
-    # Suppress plot output in notebook
-    plt.close()
+        ax1.set_xlabel(xlabel)
+        ax1.set_ylabel(ylabel)
+
+        # Legend
+        ax1.legend(loc='best', frameon=True, facecolor='w')
+
+        # save figure
+        if export_path is not None:
+            plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
+            png_wpath = Path(export_path, plot_png)
+            plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
+
+        # Suppress plot output in notebook
+        plt.close()
 
     return fig1
