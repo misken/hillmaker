@@ -95,7 +95,7 @@ def compute_hills_stats(scenario):
     return hills
 
 
-def make_hills(scenario):
+def _make_hills(scenario):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 

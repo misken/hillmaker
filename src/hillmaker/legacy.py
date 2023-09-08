@@ -5,8 +5,8 @@ from datetime import datetime, date
 import numpy as np
 import pandas as pd
 
-import hillmaker as hm
 from hillmaker.scenario import Scenario, VerbosityEnum
+from hillmaker.hills import _make_hills
 
 
 def make_hills(scenario_name: str,
@@ -127,6 +127,6 @@ def make_hills(scenario_name: str,
                         xlabel=xlabel, ylabel=ylabel,
                         output_path=output_path, verbosity=verbosity, los_units=los_units)
 
-    hills = hm.hills.make_hills(scenario)
+    hills = _make_hills(scenario)
     return hills
 

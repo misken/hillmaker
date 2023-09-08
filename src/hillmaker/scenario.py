@@ -9,7 +9,7 @@ import numpy as np
 from pydantic import BaseModel, field_validator, model_validator, confloat, FieldValidationInfo, ConfigDict
 
 # import hillmaker as hm
-from hillmaker.hills import compute_hills_stats, make_hills, get_plot, get_summary_df, get_bydatetime_df
+from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
 
 try:
     import tomllib
@@ -298,7 +298,7 @@ class Scenario(BaseModel):
         #
         # # Pass remaining parameters to hillmaker.make_hills()
 
-        self.hills = make_hills(self)
+        self.hills = _make_hills(self)
         # return self
 
     def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):

@@ -325,7 +325,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         # Add other chart elements
 
         # Set plot and axis titles
-        week_range_str = 'week'
+
 
         # Be nice to have application and session level defaults - style sheets for app level?
         if suptitle_properties is None:
@@ -346,6 +346,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
 
         # save figure
         if export_path is not None:
+            week_range_str = 'week'
             plot_png = f'{scenario_name}_{metric}_plot_{week_range_str}.png'
             png_wpath = Path(export_path, plot_png)
             plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
