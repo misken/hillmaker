@@ -198,7 +198,7 @@ def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
     return fig1
 
 
-def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
+def make_week_hill_plot(summary_df: pd.DataFrame, metric: str,
                         bin_size_minutes: int = 60,
                         cap: int = None,
                         plot_style: str = 'ggplot',
@@ -217,6 +217,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
                         title_properties: None | Dict = None,
                         legend_properties: None | Dict = None,
                         first_dow: str = 'mon',
+                        scenario_name: str = '',
                         export_path: Path | str | None = None, ):
     f"""
     Makes and optionally exports week plot for occupancy, arrivals, or departures.
@@ -228,8 +229,6 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
     ----------
     summary_df : DataFrame
         Single summary df from the output of `summarize.summarize`
-    scenario_name : str
-        Used in output filenames
     metric : str
         One of 'occupancy', 'arrivals', 'departures'
     plot_style : str, optional
@@ -270,6 +269,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         Dict of `legend` properties, default=None
     first_dow : str, optional
         Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
+    scenario_name : str
+        Used in output filenames, default is ''
     export_path : str or None, default is None
         If not None, plot is exported to `export_path`
     """
