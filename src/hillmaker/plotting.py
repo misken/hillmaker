@@ -12,6 +12,12 @@ from cycler import cycler
 from hillmaker.hmlib import HillTimer, pctile_field_name
 
 
+def _plot_dow(dow, first_dow):
+    if dow < first_dow:
+        return dow + 7
+    else:
+        return dow
+
 def make_week_dow_plots(scenario: 'Scenario', hills: dict):
     """
     Create weekly and all dow plots for arrivals, departures, and occupancy
@@ -210,6 +216,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
                         title: str = 'All categories',
                         title_properties: None | Dict = None,
                         legend_properties: None | Dict = None,
+                        first_dow: str = 'mon',
                         export_path: Path | str | None = None, ):
     f"""
     Makes and optionally exports week plot for occupancy, arrivals, or departures.
@@ -261,7 +268,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         Dict of `title` properties, default=None
     legend_properties : None or dict, optional
         Dict of `legend` properties, default=None
-
+    first_dow : str, optional
+        Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
     export_path : str or None, default is None
         If not None, plot is exported to `export_path`
     """
@@ -278,9 +286,16 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         num_bins = num_days * 1440 / bin_size_minutes
         base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
                       'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
-        first_dow = 'mon'  # TODO - Generalize to have Sunday or Monday to be first day plotted
+        first_dow_map = {'sun': 6, 'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5}
+        first_dow_val = first_dow_map[first_dow]
+        # Adjust the axis labels for first_dow
         base_date_for_first_dow = base_dates[first_dow]
         timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
+        # Adjust the summary df for first_dow
+        occ_summary_df_plot = summary_df.copy()
+        occ_summary_df_plot.reset_index(inplace=True, drop=False)
+        occ_summary_df_plot['plot_dow'] = occ_summary_df_plot['day_of_week'].map(lambda d: _plot_dow(d, first_dow_val))
+        occ_summary_df_plot.sort_values(by=['plot_dow', 'bin_of_day'], inplace=True)
 
         # Choose appropriate major and minor tick locations
         major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 12:00:00', periods=7, freq='24H').tolist()
@@ -293,18 +308,18 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         # Add data to the plot
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
-        ax1.bar(timestamps, summary_df['mean'], label=f'Mean {metric}', width=bar_width, color=bar_color_mean)
+        ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}', width=bar_width, color=bar_color_mean)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
         cycler_pctiles = (
-                    cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
+                cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
         ax1.set_prop_cycle(cycler_pctiles)
 
         for p in percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric}'
-            ax1.plot(timestamps, summary_df[pct_name], label=label)
+            ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
 
         # establish capacity horizontal line if supplied
         if cap is not None and metric.lower()[0] == 'o':
@@ -325,8 +340,6 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         # Add other chart elements
 
         # Set plot and axis titles
-
-
         # Be nice to have application and session level defaults - style sheets for app level?
         if suptitle_properties is None:
             suptitle_properties = {}
@@ -355,3 +368,5 @@ def make_week_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: st
         plt.close()
 
     return fig1
+
+
