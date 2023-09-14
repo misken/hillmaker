@@ -91,9 +91,9 @@ class Scenario(BaseModel):
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
     los_units : str, optional
-        The time units to length of stay analysis.
+        The time units for length of stay analysis.
         See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
-        value allowed is 'seoonds', largest is 'days'. The default
+        value allowed is 'seconds', largest is 'days'. The default
         is 'hours'.
 
     Attributes
@@ -142,6 +142,7 @@ class Scenario(BaseModel):
     los_units: str = 'hours'
     # Attributes
     stops_preprocessed_df: pd.DataFrame | None = None
+    los_field_name: str | None = None
     hills: dict | None = None
 
     # Ensure required fields and submitted optional fields exist
@@ -266,6 +267,8 @@ class Scenario(BaseModel):
         # reset index of df to ensure sequential numbering
         stops_preprocessed_df = stops_preprocessed_df.reset_index(drop=True)
         self.stops_preprocessed_df = stops_preprocessed_df
+        self.los_field_name = los_field_name
+
         return self
 
     def compute_hills_stats(self):
