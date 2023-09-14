@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from pathlib import Path
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from enum import IntEnum
 
 import pandas as pd
@@ -9,8 +9,8 @@ import numpy as np
 from pydantic import BaseModel, field_validator, model_validator, confloat, FieldValidationInfo, ConfigDict
 
 # import hillmaker as hm
-from hillmaker.hills import compute_hills_stats, make_hills, get_plot, get_summary_df, get_bydatetime_df
-
+from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
+from hillmaker.plotting import make_week_hill_plot, make_daily_hill_plot
 
 try:
     import tomllib
@@ -90,6 +90,11 @@ class Scenario(BaseModel):
         Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
+    los_units : str, optional
+        The time units for length of stay analysis.
+        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
+        value allowed is 'seconds', largest is 'days'. The default
+        is 'hours'.
 
     Attributes
     ----------
@@ -126,16 +131,18 @@ class Scenario(BaseModel):
     output_path: str | Path = Path('.')
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
-    make_all_dow_plots: bool = True
-    make_all_week_plots: bool = True
+    make_all_dow_plots: bool = False
+    make_all_week_plots: bool = False
     export_all_dow_plots: bool = False
     export_all_week_plots: bool = False
     cap: int | None = None
     xlabel: str | None = 'Hour'
     ylabel: str | None = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
+    los_units: str = 'hours'
     # Attributes
     stops_preprocessed_df: pd.DataFrame | None = None
+    los_field_name: str | None = None
     hills: dict | None = None
 
     # Ensure required fields and submitted optional fields exist
@@ -182,6 +189,27 @@ class Scenario(BaseModel):
         """
         if 1440 % v > 0:
             raise ValueError('bin_size_minutes must divide into 1440 with no remainder')
+        return v
+
+    @field_validator('bin_size_minutes')
+    def los_units_strings(cls, v: str):
+        """
+        Ensure los_units is a valid time unit string
+
+        Parameters
+        ----------
+        v : str
+
+        Returns
+        -------
+        str
+        """
+        allowable = ['days', 'day',
+                     'hours', 'hour', 'hr', 'h',
+                     'minutes', 'minute', 'min', 'm',
+                     'seconds', 'second', 'sec']
+        if v not in allowable:
+            raise ValueError(f'{v} is not a valid time unit code. Must be one of {allowable}')
         return v
 
     @model_validator(mode='after')
@@ -231,9 +259,16 @@ class Scenario(BaseModel):
                                       (~stops_preprocessed_df[self.out_field].isna()) &
                                       (stops_preprocessed_df[self.out_field] >= self.start_analysis_dt)]
 
+        # Compute additional fields used for analysis
+        los_field_name = f'los_{self.los_units}'
+        stops_preprocessed_df[los_field_name] = (stops_preprocessed_df[self.out_field] -
+                                                 stops_preprocessed_df[self.in_field]) / pd.Timedelta(1, self.los_units)
+
         # reset index of df to ensure sequential numbering
         stops_preprocessed_df = stops_preprocessed_df.reset_index(drop=True)
         self.stops_preprocessed_df = stops_preprocessed_df
+        self.los_field_name = los_field_name
+
         return self
 
     def compute_hills_stats(self):
@@ -267,8 +302,106 @@ class Scenario(BaseModel):
         #
         # # Pass remaining parameters to hillmaker.make_hills()
 
-        self.hills = make_hills(self)
+        self.hills = _make_hills(self)
         # return self
+
+    def make_weekly_plot(self, metric: str = 'occupancy',
+                         cap: int = None,
+                         plot_style: str = 'ggplot',
+                         figsize: tuple = (15, 10),
+                         bar_color_mean: str = 'steelblue',
+                         percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                         pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
+                         pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
+                         pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
+                         cap_color: str = 'r',
+                         xlabel: str = '',
+                         ylabel: str = '',
+                         suptitle: str = '',
+                         suptitle_properties: None | Dict = None,
+                         title: str = '',
+                         title_properties: None | Dict = None,
+                         legend_properties: None | Dict = None,
+                         first_dow: str = 'mon',
+                         export_path: Path | str | None = None, ):
+
+        bin_size_minutes = self.bin_size_minutes
+        scenario_name = self.scenario_name
+
+        metric_code = metric.lower()[0]
+        summary_df = self.get_summary_df(metric_code, by_category=False, stationary=False)
+
+        plot = make_week_hill_plot(summary_df=summary_df, metric=metric,
+                                   bin_size_minutes=bin_size_minutes,
+                                   cap=cap,
+                                   cap_color=cap_color,
+                                   plot_style=plot_style,
+                                   figsize=figsize,
+                                   bar_color_mean=bar_color_mean,
+                                   percentiles=percentiles,
+                                   pctile_color=pctile_color,
+                                   pctile_linestyle=pctile_linestyle,
+                                   pctile_linewidth=pctile_linewidth,
+                                   suptitle=suptitle,
+                                   suptitle_properties=suptitle_properties,
+                                   title=title,
+                                   title_properties=title_properties,
+                                   legend_properties=legend_properties,
+                                   xlabel=xlabel,
+                                   ylabel=ylabel,
+                                   first_dow=first_dow,
+                                   scenario_name=scenario_name,
+                                   export_path=export_path)
+
+        return plot
+
+    def make_daily_plot(self, day_of_week: str, metric: str = 'occupancy',
+                        cap: int = None,
+                        plot_style: str = 'ggplot',
+                        figsize: tuple = (15, 10),
+                        bar_color_mean: str = 'steelblue',
+                        percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                        pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
+                        pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
+                        pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
+                        cap_color: str = 'r',
+                        xlabel: str = '',
+                        ylabel: str = '',
+                        suptitle: str = '',
+                        suptitle_properties: None | Dict = None,
+                        title: str = '',
+                        title_properties: None | Dict = None,
+                        legend_properties: None | Dict = None,
+                        export_path: Path | str | None = None, ):
+
+        bin_size_minutes = self.bin_size_minutes
+        scenario_name = self.scenario_name
+
+        metric_code = metric.lower()[0]
+        summary_df = self.get_summary_df(metric_code, by_category=False, stationary=False)
+
+        plot = make_daily_hill_plot(summary_df=summary_df, day_of_week=day_of_week, metric=metric,
+                                    bin_size_minutes=bin_size_minutes,
+                                    cap=cap,
+                                    cap_color=cap_color,
+                                    plot_style=plot_style,
+                                    figsize=figsize,
+                                    bar_color_mean=bar_color_mean,
+                                    percentiles=percentiles,
+                                    pctile_color=pctile_color,
+                                    pctile_linestyle=pctile_linestyle,
+                                    pctile_linewidth=pctile_linewidth,
+                                    suptitle=suptitle,
+                                    suptitle_properties=suptitle_properties,
+                                    title=title,
+                                    title_properties=title_properties,
+                                    legend_properties=legend_properties,
+                                    xlabel=xlabel,
+                                    ylabel=ylabel,
+                                    scenario_name=scenario_name,
+                                    export_path=export_path)
+
+        return plot
 
     def get_plot(self, flow_metric: str = 'occupancy', day_of_week: str = 'week'):
         """

@@ -12,7 +12,7 @@ except ModuleNotFoundError:
     import tomli as tomllib
 
 from hillmaker.bydatetime import make_bydatetime
-from hillmaker.summarize import summarize
+from hillmaker.summarize import summarize, summarize_los
 from hillmaker.hmlib import HillTimer
 from hillmaker.plotting import make_week_dow_plots
 
@@ -88,14 +88,22 @@ def compute_hills_stats(scenario):
 
         logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
 
+    # Compute los summary
+    with HillTimer() as t:
+        los_summary = summarize_los(scenario.stops_preprocessed_df,
+                                    scenario.cat_field,
+                                    scenario.los_field_name)
+
+    logger.info(f"Length of stay summary created (seconds): {t.interval:.4f}")
+
     # Gather results
-    hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs, 'settings': {'scenario_name': scenario.scenario_name,
-                                                                            'cat_field': scenario.cat_field}}
+    hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs, 'length_of_stay': los_summary,
+             'settings': {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}}
 
     return hills
 
 
-def make_hills(scenario):
+def _make_hills(scenario):
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 

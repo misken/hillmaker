@@ -215,3 +215,28 @@ def toml_to_flatdict(toml_filepath: Union[str, Path]):
             del flat_dict[key]
 
     return flat_dict.iloc[0].to_dict()
+
+
+def pctile_field_name(p: float):
+    """
+    Create field name for a percentile value
+
+    Parameters
+    ----------
+    p : float
+        percentile
+
+    Returns
+    -------
+    String of form p{pctile}
+
+    """
+
+    pctile_name = f'p{int(100 * p):d}'
+    return pctile_name
+
+
+# def find_first_dow(year, month, dow):
+#     d = datetime(year, int(month), 7)
+#     offset = -d.weekday() #weekday = 0 means monday
+#     return d + timedelta(offset)

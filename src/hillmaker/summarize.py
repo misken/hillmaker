@@ -12,6 +12,11 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 from pandas.core.groupby import DataFrameGroupBy
+from pandas import DataFrame
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from hillmaker.hmlib import pctile_field_name
 
 # This should inherit level from root logger
 logger = logging.getLogger(__name__)
@@ -221,7 +226,7 @@ def summarize_stationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None
 
 def summary_stats(group: DataFrameGroupBy,
                   percentiles: Tuple[float] | List[float] = (0.25, 0.5, 0.75, 0.95, 0.99),
-                  stub: str = ''):
+                  ):
     """
     Compute summary statistics on a pandas `DataFrameGroupBy` object.
 
@@ -231,28 +236,83 @@ def summary_stats(group: DataFrameGroupBy,
         The grouping is by category
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    stub : str
-        Used to create field names (e.g. '{stub}_mean')
 
     Returns
     -------
     Dict whose keys are '{stub}_{statistic}'. Dict values are `DataFrame` objects.
 
     """
-    stats = {stub + 'count': group.count(), stub + 'mean': group.mean(),
-             stub + 'min': group.min(),
-             stub + 'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
-             stub + 'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
-             stub + 'skew': group.skew(), 'kurt': group.kurt()}
+    stats = {'count': group.count(), 'mean': group.mean(),
+             'min': group.min(),
+             'max': group.max(), 'stdev': group.std(), 'sem': group.sem(),
+             'var': group.var(), 'cv': group.std() / group.mean() if group.mean() > 0 else 0,
+             'skew': group.skew(), 'kurt': group.kurt()}
 
     if percentiles is not None:
         pctile_vals = group.quantile(percentiles)
 
         for p in percentiles:
-            pctile_name = f'{stub}p{int(100 * p):d}'
+            pctile_name = pctile_field_name(p)
             stats[pctile_name] = pctile_vals[p]
 
     return stats
+
+
+def summarize_los(stops_preprocessed_df: DataFrame, cat_field: str, los_field: str) -> Dict:
+    """
+    Summarize length of stay.
+
+    Creates tabular summaries along with histograms.
+
+    Parameters
+    ----------
+    stops_preprocessed_df : DataFrame
+
+    cat_field : str
+        Column name for the category values.
+
+    los_field : str
+        Column name for the length of stay values.
+
+    Returns
+    -------
+    dict
+
+    """
+
+    # Create tabular summaries
+    cat_field_grp = stops_preprocessed_df.groupby([cat_field])
+    los_bycat_stats = cat_field_grp[los_field].apply(summary_stats).unstack()
+    all_grp = stops_preprocessed_df.groupby(by = lambda x: 'all')
+    los_stats = all_grp[los_field].apply(summary_stats).unstack()
+
+    cols = ['count', 'mean', 'min', 'max', 'stdev', 'cv', 'skew', 'p50', 'p75', 'p95', 'p99']
+    float_format = '{0:.1f}'
+    fmt_map = {'count': '{:.0f}',
+               'mean': float_format,
+               'min': float_format,
+               'max': float_format,
+               'stdev': float_format,
+               'cv': float_format,
+               'skew': float_format,
+               'p50': float_format,
+               'p75': float_format,
+               'p95': float_format,
+               'p99': float_format}
+
+    los_bycat_stats_styled = los_bycat_stats[cols].style.format(fmt_map)
+    los_stats_styled = los_stats[cols].style.format(fmt_map)
+
+    # Create los plot
+    g = sns.FacetGrid(data=stops_preprocessed_df, col=cat_field, sharex=False, sharey=False, col_wrap=3)
+    plot = g.map(sns.histplot, los_field)
+    plt.close() # Supress plot showing up in notebook
+
+    results = {'los_bycat_stats': los_bycat_stats_styled,
+               'los_stats': los_stats_styled,
+               'los_histos': plot.figure}
+
+    return results
 
 
 if __name__ == '__main__':
