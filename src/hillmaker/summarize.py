@@ -310,7 +310,7 @@ def summarize_los(stops_preprocessed_df: DataFrame, cat_field: str, los_field: s
 
     results = {'los_bycat_stats': los_bycat_stats_styled,
                'los_stats': los_stats_styled,
-               'los_histos': plot.fig}
+               'los_histos': plot.figure}
 
     return results
 
