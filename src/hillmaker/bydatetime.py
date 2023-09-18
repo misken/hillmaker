@@ -28,7 +28,6 @@ LATE_END_ANALYSIS_TOLERANCE = 48.0
 logger = logging.getLogger(__name__)
 
 
-
 def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
                     start_analysis_np: np.datetime64 | Timestamp,
                     end_analysis_np: np.datetime64 | Timestamp,
@@ -37,7 +36,6 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
                     cat_to_exclude: List[str] = None,
                     occ_weight_field: str = None,
                     edge_bins: int = 1):
-
     """
     Create bydatetime table from which summary statistics can be computed.
 
@@ -118,20 +116,22 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
     # Handle cases of no catfield, or a single fieldname, (no longer supporting a list of fieldnames)
     # If no category, add a temporary dummy column populated with a totals str
 
-    #do_totals = True
+    # do_totals = True
     if catfield is not None:
+        has_cat_field = True
         # If catfield a string, convert to list
         # Keeping catfield as a list in case I change mind about multiple category fields
         if isinstance(catfield, str):
             catfield = [catfield]
     else:
         # No category field, create fake category field containing a single value
+        has_cat_field = False
         tot_list = [TOTAL_STR] * len(stops_df)
         tot_series = Series(tot_list, dtype=str, name=CONST_FAKE_CATFIELD_NAME)
         tot_field_df = DataFrame({CONST_FAKE_CATFIELD_NAME: tot_series})
         stops_df = pd.concat([stops_df, tot_field_df], axis=1)
         catfield = [CONST_FAKE_CATFIELD_NAME]
-        #do_totals = False
+        # do_totals = False
 
     # Get the unique category values and exclude any specified to exclude
     categories = []
@@ -245,8 +245,10 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
 
     # Store main results bydatetime DataFrame
     bydt_dfs = {}
-    totals_key = '_'.join(bydt_df_cat.index.names)
-    bydt_dfs[totals_key] = bydt_df_cat.copy()
+
+    if has_cat_field:
+        cat_key = '_'.join(bydt_df_cat.index.names)
+        bydt_dfs[cat_key] = bydt_df_cat.copy()
 
     # Compute totals - doing this even if only a fake category field
     results_totals = {}

@@ -191,7 +191,7 @@ class Scenario(BaseModel):
             raise ValueError('bin_size_minutes must divide into 1440 with no remainder')
         return v
 
-    @field_validator('bin_size_minutes')
+    @field_validator('los_units')
     def los_units_strings(cls, v: str):
         """
         Ensure los_units is a valid time unit string

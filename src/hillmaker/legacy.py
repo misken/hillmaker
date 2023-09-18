@@ -26,8 +26,8 @@ def make_hills(scenario_name: str,
                export_summaries_csv: bool = True,
                make_all_dow_plots: bool = True,
                make_all_week_plots: bool = True,
-               export_dow_plot: bool = False,
-               export_week_plot: bool = False,
+               export_dow_plot: bool = True,
+               export_week_plot: bool = True,
                xlabel: str | None = None,
                ylabel: str | None = None,
                output_path: str | Path = Path('.'),
@@ -86,9 +86,9 @@ def make_hills(scenario_name: str,
     make_all_week_plots : bool, optional
        If True, full week plots are created for occupancy, arrival, and departure. Default is True.
     export_dow_plot : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, day of week plots are exported for occupancy, arrival, and departure. Default is True.
     export_week_plot : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, full week plots are exported for occupancy, arrival, and departure. Default is True.
     xlabel : str
         x-axis label, default='Hour'
     ylabel : str

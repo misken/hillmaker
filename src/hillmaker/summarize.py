@@ -258,7 +258,7 @@ def summary_stats(group: DataFrameGroupBy,
     return stats
 
 
-def summarize_los(stops_preprocessed_df: DataFrame, cat_field: str, los_field: str) -> Dict:
+def summarize_los(stops_preprocessed_df: DataFrame, los_field: str, cat_field: str = None) -> Dict:
     """
     Summarize length of stay.
 
@@ -280,12 +280,6 @@ def summarize_los(stops_preprocessed_df: DataFrame, cat_field: str, los_field: s
 
     """
 
-    # Create tabular summaries
-    cat_field_grp = stops_preprocessed_df.groupby([cat_field])
-    los_bycat_stats = cat_field_grp[los_field].apply(summary_stats).unstack()
-    all_grp = stops_preprocessed_df.groupby(by = lambda x: 'all')
-    los_stats = all_grp[los_field].apply(summary_stats).unstack()
-
     cols = ['count', 'mean', 'min', 'max', 'stdev', 'cv', 'skew', 'p50', 'p75', 'p95', 'p99']
     float_format = '{0:.1f}'
     fmt_map = {'count': '{:.0f}',
@@ -300,17 +294,29 @@ def summarize_los(stops_preprocessed_df: DataFrame, cat_field: str, los_field: s
                'p95': float_format,
                'p99': float_format}
 
-    los_bycat_stats_styled = los_bycat_stats[cols].style.format(fmt_map)
+    # Create tabular summaries
+    all_grp = stops_preprocessed_df.groupby(by=lambda x: 'all')
+    los_stats = all_grp[los_field].apply(summary_stats).unstack()
     los_stats_styled = los_stats[cols].style.format(fmt_map)
-
     # Create los plot
-    g = sns.FacetGrid(data=stops_preprocessed_df, col=cat_field, sharex=False, sharey=False, col_wrap=3)
-    plot = g.map(sns.histplot, los_field)
-    plt.close() # Supress plot showing up in notebook
+    plot_all = sns.histplot(stops_preprocessed_df, x=los_field)
+    plt.close()  # Supress plot showing up in notebook
 
-    results = {'los_bycat_stats': los_bycat_stats_styled,
-               'los_stats': los_stats_styled,
-               'los_histos': plot.figure}
+    # Gather results
+    results = {'los_stats': los_stats_styled,
+               'los_histo_all': plot_all.figure}
+
+    # Plot by category if cat_field is not None
+    if cat_field is not None:
+        cat_field_grp = stops_preprocessed_df.groupby([cat_field])
+        los_bycat_stats = cat_field_grp[los_field].apply(summary_stats).unstack()
+        los_bycat_stats_styled = los_bycat_stats[cols].style.format(fmt_map)
+        # Create los plot
+        g_bycat = sns.FacetGrid(data=stops_preprocessed_df, col=cat_field, sharex=False, sharey=False, col_wrap=3)
+        plot_bycat = g_bycat.map(sns.histplot, los_field)
+        plt.close()  # Supress plot showing up in notebook
+        results['los_bycat_stats'] = los_bycat_stats_styled
+        results['los_histo_bycat'] = plot_bycat.figure
 
     return results
 
