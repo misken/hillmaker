@@ -8,7 +8,7 @@ entities arrive, occupy capacity for some amount of time, and then depart. It
 gets its name from the hill-like nature of plots based on temporal occupancy
 statistics.
 
-![hillmaker Screenshot](/docs/hillmaker-user-guide/images/ssu_occ_1.png "hillmaker screenshot")
+![hillmaker Screenshot](docs/images/ssu_occ_1.png "hillmaker screenshot")
 
 - Takes a pandas DataFrame or csv file as the input data type
 - Functions for computing arrival, departure and occupancy summary statistics
@@ -19,10 +19,9 @@ statistics.
 - Select any time bin size (minutes) that divides evenly into a day.
 - Output statistics includes sample size, mean, min, max, standard deviation,
   coefficient of variation, standard error, skew, kurtosis, and percentiles.
-- Output CSV files are written by default but can be supressed.
-- Optionally capture outputs as a dictionary of pandas DataFrames for further
-  post-processing (e.g. plot creation).
-- Requires Python >= 3.9, pandas >= 1.4.0, numpy >= 1.22
+- Weekly and day of week plots can be created.
+- Outputs are stored in a dictionary containing pandas dataframes and as matplotlib figures. These can be accessed by methods for further post-processing or for exporting to external files.
+- Requires Python >= 3.10, pandas >= 1.5.0, numpy >= 1.22
 - MIT License
 
 Where to get it

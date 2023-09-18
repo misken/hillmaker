@@ -67,27 +67,22 @@ def process_command_line(argv=None):
 
     optional.add_argument(
         '--config', type=str, default=None,
-        help="Configuration file (TOML format) containing input parameter arguments and values"
+        help="Configuration file (TOML format) containing input parameter arguments and values."
     )
 
     optional.add_argument(
         '--cat_field', type=str, default=None,
-        help="Column name corresponding to the categories. If None, then only overall occupancy is analyzed"
+        help="Column name corresponding to the categories. If None, then only overall occupancy is analyzed."
     )
 
     optional.add_argument(
         '--bin_size_mins', type=int, default=60,
-        help="Number of minutes in each time bin of the day"
+        help="Number of minutes in each time bin of the day (default=60)."
     )
 
     optional.add_argument(
         '--occ_weight_field', type=str, default=None,
-        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used"
-    )
-
-    optional.add_argument(
-        '--edge_bins', type=int, default=1,
-        help="Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin"
+        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used."
     )
 
     optional.add_argument(
@@ -96,14 +91,9 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--export_all_week_plots', action='store_true',
-        help="If set (true), weekly plots are exported to OUTPUT_PATH"
+        '--no_plots', action='store_true',
+        help="If set (true), all plots are suppressed. By default, plots are exported to OUTPUT_PATH."
 
-    )
-
-    optional.add_argument(
-        '--export_all_dow_plots', action='store_true',
-        help="If set (true), individual day of week plots are exported to OUTPUT_PATH"
     )
 
     optional.add_argument(
@@ -117,29 +107,34 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--verbosity', type=int, default=0,
-        help="Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG"
+        '--cap', type=int, default=None,
+        help="Capacity level line to include in occupancy plots"
     )
 
     optional.add_argument(
-        '--cap', type=int, default=None,
-        help="Capacity level line to include in plots"
+        '--edge_bins', type=int, default=1,
+        help="Occupancy contribution method for arrival and departure bins. 1=fractional (the default), 2=whole bin"
+    )
+
+    optional.add_argument(
+        '--verbosity', type=int, default=1,
+        help="Used to set level in loggers. 0=logging.WARNING, 1=logging.INFO (default), 2=logging.DEBUG"
     )
 
     # Be nice if this default came from application settings file
-    optional.add_argument(
-        "--percentiles",
-        nargs="*",  # 0 or more values expected => creates a list
-        type=float,
-        default=(0.25, 0.5, 0.75, 0.95, 0.99),  # default if nothing is provided
-    )
-
-    optional.add_argument(
-        "--cats_to_exclude",
-        nargs="*",  # 0 or more values expected => creates a list
-        type=str,
-        default=[],  # default if nothing is provided
-    )
+    # optional.add_argument(
+    #     "--percentiles",
+    #     nargs="*",  # 0 or more values expected => creates a list
+    #     type=float,
+    #     default=(0.25, 0.5, 0.75, 0.95, 0.99),  # default if nothing is provided
+    # )
+    #
+    # optional.add_argument(
+    #     "--cats_to_exclude",
+    #     nargs="*",  # 0 or more values expected => creates a list
+    #     type=str,
+    #     default=[],  # default if nothing is provided
+    # )
 
     # Add back help
     optional.add_argument(
@@ -207,25 +202,26 @@ def main(argv=None):
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
     # Make hills
-    if args.export_all_week_plots:
+    if not args.no_plots:
         make_week_plot = True
+        make_dow_plots = True
+        export_week_plot = True
+        export_dow_plots = True
     else:
         make_week_plot = False
-
-    if args.export_all_dow_plots:
-        make_dow_plot = True
-    else:
-        make_dow_plot = False
+        make_dow_plots = False
+        export_week_plot = False
+        export_dow_plots = False
 
     scenario = Scenario(scenario_name=args.scenario_name, stops_df=stops_df,
                         in_field=args.in_field, out_field=args.out_field,
                         start_analysis_dt=args.start_analysis_dt, end_analysis_dt=args.end_analysis_dt,
                         cat_field=args.cat_field,
                         output_path=args.output_path, verbosity=args.verbosity,
-                        cats_to_exclude=args.cats_to_exclude, percentiles=args.percentiles,
-                        make_all_week_plots=make_week_plot, make_all_dow_plots=make_dow_plot,
-                        export_all_week_plots=args.export_all_week_plots,
-                        export_all_dow_plots=args.export_all_dow_plots,
+                        export_bydatetime_csv=True, export_summaries_csv=True,
+                        make_all_week_plots=make_week_plot, make_all_dow_plots=make_dow_plots,
+                        export_all_week_plots=export_week_plot,
+                        export_all_dow_plots=export_dow_plots,
                         cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel,
                         los_units='hours')
 

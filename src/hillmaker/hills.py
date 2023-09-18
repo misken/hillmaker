@@ -91,8 +91,8 @@ def compute_hills_stats(scenario):
     # Compute los summary
     with HillTimer() as t:
         los_summary = summarize_los(scenario.stops_preprocessed_df,
-                                    scenario.cat_field,
-                                    scenario.los_field_name)
+                                    scenario.los_field_name,
+                                    cat_field=scenario.cat_field)
 
     logger.info(f"Length of stay summary created (seconds): {t.interval:.4f}")
 
@@ -153,8 +153,9 @@ def _make_hills(scenario):
 
     # Plots
     if scenario.make_all_week_plots or scenario.make_all_dow_plots:
-        plots = make_week_dow_plots(scenario, hills)
-        hills['plots'] = plots
+        with HillTimer() as t:
+            plots = make_week_dow_plots(scenario, hills)
+            hills['plots'] = plots
 
     # Add settings to hills dict - now done in compute_hill_stats
     # hills['settings'] = {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}
