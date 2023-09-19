@@ -152,10 +152,10 @@ class Scenario(BaseModel):
             raise ValueError(f'{v} is not a column in the dataframe')
         return v
 
-    @field_validator('start_analysis_dt', 'end_analysis_dt')
-    def validate_start_end_date(cls, v: date | datetime, info: FieldValidationInfo):
+    @field_validator('start_analysis_dt')
+    def validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
         """
-        Ensure start and end dates for analysis are convertible to numpy datetime64 and do the conversion.
+        Ensure start date for analysis is convertible to numpy datetime64 and do the conversion.
 
         Parameters
         ----------
@@ -168,9 +168,32 @@ class Scenario(BaseModel):
         """
 
         try:
-            analysis_dt_ts = pd.Timestamp(v)
-            analysis_dt_np = analysis_dt_ts.to_datetime64()
-            return analysis_dt_np
+            start_analysis_dt_ts = pd.Timestamp(v)
+            start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
+            return start_analysis_dt_np
+        except ValueError as error:
+            raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
+
+    @field_validator('end_analysis_dt')
+    def validate_end_date(cls, v: date | datetime, info: FieldValidationInfo):
+        """
+        Ensure end date for analysis is convertible to numpy datetime64 and do the conversion.
+        Adjust end date to include entire day.
+
+        Parameters
+        ----------
+        v
+        info
+
+        Returns
+        -------
+
+        """
+
+        try:
+            end_analysis_dt_ts = pd.Timestamp(v).floor("d") + pd.Timedelta(86399, "s")
+            end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
+            return end_analysis_dt_np
         except ValueError as error:
             raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
 
