@@ -17,6 +17,7 @@ cat_field_name = 'PatType'
 verbosity = 1  # INFO level logging
 output_path = './output'
 bin_size_minutes = 60
+edge_bins = 2
 
 df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
 
@@ -27,4 +28,5 @@ hm.make_hills(scenario_name=scenario_name, stops_df=df,
               cat_field=cat_field_name,
               bin_size_minutes=bin_size_minutes,
               output_path='./output', verbosity=verbosity,
-              export_summaries_csv=True)
+              export_summaries_csv=True,
+              edge_bins=edge_bins)

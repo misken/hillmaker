@@ -223,7 +223,7 @@ def main(argv=None):
                         export_all_week_plots=export_week_plot,
                         export_all_dow_plots=export_dow_plots,
                         cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel,
-                        los_units='hours')
+                        edge_bins=args.edge_bins, los_units='hours')
 
     scenario.make_hills()
 

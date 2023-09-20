@@ -407,7 +407,8 @@ def in_bin_occ_frac(entry_bin: int,
         in_bin_seconds = (rel_right_edge_secs - rel_in_time_secs)
         inbin_occ_frac = in_bin_seconds / (bin_size_minutes * 60.0)
     else:
-        inbin_occ_frac = 1.0
+        #inbin_occ_frac = 1.0
+        inbin_occ_frac = np.ones(in_dt_np.size)
 
     return inbin_occ_frac
 
@@ -447,7 +448,8 @@ def out_bin_occ_frac(exit_bin: int, in_dt_np, out_dt_np, start_analysis_dt_np,
         out_bin_seconds = (rel_out_time_secs - rel_left_edge_secs)
         outbin_occ_frac = out_bin_seconds / (bin_size_minutes * 60.0)
     else:
-        outbin_occ_frac = 1.0
+        #outbin_occ_frac = 1.0
+        outbin_occ_frac = np.ones(in_dt_np.size)
 
     return outbin_occ_frac
 
