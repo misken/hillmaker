@@ -276,6 +276,7 @@ class Scenario(BaseModel):
         if self.bin_size_minutes < self.highres_bin_size_minutes:
             raise ValueError(
                 f'highres_bin_size_minutes ({self.highres_bin_size_minutes}) must be <= bin_size_minutes ({self.bin_size_minutes})')
+        return self
 
     @model_validator(mode='after')
     def preprocess_stops_df(self) -> 'Scenario':
