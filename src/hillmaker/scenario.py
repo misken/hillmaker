@@ -271,6 +271,13 @@ class Scenario(BaseModel):
         return self
 
     @model_validator(mode='after')
+    def bin_size_relationship(self) -> 'Scenario':
+        
+        if self.bin_size_minutes < self.highres_bin_size_minutes:
+            raise ValueError(
+                f'highres_bin_size_minutes ({self.highres_bin_size_minutes}) must be <= bin_size_minutes ({self.bin_size_minutes})')
+
+    @model_validator(mode='after')
     def preprocess_stops_df(self) -> 'Scenario':
         """
         Create preprocessed dataframe that only contains necessary fields and does not include records with missing
