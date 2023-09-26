@@ -63,18 +63,18 @@ def compute_hills_stats(scenario):
 
     # Create the bydatetime DataFrame
     with HillTimer() as t:
-        bydt_dfs = make_bydatetime(scenario.stops_preprocessed_df,
-                                   scenario.in_field,
-                                   scenario.out_field,
-                                   scenario.start_analysis_dt,
-                                   scenario.end_analysis_dt,
-                                   cat_field=scenario.cat_field,
-                                   bin_size_minutes=scenario.bin_size_minutes,
-                                   highres_bin_size_minutes=scenario.highres_bin_size_minutes,
-                                   keep_highres_bydatetime=scenario.keep_highres_bydatetime,
-                                   cat_to_exclude=scenario.cats_to_exclude,
-                                   occ_weight_field=scenario.occ_weight_field,
-                                   edge_bins=scenario.edge_bins)
+        bydt_dfs, bydt_highres_dfs = make_bydatetime(scenario.stops_preprocessed_df,
+                                                     scenario.in_field,
+                                                     scenario.out_field,
+                                                     scenario.start_analysis_dt,
+                                                     scenario.end_analysis_dt,
+                                                     cat_field=scenario.cat_field,
+                                                     bin_size_minutes=scenario.bin_size_minutes,
+                                                     highres_bin_size_minutes=scenario.highres_bin_size_minutes,
+                                                     keep_highres_bydatetime=scenario.keep_highres_bydatetime,
+                                                     cat_to_exclude=scenario.cats_to_exclude,
+                                                     occ_weight_field=scenario.occ_weight_field,
+                                                     edge_bins=scenario.edge_bins)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
@@ -101,6 +101,9 @@ def compute_hills_stats(scenario):
     # Gather results
     hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs, 'length_of_stay': los_summary,
              'settings': {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}}
+
+    if scenario.keep_highres_bydatetime:
+        hills['bydatetime_highres'] = bydt_highres_dfs
 
     return hills
 
@@ -163,6 +166,9 @@ def _make_hills(scenario):
 
     # All done
     endtime = t.end
+    runtime = endtime - starttime
+    hills['runtime'] = runtime
+    
     logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
     logger.info(f"Scenario {scenario.scenario_name} complete at {endtime}\n")
 
