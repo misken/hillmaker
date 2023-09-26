@@ -17,7 +17,9 @@ cat_field_name = 'PatType'
 verbosity = 1  # INFO level logging
 output_path = './output'
 bin_size_minutes = 60
-edge_bins = 2
+highres_bin_size_minutes = 5
+keep_highres_datetime = True
+edge_bins = 1
 
 df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
 
@@ -27,6 +29,8 @@ hm.make_hills(scenario_name=scenario_name, stops_df=df,
               start_analysis_dt=start_date, end_analysis_dt=end_date,
               cat_field=cat_field_name,
               bin_size_minutes=bin_size_minutes,
+              highres_bin_size_minutes=highres_bin_size_minutes,
+              keep_highres_bydatetime=keep_highres_datetime,
               output_path='./output', verbosity=verbosity,
               export_summaries_csv=True,
               edge_bins=edge_bins)

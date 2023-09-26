@@ -77,7 +77,12 @@ def process_command_line(argv=None):
 
     optional.add_argument(
         '--bin_size_mins', type=int, default=60,
-        help="Number of minutes in each time bin of the day (default=60)."
+        help="Number of minutes in each time bin of the day (default=60) for aggregate statistics."
+    )
+
+    optional.add_argument(
+        '--highres_bin_size_mins', type=int, default=60,
+        help="Number of minutes in each time bin of the day (default=60) for high resolution occupancy computation."
     )
 
     optional.add_argument(
@@ -216,7 +221,8 @@ def main(argv=None):
     scenario = Scenario(scenario_name=args.scenario_name, stops_df=stops_df,
                         in_field=args.in_field, out_field=args.out_field,
                         start_analysis_dt=args.start_analysis_dt, end_analysis_dt=args.end_analysis_dt,
-                        cat_field=args.cat_field,
+                        cat_field=args.cat_field, bin_size_minutes=args.bin_size_mins,
+                        highres_bin_size_minutes=args.highres_bin_size_minutes,
                         output_path=args.output_path, verbosity=args.verbosity,
                         export_bydatetime_csv=True, export_summaries_csv=True,
                         make_all_week_plots=make_week_plot, make_all_dow_plots=make_dow_plots,

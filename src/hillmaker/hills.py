@@ -68,8 +68,10 @@ def compute_hills_stats(scenario):
                                    scenario.out_field,
                                    scenario.start_analysis_dt,
                                    scenario.end_analysis_dt,
-                                   scenario.cat_field,
-                                   scenario.bin_size_minutes,
+                                   cat_field=scenario.cat_field,
+                                   bin_size_minutes=scenario.bin_size_minutes,
+                                   highres_bin_size_minutes=scenario.highres_bin_size_minutes,
+                                   keep_highres_bydatetime=scenario.keep_highres_bydatetime,
                                    cat_to_exclude=scenario.cats_to_exclude,
                                    occ_weight_field=scenario.occ_weight_field,
                                    edge_bins=scenario.edge_bins)
@@ -131,6 +133,7 @@ def _make_hills(scenario):
     # Compute stats
     with HillTimer() as t:
         starttime = t.start
+        logger.info(f"Starting scenario {scenario.scenario_name} at {starttime}")
         hills = compute_hills_stats(scenario)
 
     logger.info(f"bydatetime and summaries by datetime created (seconds): {t.interval:.4f}")
@@ -152,17 +155,16 @@ def _make_hills(scenario):
         logger.info(f"Summaries exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
 
     # Plots
-    if scenario.make_all_week_plots or scenario.make_all_dow_plots:
+    if scenario.make_all_week_plots or scenario.make_all_dow_plots or \
+            scenario.export_all_week_plots or scenario.export_all_dow_plots:
         with HillTimer() as t:
             plots = make_week_dow_plots(scenario, hills)
             hills['plots'] = plots
 
-    # Add settings to hills dict - now done in compute_hill_stats
-    # hills['settings'] = {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}
-
     # All done
     endtime = t.end
     logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
+    logger.info(f"Scenario {scenario.scenario_name} complete at {endtime}\n")
 
     return hills
 
@@ -279,7 +281,7 @@ def get_bydatetime_df(hills: dict, by_category: bool = True):
     DataFrame
 
     """
-    bydatetime_stub = 'bydatetime'
+    bydatetime_stub = 'datetime'
     cat_field = hills['settings']['cat_field']
 
     if by_category and cat_field is not None:
