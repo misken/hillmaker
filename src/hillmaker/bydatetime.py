@@ -255,13 +255,14 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
 
     # Store main results bydatetime DataFrames
     bydt_dfs = {}
+    bydt_highres_dfs = {}
 
     if has_cat_field:
         cat_key = '_'.join(bydt_dfs_cat['agg'].index.names)
         bydt_dfs[cat_key] = bydt_dfs_cat['agg']
         if keep_highres_bydatetime:
             highres_cat_key = f'{cat_key}_highres'
-            bydt_dfs[highres_cat_key] = bydt_dfs_cat['highres']
+            bydt_highres_dfs[highres_cat_key] = bydt_dfs_cat['highres']
 
     # Compute totals - doing this even if only a fake category field
     results_totals = {}
@@ -277,9 +278,9 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
     bydt_dfs[totals_key] = bydt_dfs_total['agg']
     if keep_highres_bydatetime:
         highres_totals_key = f'{totals_key}_highres'
-        bydt_dfs[highres_totals_key] = bydt_dfs_total['highres']
+        bydt_highres_dfs[highres_totals_key] = bydt_dfs_total['highres']
 
-    return bydt_dfs
+    return bydt_dfs, bydt_highres_dfs
 
 
 def check_date_ranges(start_analysis_dt, end_analysis_dt, min_in_date, max_out_date):
