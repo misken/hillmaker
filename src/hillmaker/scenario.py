@@ -53,8 +53,15 @@ class Scenario(BaseModel):
         Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
         Default is None
     bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day, default is 60. Use a value that
-        divides into 1440 with no remainder
+        Number of minutes in each time bin of the day, default is 60. This bin size is used for plots and reporting and
+        is an aggregation of computations done at the finer bin size resolution specified by `resolution_bin_size_mins`.
+        Use a value that divides into 1440 with no remainder.
+    highres_bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
+        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
+        stays, the smaller the resolution should be. The current default is 5 minutes.
+    keep_highres_bydatetime : bool, optional
+        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
     cats_to_exclude : list, optional
         Category values to ignore, default is None
     occ_weight_field : str, optional
@@ -122,6 +129,8 @@ class Scenario(BaseModel):
     # stop_data_csv: str | Path | None = None
     cat_field: str | None = None
     bin_size_minutes: int = 60
+    highres_bin_size_minutes: int = 5
+    keep_highres_bydatetime: bool = False
     cats_to_exclude: List[str] | None = None
     occ_weight_field: str | None = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
@@ -152,10 +161,10 @@ class Scenario(BaseModel):
             raise ValueError(f'{v} is not a column in the dataframe')
         return v
 
-    @field_validator('start_analysis_dt', 'end_analysis_dt')
-    def validate_start_end_date(cls, v: date | datetime, info: FieldValidationInfo):
+    @field_validator('start_analysis_dt')
+    def validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
         """
-        Ensure start and end dates for analysis are convertible to numpy datetime64 and do the conversion.
+        Ensure start date for analysis is convertible to numpy datetime64 and do the conversion.
 
         Parameters
         ----------
@@ -168,9 +177,32 @@ class Scenario(BaseModel):
         """
 
         try:
-            analysis_dt_ts = pd.Timestamp(v)
-            analysis_dt_np = analysis_dt_ts.to_datetime64()
-            return analysis_dt_np
+            start_analysis_dt_ts = pd.Timestamp(v)
+            start_analysis_dt_np = start_analysis_dt_ts.to_datetime64()
+            return start_analysis_dt_np
+        except ValueError as error:
+            raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
+
+    @field_validator('end_analysis_dt')
+    def validate_end_date(cls, v: date | datetime, info: FieldValidationInfo):
+        """
+        Ensure end date for analysis is convertible to numpy datetime64 and do the conversion.
+        Adjust end date to include entire day.
+
+        Parameters
+        ----------
+        v
+        info
+
+        Returns
+        -------
+
+        """
+
+        try:
+            end_analysis_dt_ts = pd.Timestamp(v).floor("d") + pd.Timedelta(86399, "s")
+            end_analysis_dt_np = end_analysis_dt_ts.to_datetime64()
+            return end_analysis_dt_np
         except ValueError as error:
             raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
 
@@ -213,7 +245,7 @@ class Scenario(BaseModel):
         return v
 
     @model_validator(mode='after')
-    def date_relationship(self) -> 'Scenario':
+    def date_relationships(self) -> 'Scenario':
         """
         Start date for analysis must be before end date.
 
@@ -224,6 +256,18 @@ class Scenario(BaseModel):
         """
         if self.end_analysis_dt <= self.start_analysis_dt:
             raise ValueError(f'end date must be > start date')
+
+        min_intime = self.stops_df[self.in_field].min()
+        max_outtime = self.stops_df[self.out_field].max()
+
+        if max_outtime < self.start_analysis_dt:
+            raise ValueError(
+                f'latest departure time of {max_outtime} is prior to start analysis date of {self.start_analysis_dt}')
+
+        if min_intime > self.end_analysis_dt:
+            raise ValueError(
+                f'earliest arrival time of {min_intime} is after end analysis date of {self.end_analysis_dt}')
+
         return self
 
     @model_validator(mode='after')
@@ -257,7 +301,7 @@ class Scenario(BaseModel):
             stops_preprocessed_df.loc[(stops_preprocessed_df[self.in_field] < self.end_analysis_dt) &
                                       (~stops_preprocessed_df[self.in_field].isna()) &
                                       (~stops_preprocessed_df[self.out_field].isna()) &
-                                      (stops_preprocessed_df[self.out_field] >= self.start_analysis_dt)]
+                                      (stops_preprocessed_df[self.out_field] > self.start_analysis_dt)]
 
         # Compute additional fields used for analysis
         los_field_name = f'los_{self.los_units}'

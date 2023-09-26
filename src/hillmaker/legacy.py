@@ -16,6 +16,8 @@ def make_hills(scenario_name: str,
                end_analysis_dt: str | date | datetime | pd.Timestamp | np.datetime64,
                cat_field: str = None,
                bin_size_minutes: int = 60,
+               highres_bin_size_minutes: int = 5,
+               keep_highres_bydatetime: bool = False,
                percentiles: Tuple | List = (0.25, 0.5, 0.75, 0.95, 0.99),
                cats_to_exclude: str | None = None,
                occ_weight_field: str | None = None,
@@ -62,6 +64,12 @@ def make_hills(scenario_name: str,
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60. Use a value that
         divides into 1440 with no remainder
+    highres_bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
+        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
+        stays, the smaller the resolution should be. The current default is 5 minutes.
+    keep_highres_bydatetime : bool, optional
+        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
     cats_to_exclude : list, optional
@@ -114,7 +122,9 @@ def make_hills(scenario_name: str,
     scenario = Scenario(scenario_name=scenario_name, stops_df=stops_df,
                         in_field=in_field, out_field=out_field,
                         start_analysis_dt=start_analysis_dt, end_analysis_dt=end_analysis_dt,
-                        cat_field=cat_field, bin_size_minutes=bin_size_minutes,
+                        cat_field=cat_field,
+                        bin_size_minutes=bin_size_minutes, highres_bin_size_minutes=highres_bin_size_minutes,
+                        keep_highres_bydatetime=keep_highres_bydatetime,
                         cats_to_exclude=cats_to_exclude, occ_weight_field=occ_weight_field,
                         edge_bins=edge_bins,
                         stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
