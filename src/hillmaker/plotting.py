@@ -201,7 +201,7 @@ def make_hill_plot(summary_df: pd.DataFrame, scenario_name: str, metric: str,
     # Add data to the plot
     # Mean occupancy as bars - here's the GOTCHA involving the bar width
     bar_width = 1 / (1440 / bin_size_minutes)
-    ax1.bar(timestamps, mean_occ, label=f'Mean {metric}', width=bar_width, color=bar_color)
+    ax1.bar(timestamps, mean_occ, label=f'Mean {metric}', width=bar_width, color=bar_color, edgecolor=bar_color)
 
     # Some percentile as a line
     ax1.plot(timestamps, pctile_occ, linestyle=pctile_line_style, label=f'95th %ile {metric}', color=pctile_color)
@@ -260,12 +260,12 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
                         pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
                         cap_color: str = 'r',
                         xlabel: str = 'Hour',
-                        ylabel: str = 'Patients',
-                        suptitle: str = '',
-                        suptitle_properties: None | Dict = None,
-                        title: str = '',
-                        title_properties: None | Dict = None,
-                        legend_properties: None | Dict = None,
+                        ylabel: str = 'Volume',
+                        main_title: str = '',
+                        main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16},
+                        subtitle: str = '',
+                        subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
+                        legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                         first_dow: str = 'mon',
                         scenario_name: str = '',
                         export_path: Path | str | None = None, ):
@@ -306,17 +306,17 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
     xlabel : str, optional
         x-axis label, default='Hour'
     ylabel : str, optional
-        y-axis label, default='Patients'
-    suptitle : str, optional
-        super title for plot, default = ''
-    suptitle_properties : None or dict, optional
-        Dict of `suptitle` properties, default=None   
-    title : str, optional
-        title for plot, default = ''
-    title_properties : None or dict, optional
-        Dict of `title` properties, default=None
+        y-axis label, default='Volume'
+    main_title : str, optional
+        main title for plot, default = ''
+    main_title_properties : None or dict, optional
+        Dict of `title` properties, default={{'loc': 'left', 'fontsize': 16}}
+    subtitle : str, optional
+        subtitle for plot, default = ''
+    subtitle_properties : None or dict, optional
+        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
     legend_properties : None or dict, optional
-        Dict of `legend` properties, default=None
+        Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
     first_dow : str, optional
         Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
     scenario_name : str
@@ -326,12 +326,15 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
     """
 
     # Create default titles
-    if suptitle == '':
-        suptitle = f'{_metric_name(metric)} by time of day and day of week'
+    if main_title == '':
+        main_title = f'{_metric_name(metric)} by time of day and day of week'
 
-    if title == '':
+    if subtitle == '':
         if len(scenario_name) > 0:
-            title = f'Scenario: {scenario_name}'
+            subtitle = f'Scenario: {scenario_name}'
+            main_title += '\n'  # appends newline character to make room for subtitle
+    else:
+        main_title += '\n'  # appends newline character to make room for subtitle
 
     with plt.style.context(plot_style):
         # Create empty sized figure
@@ -367,7 +370,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         # Add data to the plot
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
-        ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}', width=bar_width, color=bar_color_mean)
+        ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}',
+                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -400,13 +404,17 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
 
         # Set plot and axis titles
         # Be nice to have application and session level defaults - style sheets for app level?
-        if suptitle_properties is None:
-            suptitle_properties = {}
-        sup_title = fig1.suptitle(suptitle, **suptitle_properties)
+        if main_title_properties is None:
+            main_title_properties = {}
 
-        if title_properties is None:
-            title_properties = {}
-        ax1.set_title(title, **title_properties)
+        # Create an invisible subplot to add the second title
+        ax2 = fig1.add_axes(ax1.get_position(), zorder=1, frame_on=False)
+        ax2.set_axis_off()
+        ax2.set_title(main_title, **main_title_properties)
+
+        if subtitle_properties is None:
+            subtitle_properties = {}
+        ax1.set_title(subtitle, **subtitle_properties)
 
         ax1.set_xlabel(xlabel)
         ax1.set_ylabel(ylabel)
@@ -421,7 +429,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
             week_range_str = 'week'
             plot_png = f'{scenario_name}_{metric}_{week_range_str}.png'
             png_wpath = Path(export_path, plot_png)
-            plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
+            plt.savefig(png_wpath, bbox_inches='tight')
 
         # Suppress plot output in notebook
         plt.close()
@@ -441,12 +449,12 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                          pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
                          cap_color: str = 'r',
                          xlabel: str = 'Hour',
-                         ylabel: str = 'Patients',
-                         suptitle: str = '',
-                         suptitle_properties: None | Dict = None,
-                         title: str = '',
-                         title_properties: None | Dict = None,
-                         legend_properties: None | Dict = None,
+                         ylabel: str = 'Volume',
+                         main_title: str = '',
+                         main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16},
+                         subtitle: str = '',
+                         subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
+                         legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                          scenario_name: str = '',
                          export_path: Path | str | None = None, ):
     f"""
@@ -492,13 +500,13 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
     suptitle : str, optional
         super title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
     suptitle_properties : None or dict, optional
-        Dict of `suptitle` properties, default=None   
+        Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}  
     title : str, optional
         title for plot, default = 'All categories'
     title_properties : None or dict, optional
-        Dict of `title` properties, default=None
+        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
     legend_properties : None or dict, optional
-        Dict of `legend` properties, default=None
+        Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
     scenario_name : str
         Used in output filenames, default is ''
     export_path : str or None, default is None
@@ -506,12 +514,15 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
     """
 
     # Create default titles
-    if suptitle == '':
-        suptitle = f'{_metric_name(metric)} summary - {_dow_name(day_of_week)}'
+    if main_title == '':
+        main_title = f'{_metric_name(metric)} summary - {_dow_name(day_of_week)}'
 
-    if title == '':
+    if subtitle == '':
         if len(scenario_name) > 0:
-            title = f'Scenario: {scenario_name}'
+            subtitle = f'Scenario: {scenario_name}'
+            main_title += '\n'  # appends newline character to make room for subtitle
+    else:
+        main_title += '\n'  # appends newline character to make room for subtitle
 
     with plt.style.context(plot_style):
         # Create empty sized figure
@@ -579,13 +590,17 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
 
         # Set plot and axis titles
         # Be nice to have application and session level defaults - style sheets for app level?
-        if suptitle_properties is None:
-            suptitle_properties = {}
-        sup_title = fig1.suptitle(suptitle, **suptitle_properties)
+        if main_title_properties is None:
+            main_title_properties = {}
 
-        if title_properties is None:
-            title_properties = {}
-        ax1.set_title(title, **title_properties)
+        # Create an invisible subplot to add the second title
+        ax2 = fig1.add_axes(ax1.get_position(), zorder=1, frame_on=False)
+        ax2.set_axis_off()
+        ax2.set_title(main_title, **main_title_properties)
+
+        if subtitle_properties is None:
+            subtitle_properties = {}
+        ax1.set_title(subtitle, **subtitle_properties)
 
         ax1.set_xlabel(xlabel)
         ax1.set_ylabel(ylabel)
@@ -600,7 +615,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
             week_range_str = day_of_week
             plot_png = f'{scenario_name}_{metric}_{week_range_str}.png'
             png_wpath = Path(export_path, plot_png)
-            plt.savefig(png_wpath, bbox_extra_artists=[sup_title], bbox_inches='tight')
+            plt.savefig(png_wpath, bbox_inches='tight')
 
         # Suppress plot output in notebook
         plt.close()
