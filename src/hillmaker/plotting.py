@@ -497,13 +497,13 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         x-axis label, default='Hour'
     ylabel : str, optional
         y-axis label, default='Patients'
-    suptitle : str, optional
+    main_title : str, optional
         super title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
-    suptitle_properties : None or dict, optional
+    main_title_properties : None or dict, optional
         Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}  
-    title : str, optional
+    subtitle : str, optional
         title for plot, default = 'All categories'
-    title_properties : None or dict, optional
+    subtitle_properties : None or dict, optional
         Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
     legend_properties : None or dict, optional
         Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
@@ -557,7 +557,8 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         # Add data to the plot
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
-        ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}', width=bar_width, color=bar_color_mean)
+        ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}',
+                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
