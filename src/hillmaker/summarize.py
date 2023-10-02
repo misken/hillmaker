@@ -4,7 +4,7 @@ arrival, and departure statistics by time bin of day, day of week and one
 or more category fields.
 """
 
-# Copyright 2022 Mark Isken
+# Copyright 2022-2023 Mark Isken, Jacob Norman
 
 import logging
 from typing import Dict, List, Tuple
@@ -319,6 +319,84 @@ def summarize_los(stops_preprocessed_df: DataFrame, los_field: str, cat_field: s
         results['los_histo_bycat'] = plot_bycat.figure
 
     return results
+
+
+def compute_implied_operating_hours(occupancy_summary_df, statistic='mean', threshold=0.2):
+    """
+    Infers operating hours of underlying data.
+
+    Computes implied operating hours based on exceeding a percentage of the
+    maximum occupancy for a given statistic.
+
+    Parameters
+    ----------
+    occupancy_summary_df : DataFrame
+
+    statistic : str
+        Column name for the statistic value. Default is 'mean'.
+
+    threshold : str
+        Percentage of maximum occupancy that will be considered 'open' for
+        operating purposes, inclusive. Default is 0.2.
+
+    Returns
+    -------
+    pandas styler object
+
+    """
+
+    occ_sum = occupancy_summary_df.copy().reset_index()
+    overall_max_occ = occ_sum['mean'].max()
+    cutoff = threshold * overall_max_occ
+
+    # initialize an empty list
+    data = []
+
+    # iterate over each unique dow_name to fill the data list
+    for day in occ_sum['dow_name'].unique():
+        df = occ_sum[occ_sum['dow_name'] == day]
+
+        # occ_sum['bin_of_day'] = occ_sum.bin_of_day * occ_sum.num_beds
+        df.set_index('bin_of_day', inplace=True)
+
+        # remove all rows (bin_of_day) not meeting the cutoff
+        df = df[df[statistic] >= cutoff]
+
+        # get starting and ending times
+        start_hr = df.index.min()
+        end_hr = df.index.max() + 1
+        time_open = end_hr - start_hr
+
+        # logic to deal with closed days
+        if time_open > 0:
+            max_occ = df[statistic].max()
+            max_occ_hr = df[statistic].idxmax()
+        else:
+            max_occ = np.nan
+            max_occ_hr = np.nan
+
+        # add row of data to list
+        data.append([day, start_hr, end_hr, time_open, max_occ, max_occ_hr])
+
+    # construct summary table
+    summary_df = pd.DataFrame(data, columns=['Day of Week', 'Start Time', 'End Time',
+                                             'Hours Open', 'Peak Occupancy', 'Peak Occupancy Time'])
+
+    # df styling
+
+    # style options for title caption
+    styles = [dict(selector='caption',
+                   props=[('font-size', '100%'),
+                          ('font-weight', 'bold'),
+                          ('text-align', 'left')])]
+
+    styler = summary_df.style
+    styler.background_gradient(axis=0, subset=['Hours Open', 'Peak Occupancy'], cmap='YlGnBu')
+    styler.set_caption('<h3>Implied Operating Hours</h3>').set_table_styles(styles)
+    styler.format(precision=0, na_rep='').hide()
+    styler.format(precision=2, subset='Peak Occupancy', na_rep='')
+
+    return styler
 
 
 if __name__ == '__main__':
