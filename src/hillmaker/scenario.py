@@ -510,7 +510,8 @@ class Scenario(BaseModel):
         df = get_bydatetime_df(self.hills, by_category=by_category)
         return df
 
-    def compute_implied_operating_hours(self, statistic: str = 'mean', threshold: float = 0.2):
+    def compute_implied_operating_hours(self, by_category: bool =True,
+                                        statistic: str = 'mean', threshold: float = 0.2):
         """
         Infers operating hours of underlying data.
 
@@ -519,6 +520,9 @@ class Scenario(BaseModel):
 
         Parameters
         ----------
+        by_category : bool
+            Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
         statistic : str
             Column name for the statistic value. Default is 'mean'.
 
@@ -531,8 +535,9 @@ class Scenario(BaseModel):
         pandas styler object
 
         """
-        occ_df = get_summary_df(self.hills)
-        styler = implied_operating_hours(occ_df, statistic=statistic, threshold=threshold)
+        occ_df = get_summary_df(self.hills, by_category=by_category)
+        cat = self.model_dump['cat_field']
+        styler = implied_operating_hours(occ_df, cat_field=cat, statistic=statistic, threshold=threshold)
         return styler
 
     def __str__(self):

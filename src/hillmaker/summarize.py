@@ -321,7 +321,7 @@ def summarize_los(stops_preprocessed_df: DataFrame, los_field: str, cat_field: s
     return results
 
 
-def compute_implied_operating_hours(occupancy_summary_df, statistic='mean', threshold=0.2):
+def compute_implied_operating_hours(occupancy_summary_df, cat_field=None, statistic='mean', threshold=0.2):
     """
     Infers operating hours of underlying data.
 
@@ -331,6 +331,10 @@ def compute_implied_operating_hours(occupancy_summary_df, statistic='mean', thre
     Parameters
     ----------
     occupancy_summary_df : DataFrame
+
+    cat_field : str, optional
+    Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
+        Default is None
 
     statistic : str
         Column name for the statistic value. Default is 'mean'.
@@ -349,38 +353,59 @@ def compute_implied_operating_hours(occupancy_summary_df, statistic='mean', thre
     overall_max_occ = occ_sum['mean'].max()
     cutoff = threshold * overall_max_occ
 
+    # creates dummy cat_field if none is supplied
+    if cat_field is None:
+        cat_field = 'FakeCatFieldForTotals'
+        occ_sum[cat_field] = 'FakeCatForTotals'
+
     # initialize an empty list
     data = []
 
-    # iterate over each unique dow_name to fill the data list
-    for day in occ_sum['dow_name'].unique():
-        df = occ_sum[occ_sum['dow_name'] == day]
+    for cat in occ_sum[cat_field].unique():
+        cat_df = occ_sum[occ_sum[cat_field] == cat]
 
-        # occ_sum['bin_of_day'] = occ_sum.bin_of_day * occ_sum.num_beds
-        df.set_index('bin_of_day', inplace=True)
+        # iterate over each unique dow_name to fill the data list
+        for day in cat_df['dow_name'].unique():
+            df = cat_df[cat_df['dow_name'] == day]
 
-        # remove all rows (bin_of_day) not meeting the cutoff
-        df = df[df[statistic] >= cutoff]
+            # occ_sum['bin_of_day'] = occ_sum.bin_of_day * occ_sum.num_beds
+            df.set_index('bin_of_day', inplace=True)
 
-        # get starting and ending times
-        start_hr = df.index.min()
-        end_hr = df.index.max() + 1
-        time_open = end_hr - start_hr
+            # remove all rows (bin_of_day) not meeting the cutoff
+            df = df[df[statistic] >= cutoff]
 
-        # logic to deal with closed days
-        if time_open > 0:
-            max_occ = df[statistic].max()
-            max_occ_hr = df[statistic].idxmax()
-        else:
-            max_occ = np.nan
-            max_occ_hr = np.nan
+            # get starting and ending times
+            start_hr = df.index.min()
+            end_hr = df.index.max() + 1
+            time_open = end_hr - start_hr
 
-        # add row of data to list
-        data.append([day, start_hr, end_hr, time_open, max_occ, max_occ_hr])
+            # logic to deal with closed days
+            if time_open > 0:
+                max_occ = df[statistic].max()
+                max_occ_hr = df[statistic].idxmax()
+            else:
+                max_occ = np.nan
+                max_occ_hr = np.nan
+
+            # add row of data to list
+            row = [cat, day, start_hr, end_hr, time_open, max_occ, max_occ_hr]
+
+            # removes cat from row list if none was supplied
+            if cat_field == 'FakeCatFieldForTotals':
+                row.pop(0)
+
+            data.append(row)
 
     # construct summary table
-    summary_df = pd.DataFrame(data, columns=['Day of Week', 'Start Time', 'End Time',
-                                             'Hours Open', 'Peak Occupancy', 'Peak Occupancy Time'])
+    cols = [cat_field, 'Day of Week', 'Start Time', 'End Time', 'Hours Open', 'Peak Occupancy', 'Peak Occupancy Time']
+    if cat_field == 'FakeCatFieldForTotals':
+        cols.pop(0)
+
+    summary_df = pd.DataFrame(data, columns=cols)
+
+    # sets index only if cat_field was supplied, looks better visually
+    if cat_field != 'FakeCatFieldForTotals':
+        summary_df.set_index([cat_field, 'Day of Week'], inplace=True)
 
     # df styling
 
@@ -388,13 +413,17 @@ def compute_implied_operating_hours(occupancy_summary_df, statistic='mean', thre
     styles = [dict(selector='caption',
                    props=[('font-size', '100%'),
                           ('font-weight', 'bold'),
-                          ('text-align', 'left')])]
+                          ('text-align', 'center')])]
 
     styler = summary_df.style
     styler.background_gradient(axis=0, subset=['Hours Open', 'Peak Occupancy'], cmap='YlGnBu')
     styler.set_caption('<h3>Implied Operating Hours</h3>').set_table_styles(styles)
-    styler.format(precision=0, na_rep='').hide()
+    styler.format(precision=0, na_rep='')
     styler.format(precision=2, subset='Peak Occupancy', na_rep='')
+
+    # hides index if not summarizing by category
+    if cat_field == 'FakeCatFieldForTotals':
+        styler.hide()
 
     return styler
 
