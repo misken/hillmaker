@@ -11,6 +11,7 @@ from pydantic import BaseModel, field_validator, model_validator, confloat, Fiel
 # import hillmaker as hm
 from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
 from hillmaker.plotting import make_week_hill_plot, make_daily_hill_plot
+from hillmaker.summarize import implied_operating_hours
 
 try:
     import tomllib
@@ -508,6 +509,31 @@ class Scenario(BaseModel):
         """
         df = get_bydatetime_df(self.hills, by_category=by_category)
         return df
+
+    def compute_implied_operating_hours(self, statistic: str = 'mean', threshold: float = 0.2):
+        """
+        Infers operating hours of underlying data.
+
+        Computes implied operating hours based on exceeding a percentage of the
+        maximum occupancy for a given statistic.
+
+        Parameters
+        ----------
+        statistic : str
+            Column name for the statistic value. Default is 'mean'.
+
+        threshold : str
+            Percentage of maximum occupancy that will be considered 'open' for
+            operating purposes, inclusive. Default is 0.2.
+
+        Returns
+        -------
+        pandas styler object
+
+        """
+        occ_df = get_summary_df(self.hills)
+        styler = implied_operating_hours(occ_df, statistic=statistic, threshold=threshold)
+        return styler
 
     def __str__(self):
         """Pretty string representation of a scenario"""
