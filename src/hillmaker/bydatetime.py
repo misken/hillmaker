@@ -330,7 +330,8 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt,
         res_df['date'] = res_df['datetime'].map(lambda x: x.date())
         res_df['bin_of_day'] = res_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
 
-        # Aggregate by bin_size_minutes
+        # Aggregate by bin_size_minutes if necessary
+
         if catfield:
             for c in catfield:
                 res_df[c] = cat

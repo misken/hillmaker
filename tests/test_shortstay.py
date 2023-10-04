@@ -2,14 +2,14 @@ import pandas as pd
 
 import hillmaker as hm
 
-file_stopdata = './fixtures/ShortStay2_10pct.csv'
+file_stopdata = './fixtures/ssu_2024.csv'
 
 # Required inputs
 scenario_name = 'ss_example_1'
 in_field_name = 'InRoomTS'
 out_field_name = 'OutRoomTS'
-start_date = '1996-01-01'
-end_date = pd.Timestamp('3/30/1996')
+start_date = '2024-01-02'
+end_date = pd.Timestamp('3/30/2024')
 
 # Optional inputs
 
@@ -17,8 +17,8 @@ cat_field_name = 'PatType'
 verbosity = 1  # INFO level logging
 output_path = './output'
 bin_size_minutes = 60
-highres_bin_size_minutes = 5
-keep_highres_datetime = True
+highres_bin_size_minutes = 60
+keep_highres_datetime = False
 edge_bins = 1
 
 df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
