@@ -271,11 +271,16 @@ class Scenario(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def bin_size_relationship(self) -> 'Scenario':
+    def bin_size_relationships(self) -> 'Scenario':
         
         if self.bin_size_minutes < self.highres_bin_size_minutes:
             raise ValueError(
                 f'highres_bin_size_minutes ({self.highres_bin_size_minutes}) must be <= bin_size_minutes ({self.bin_size_minutes})')
+
+        if self.edge_bins == EdgeBinsEnum.FRACTIONAL and not self.keep_highres_bydatetime:
+            # No need to compute bydatetime at high resolution
+            self.highres_bin_size_minutes = self.bin_size_minutes
+
         return self
 
     @model_validator(mode='after')

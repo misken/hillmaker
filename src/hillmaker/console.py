@@ -57,12 +57,12 @@ def process_command_line(argv=None):
 
     required.add_argument(
         '--start_analysis_dt', type=str,
-        help="Starting datetime for the analysis (must be convertible to pandas Timestamp)"
+        help="Starting datetime for the analysis (use yyyy-mm-dd format)"
     )
 
     required.add_argument(
         '--end_analysis_dt', type=str,
-        help="Ending datetime for the analysis (must be convertible to pandas Timestamp)"
+        help="Ending datetime for the analysis (use yyyy-mm-dd format)"
     )
 
     optional.add_argument(
@@ -78,11 +78,6 @@ def process_command_line(argv=None):
     optional.add_argument(
         '--bin_size_mins', type=int, default=60,
         help="Number of minutes in each time bin of the day (default=60) for aggregate statistics."
-    )
-
-    optional.add_argument(
-        '--highres_bin_size_mins', type=int, default=60,
-        help="Number of minutes in each time bin of the day (default=60) for high resolution occupancy computation."
     )
 
     optional.add_argument(
@@ -114,11 +109,6 @@ def process_command_line(argv=None):
     optional.add_argument(
         '--cap', type=int, default=None,
         help="Capacity level line to include in occupancy plots"
-    )
-
-    optional.add_argument(
-        '--edge_bins', type=int, default=1,
-        help="Occupancy contribution method for arrival and departure bins. 1=fractional (the default), 2=whole bin"
     )
 
     optional.add_argument(
@@ -222,14 +212,13 @@ def main(argv=None):
                         in_field=args.in_field, out_field=args.out_field,
                         start_analysis_dt=args.start_analysis_dt, end_analysis_dt=args.end_analysis_dt,
                         cat_field=args.cat_field, bin_size_minutes=args.bin_size_mins,
-                        highres_bin_size_minutes=args.highres_bin_size_minutes,
                         output_path=args.output_path, verbosity=args.verbosity,
                         export_bydatetime_csv=True, export_summaries_csv=True,
                         make_all_week_plots=make_week_plot, make_all_dow_plots=make_dow_plots,
                         export_all_week_plots=export_week_plot,
                         export_all_dow_plots=export_dow_plots,
                         cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel,
-                        edge_bins=args.edge_bins, los_units='hours')
+                        los_units='hours')
 
     scenario.make_hills()
 
