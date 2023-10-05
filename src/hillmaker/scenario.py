@@ -510,7 +510,7 @@ class Scenario(BaseModel):
         df = get_bydatetime_df(self.hills, by_category=by_category)
         return df
 
-    def compute_implied_operating_hours(self, by_category: bool =True,
+    def compute_implied_operating_hours(self, by_category: bool = True,
                                         statistic: str = 'mean', threshold: float = 0.2):
         """
         Infers operating hours of underlying data.
@@ -536,7 +536,7 @@ class Scenario(BaseModel):
 
         """
         occ_df = get_summary_df(self.hills, by_category=by_category)
-        cat = self.model_dump['cat_field']
+        cat = self.model_dump()['cat_field']
         styler = compute_implied_operating_hours(occ_df, cat_field=cat, statistic=statistic, threshold=threshold)
         return styler
 
