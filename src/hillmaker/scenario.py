@@ -11,7 +11,7 @@ from pydantic import BaseModel, field_validator, model_validator, confloat, Fiel
 # import hillmaker as hm
 from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
 from hillmaker.plotting import make_week_hill_plot, make_daily_hill_plot
-from hillmaker.summarize import implied_operating_hours
+from hillmaker.summarize import compute_implied_operating_hours
 
 try:
     import tomllib
@@ -375,10 +375,10 @@ class Scenario(BaseModel):
                          cap_color: str = 'r',
                          xlabel: str = '',
                          ylabel: str = '',
-                         suptitle: str = '',
-                         suptitle_properties: None | Dict = None,
-                         title: str = '',
-                         title_properties: None | Dict = None,
+                         main_title: str = '',
+                         main_title_properties: None | Dict = None,
+                         subtitle: str = '',
+                         subtitle_properties: None | Dict = None,
                          legend_properties: None | Dict = None,
                          first_dow: str = 'mon',
                          export_path: Path | str | None = None, ):
@@ -400,10 +400,10 @@ class Scenario(BaseModel):
                                    pctile_color=pctile_color,
                                    pctile_linestyle=pctile_linestyle,
                                    pctile_linewidth=pctile_linewidth,
-                                   suptitle=suptitle,
-                                   suptitle_properties=suptitle_properties,
-                                   title=title,
-                                   title_properties=title_properties,
+                                   main_title=main_title,
+                                   main_title_properties=main_title_properties,
+                                   subtitle=subtitle,
+                                   subtitle_properties=subtitle_properties,
                                    legend_properties=legend_properties,
                                    xlabel=xlabel,
                                    ylabel=ylabel,
@@ -425,10 +425,10 @@ class Scenario(BaseModel):
                         cap_color: str = 'r',
                         xlabel: str = '',
                         ylabel: str = '',
-                        suptitle: str = '',
-                        suptitle_properties: None | Dict = None,
-                        title: str = '',
-                        title_properties: None | Dict = None,
+                        main_title: str = '',
+                        main_title_properties: None | Dict = None,
+                        subtitle: str = '',
+                        subtitle_properties: None | Dict = None,
                         legend_properties: None | Dict = None,
                         export_path: Path | str | None = None, ):
 
@@ -449,10 +449,10 @@ class Scenario(BaseModel):
                                     pctile_color=pctile_color,
                                     pctile_linestyle=pctile_linestyle,
                                     pctile_linewidth=pctile_linewidth,
-                                    suptitle=suptitle,
-                                    suptitle_properties=suptitle_properties,
-                                    title=title,
-                                    title_properties=title_properties,
+                                    main_title=main_title,
+                                    main_title_properties=main_title_properties,
+                                    subtitle=subtitle,
+                                    subtitle_properties=subtitle_properties,
                                     legend_properties=legend_properties,
                                     xlabel=xlabel,
                                     ylabel=ylabel,
@@ -539,7 +539,7 @@ class Scenario(BaseModel):
         statistic : str
             Column name for the statistic value. Default is 'mean'.
 
-        threshold : str
+        threshold : float
             Percentage of maximum occupancy that will be considered 'open' for
             operating purposes, inclusive. Default is 0.2.
 
@@ -550,7 +550,7 @@ class Scenario(BaseModel):
         """
         occ_df = get_summary_df(self.hills, by_category=by_category)
         cat = self.model_dump['cat_field']
-        styler = implied_operating_hours(occ_df, cat_field=cat, statistic=statistic, threshold=threshold)
+        styler = compute_implied_operating_hours(occ_df, cat_field=cat, statistic=statistic, threshold=threshold)
         return styler
 
     def __str__(self):

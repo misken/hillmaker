@@ -339,7 +339,7 @@ def compute_implied_operating_hours(occupancy_summary_df, cat_field=None, statis
     statistic : str
         Column name for the statistic value. Default is 'mean'.
 
-    threshold : str
+    threshold : float
         Percentage of maximum occupancy that will be considered 'open' for
         operating purposes, inclusive. Default is 0.2.
 
