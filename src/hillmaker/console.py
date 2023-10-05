@@ -102,7 +102,7 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--ylabel', type=str, default='Hour',
+        '--ylabel', type=str, default='Volume',
         help="y-axis label for plots"
     )
 
