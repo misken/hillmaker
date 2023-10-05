@@ -11,7 +11,7 @@ from pydantic import BaseModel, field_validator, model_validator, confloat, Fiel
 # import hillmaker as hm
 from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
 from hillmaker.plotting import make_week_hill_plot, make_daily_hill_plot
-from hillmaker.summarize import implied_operating_hours
+from hillmaker.summarize import compute_implied_operating_hours
 
 try:
     import tomllib

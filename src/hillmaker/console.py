@@ -77,12 +77,12 @@ def process_command_line(argv=None):
 
     optional.add_argument(
         '--bin_size_mins', type=int, default=60,
-        help="Number of minutes in each time bin of the day (default=60) for aggregate statistics."
+        help="Number of minutes in each time bin of the day (default=60) for aggregate statistics and plots."
     )
 
     optional.add_argument(
         '--occ_weight_field', type=str, default=None,
-        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used."
+        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used. Default is None."
     )
 
     optional.add_argument(
