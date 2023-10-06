@@ -73,8 +73,7 @@ def compute_hills_stats(scenario):
                                                      highres_bin_size_minutes=scenario.highres_bin_size_minutes,
                                                      keep_highres_bydatetime=scenario.keep_highres_bydatetime,
                                                      cat_to_exclude=scenario.cats_to_exclude,
-                                                     occ_weight_field=scenario.occ_weight_field,
-                                                     edge_bins=scenario.edge_bins)
+                                                     occ_weight_field=scenario.occ_weight_field)
 
     logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
