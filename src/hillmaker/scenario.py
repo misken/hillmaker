@@ -373,13 +373,13 @@ class Scenario(BaseModel):
                          pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                          pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
                          cap_color: str = 'r',
-                         xlabel: str = '',
-                         ylabel: str = '',
+                         xlabel: str = 'Hour',
+                         ylabel: str = 'Volume',
                          main_title: str = '',
-                         main_title_properties: None | Dict = None,
+                         main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16},
                          subtitle: str = '',
-                         subtitle_properties: None | Dict = None,
-                         legend_properties: None | Dict = None,
+                         subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
+                         legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                          first_dow: str = 'mon',
                          export_path: Path | str | None = None, ):
 
@@ -423,13 +423,13 @@ class Scenario(BaseModel):
                         pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                         pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
                         cap_color: str = 'r',
-                        xlabel: str = '',
-                        ylabel: str = '',
+                        xlabel: str = 'Hour',
+                        ylabel: str = 'Volume',
                         main_title: str = '',
-                        main_title_properties: None | Dict = None,
+                        main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16},
                         subtitle: str = '',
-                        subtitle_properties: None | Dict = None,
-                        legend_properties: None | Dict = None,
+                        subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
+                        legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                         export_path: Path | str | None = None, ):
 
         bin_size_minutes = self.bin_size_minutes
@@ -523,7 +523,7 @@ class Scenario(BaseModel):
         df = get_bydatetime_df(self.hills, by_category=by_category)
         return df
 
-    def compute_implied_operating_hours(self, by_category: bool =True,
+    def compute_implied_operating_hours(self, by_category: bool = True,
                                         statistic: str = 'mean', threshold: float = 0.2):
         """
         Infers operating hours of underlying data.
@@ -549,8 +549,15 @@ class Scenario(BaseModel):
 
         """
         occ_df = get_summary_df(self.hills, by_category=by_category)
-        cat = self.model_dump['cat_field']
+
+        # get cat_field name from Scenario if specified
+        if by_category:
+            cat = self.model_dump()['cat_field']
+        else:
+            cat = None
+
         styler = compute_implied_operating_hours(occ_df, cat_field=cat, statistic=statistic, threshold=threshold)
+
         return styler
 
     def __str__(self):
