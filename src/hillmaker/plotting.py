@@ -68,7 +68,7 @@ def _dow_name(dow, capitalize=True):
     return dow_name
 
 
-def make_week_dow_plots(scenario: 'Scenario', hills: dict):
+def make_plots(scenario: 'Scenario', hills: dict):
     """
     Create weekly and all dow plots for arrivals, departures, and occupancy
 
@@ -88,7 +88,7 @@ def make_week_dow_plots(scenario: 'Scenario', hills: dict):
 
     # Create and export full week plots if requested
     plots = {}
-    if scenario.make_all_week_plots:
+    if scenario.make_all_week_plots or scenario.export_all_week_plots:
         with HillTimer() as t:
             for metric in hills['summaries']['nonstationary']['dow_binofday']:
                 fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
@@ -111,7 +111,7 @@ def make_week_dow_plots(scenario: 'Scenario', hills: dict):
         logger.info(f"Full week plots created (seconds): {t.interval:.4f}")
 
     # Create and export individual day of week plots if requested
-    if scenario.make_all_dow_plots:
+    if scenario.make_all_dow_plots or scenario.export_all_dow_plots:
         with HillTimer() as t:
             for metric in hills['summaries']['nonstationary']['dow_binofday']:
                 fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]

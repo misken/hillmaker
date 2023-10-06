@@ -3,6 +3,21 @@
 
 format: jb-book
 root: intro
-chapters:
-- file: getting_started
+parts:
+  - caption: Tutorials
+    chapters:
+    - file: getting_started
+    - file: using_oo_api
+    - file: using_cli
+    - file: basic_occupancy_analysis
+    - file: pseudo_simulation
+  - caption: Topic Guides
+    chapters:
+    - file: computing_occupancy
+    - file: hillmaker_outputs
+  - caption: Refeernce
+    chapters:
+    - file: api_reference
+    - file: datasets
+    - file: logging
 
