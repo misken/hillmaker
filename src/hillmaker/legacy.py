@@ -1,6 +1,7 @@
 from typing import Tuple, List
 from pathlib import Path
 from datetime import datetime, date
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -35,7 +36,7 @@ def make_hills(scenario_name: str,
                output_path: str | Path = Path('.'),
                edge_bins: int = 1,
                verbosity: int = VerbosityEnum.WARNING,
-               los_units: str = 'hours'):
+               los_units: str = 'hours') -> Dict:
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -108,8 +109,7 @@ def make_hills(scenario_name: str,
     los_units : str, optional
         The time units to length of stay analysis.
         See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
-        value allowed is 'seoonds', largest is 'days'. The default
-        is 'hours'.
+        value allowed is 'seconds', largest is 'days'. The default is 'hours'.
 
 
     Returns
