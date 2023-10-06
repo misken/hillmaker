@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize, summarize_los
 from hillmaker.hmlib import HillTimer
-from hillmaker.plotting import make_week_dow_plots
+from hillmaker.plotting import make_plots
 
 
 def setup_logger(verbosity: int):
@@ -161,7 +161,7 @@ def _make_hills(scenario):
     if scenario.make_all_week_plots or scenario.make_all_dow_plots or \
             scenario.export_all_week_plots or scenario.export_all_dow_plots:
         with HillTimer() as t:
-            plots = make_week_dow_plots(scenario, hills)
+            plots = make_plots(scenario, hills)
             hills['plots'] = plots
 
     # All done
