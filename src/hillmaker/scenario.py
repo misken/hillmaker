@@ -536,8 +536,15 @@ class Scenario(BaseModel):
 
         """
         occ_df = get_summary_df(self.hills, by_category=by_category)
-        cat = self.model_dump()['cat_field']
+
+        # get cat_field name from Scenario if specified
+        if by_category:
+            cat = self.model_dump()['cat_field']
+        else:
+            cat = None
+
         styler = compute_implied_operating_hours(occ_df, cat_field=cat, statistic=statistic, threshold=threshold)
+
         return styler
 
     def __str__(self):
