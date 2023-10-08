@@ -34,6 +34,7 @@ def make_hills(scenario_name: str,
                xlabel: str | None = None,
                ylabel: str | None = None,
                output_path: str | Path = Path('.'),
+               edge_bins: int = 1,
                verbosity: int = VerbosityEnum.WARNING,
                los_units: str = 'hours') -> Dict:
     """
@@ -77,6 +78,8 @@ def make_hills(scenario_name: str,
     occ_weight_field : str, optional
         Column name corresponding to the weights to use for occupancy incrementing, default is None
         which corresponds to a weight of 1.0.
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     cap : int, optional
         Capacity of area being analyzed, default is None
     nonstationary_stats : bool, optional
@@ -106,7 +109,7 @@ def make_hills(scenario_name: str,
     los_units : str, optional
         The time units to length of stay analysis.
         See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
-        value allowed is 'seconds', largest is 'days'). The default is 'hours'.
+        value allowed is 'seconds', largest is 'days'. The default is 'hours'.
 
 
     Returns
@@ -123,6 +126,7 @@ def make_hills(scenario_name: str,
                         bin_size_minutes=bin_size_minutes, highres_bin_size_minutes=highres_bin_size_minutes,
                         keep_highres_bydatetime=keep_highres_bydatetime,
                         cats_to_exclude=cats_to_exclude, occ_weight_field=occ_weight_field,
+                        edge_bins=edge_bins,
                         stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
                         percentiles=percentiles, cap=cap,
                         make_all_dow_plots=make_all_dow_plots, make_all_week_plots=make_all_week_plots,

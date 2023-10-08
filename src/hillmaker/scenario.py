@@ -22,6 +22,11 @@ except ModuleNotFoundError:
 logger = logging.getLogger(__name__)
 
 
+class EdgeBinsEnum(IntEnum):
+    FRACTIONAL = 1
+    ENTIRE = 2
+
+
 class VerbosityEnum(IntEnum):
     WARNING = 0
     INFO = 1
@@ -63,6 +68,8 @@ class Scenario(BaseModel):
     occ_weight_field : str, optional
         Column name corresponding to the weights to use for occupancy incrementing, default is None
         which corresponds to a weight of 1.0.
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
     cap : int, optional
@@ -130,6 +137,7 @@ class Scenario(BaseModel):
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
     nonstationary_stats: bool = True
     stationary_stats: bool = True
+    edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
     output_path: str | Path = Path('.')
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
@@ -270,8 +278,8 @@ class Scenario(BaseModel):
             raise ValueError(
                 f'highres_bin_size_minutes ({self.highres_bin_size_minutes}) must be <= bin_size_minutes ({self.bin_size_minutes})')
 
-        if not self.keep_highres_bydatetime:
-            # No need to compute bydatetime at high resolution if not saving dataframe
+        if self.edge_bins == EdgeBinsEnum.FRACTIONAL and not self.keep_highres_bydatetime:
+            # No need to compute bydatetime at high resolution
             self.highres_bin_size_minutes = self.bin_size_minutes
 
         return self
