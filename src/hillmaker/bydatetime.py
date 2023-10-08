@@ -37,7 +37,6 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
                     keep_highres_bydatetime: bool = False,
                     cat_to_exclude: List[str] = None,
                     occ_weight_field: str = None,
-                    edge_bins: int = 1
                     ):
     """
     Create bydatetime table from which summary statistics can be computed.
@@ -79,8 +78,6 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
         Column name corresponding to the weights to use for occupancy incrementing.
         If omitted, occupancy weights of 1.0 are used (i.e. pure occupancy)
 
-    edge_bins: int, default=1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
 
     Returns
     -------
@@ -178,9 +175,9 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
 
         # Compute inbin and outbin fraction arrays
         entry_bin_frac = in_bin_occ_frac(entry_bin, in_ts_np, out_ts_np,
-                                         start_analysis_np, highres_bin_size_minutes, edge_bins=edge_bins)
+                                         start_analysis_np, highres_bin_size_minutes)
         exit_bin_frac = out_bin_occ_frac(exit_bin, in_ts_np, out_ts_np,
-                                         start_analysis_np, highres_bin_size_minutes, edge_bins=edge_bins)
+                                         start_analysis_np, highres_bin_size_minutes)
 
         # Create list of occupancy incrementer arrays
         list_of_inc_arrays = [make_occ_inc(entry_bin[i], exit_bin[i],
@@ -349,7 +346,8 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt,
         agg_df = agg_df.reset_index(drop=False)
 
         # Compute datetime
-        agg_df['datetime'] = agg_df.apply(lambda x: pd.Timestamp(x.date) + pd.Timedelta(x.bin_of_day * bin_size_minutes, 'm'), axis=1)
+        agg_df['datetime'] = agg_df.apply(
+            lambda x: pd.Timestamp(x.date) + pd.Timedelta(x.bin_of_day * bin_size_minutes, 'm'), axis=1)
 
         # Add additional fields
         agg_df['day_of_week'] = agg_df['datetime'].map(lambda x: x.weekday())
@@ -419,8 +417,7 @@ def in_bin_occ_frac(entry_bin: int,
                     in_dt_np: np.datetime64,
                     out_dt_np: np.datetime64,
                     start_analysis_dt_np: np.datetime64,
-                    bin_size_minutes: int,
-                    edge_bins: int = 1):
+                    bin_size_minutes: int):
     """
     Computes fractional occupancy in arrival (entry) bin.
 
@@ -436,8 +433,7 @@ def in_bin_occ_frac(entry_bin: int,
         datetime to start computing metrics
     bin_size_minutes : int
         bin size in minutes
-    edge_bins : int
-        1=fractional, 2=whole bin
+
 
     Returns
     -------
@@ -445,23 +441,19 @@ def in_bin_occ_frac(entry_bin: int,
 
     """
 
-    if edge_bins == 1:
-        rel_in_time_secs = (in_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
-        rel_out_time_secs = (out_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
-        rel_right_bin_edge_secs = (entry_bin + 1) * bin_size_minutes * 60
-        rel_right_edge_secs = np.minimum(rel_out_time_secs, rel_right_bin_edge_secs)
-        in_bin_seconds = (rel_right_edge_secs - rel_in_time_secs)
-        inbin_occ_frac = in_bin_seconds / (bin_size_minutes * 60.0)
-    else:
-        # inbin_occ_frac = 1.0
-        inbin_occ_frac = np.ones(in_dt_np.size)
+    rel_in_time_secs = (in_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
+    rel_out_time_secs = (out_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
+    rel_right_bin_edge_secs = (entry_bin + 1) * bin_size_minutes * 60
+    rel_right_edge_secs = np.minimum(rel_out_time_secs, rel_right_bin_edge_secs)
+    in_bin_seconds = (rel_right_edge_secs - rel_in_time_secs)
+    inbin_occ_frac = in_bin_seconds / (bin_size_minutes * 60.0)
 
     return inbin_occ_frac
 
 
 # This is new and untested.
 def out_bin_occ_frac(exit_bin: int, in_dt_np, out_dt_np, start_analysis_dt_np,
-                     bin_size_minutes: int, edge_bins: int = 1):
+                     bin_size_minutes: int):
     """
     Computes fractional occupancy in departure (exit) bin.
 
@@ -477,8 +469,6 @@ def out_bin_occ_frac(exit_bin: int, in_dt_np, out_dt_np, start_analysis_dt_np,
         datetime to start computing metrics
     bin_size_minutes : int
         bin size in minutes
-    edge_bins : int
-        1=fractional, 2=whole bin
 
     Returns
     -------
@@ -486,16 +476,12 @@ def out_bin_occ_frac(exit_bin: int, in_dt_np, out_dt_np, start_analysis_dt_np,
 
     """
 
-    if edge_bins == 1:
-        rel_in_time_secs = (in_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
-        rel_out_time_secs = (out_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
-        rel_left_bin_edge_secs = exit_bin * bin_size_minutes * 60
-        rel_left_edge_secs = np.maximum(rel_in_time_secs, rel_left_bin_edge_secs)
-        out_bin_seconds = (rel_out_time_secs - rel_left_edge_secs)
-        outbin_occ_frac = out_bin_seconds / (bin_size_minutes * 60.0)
-    else:
-        # outbin_occ_frac = 1.0
-        outbin_occ_frac = np.ones(in_dt_np.size)
+    rel_in_time_secs = (in_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
+    rel_out_time_secs = (out_dt_np - start_analysis_dt_np).astype('timedelta64[s]').astype(np.float64)
+    rel_left_bin_edge_secs = exit_bin * bin_size_minutes * 60
+    rel_left_edge_secs = np.maximum(rel_in_time_secs, rel_left_bin_edge_secs)
+    out_bin_seconds = (rel_out_time_secs - rel_left_edge_secs)
+    outbin_occ_frac = out_bin_seconds / (bin_size_minutes * 60.0)
 
     return outbin_occ_frac
 
