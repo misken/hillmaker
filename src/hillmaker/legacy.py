@@ -17,8 +17,6 @@ def make_hills(scenario_name: str,
                end_analysis_dt: str | date | datetime | pd.Timestamp | np.datetime64,
                cat_field: str = None,
                bin_size_minutes: int = 60,
-               highres_bin_size_minutes: int = 5,
-               keep_highres_bydatetime: bool = False,
                percentiles: Tuple | List = (0.25, 0.5, 0.75, 0.95, 0.99),
                cats_to_exclude: str | None = None,
                occ_weight_field: str | None = None,
@@ -34,9 +32,11 @@ def make_hills(scenario_name: str,
                xlabel: str | None = None,
                ylabel: str | None = None,
                output_path: str | Path = Path('.'),
-               edge_bins: int = 1,
                verbosity: int = VerbosityEnum.WARNING,
-               los_units: str = 'hours') -> Dict:
+               los_units: str = 'hours',
+               edge_bins: int = 1,
+               highres_bin_size_minutes: int = 5,
+               keep_highres_bydatetime: bool = False) -> Dict:
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -65,12 +65,6 @@ def make_hills(scenario_name: str,
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60. Use a value that
         divides into 1440 with no remainder
-    highres_bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
-        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
-        stays, the smaller the resolution should be. The current default is 5 minutes.
-    keep_highres_bydatetime : bool, optional
-        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
     cats_to_exclude : list, optional
@@ -78,8 +72,6 @@ def make_hills(scenario_name: str,
     occ_weight_field : str, optional
         Column name corresponding to the weights to use for occupancy incrementing, default is None
         which corresponds to a weight of 1.0.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
     cap : int, optional
         Capacity of area being analyzed, default is None
     nonstationary_stats : bool, optional
@@ -110,6 +102,14 @@ def make_hills(scenario_name: str,
         The time units to length of stay analysis.
         See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
         value allowed is 'seconds', largest is 'days'. The default is 'hours'.
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
+    highres_bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
+        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
+        stays, the smaller the resolution should be. The current default is 5 minutes.
+    keep_highres_bydatetime : bool, optional
+        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
 
 
     Returns
@@ -139,4 +139,3 @@ def make_hills(scenario_name: str,
 
     hills = _make_hills(scenario)
     return hills
-

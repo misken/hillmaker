@@ -130,14 +130,11 @@ class Scenario(BaseModel):
     # stop_data_csv: str | Path | None = None
     cat_field: str | None = None
     bin_size_minutes: int = 60
-    highres_bin_size_minutes: int = 5
-    keep_highres_bydatetime: bool = False
     cats_to_exclude: List[str] | None = None
     occ_weight_field: str | None = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
     nonstationary_stats: bool = True
     stationary_stats: bool = True
-    edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
     output_path: str | Path = Path('.')
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
@@ -150,6 +147,10 @@ class Scenario(BaseModel):
     ylabel: str | None = 'Patients'
     verbosity: int = VerbosityEnum.WARNING
     los_units: str = 'hours'
+    # Advanced parameters
+    edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
+    highres_bin_size_minutes: int = 5
+    keep_highres_bydatetime: bool = False
     # Attributes
     stops_preprocessed_df: pd.DataFrame | None = None
     los_field_name: str | None = None
