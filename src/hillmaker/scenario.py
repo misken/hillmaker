@@ -94,7 +94,7 @@ class Scenario(BaseModel):
         x-axis label, default='Hour'
     ylabel : str
         y-axis label, default='Occupancy'
-    output_path : str or Path, optional
+    csv_export_path : str or Path, optional
         Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
@@ -135,22 +135,38 @@ class Scenario(BaseModel):
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
     nonstationary_stats: bool = True
     stationary_stats: bool = True
-    output_path: str | Path = Path('.')
+    los_units: str = 'hours'
+    csv_export_path: str | Path = Path('.')
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
     make_all_dow_plots: bool = False
     make_all_week_plots: bool = False
     export_all_dow_plots: bool = False
     export_all_week_plots: bool = False
+    # Plot options
     cap: int | None = None
-    xlabel: str | None = 'Hour'
-    ylabel: str | None = 'Patients'
-    verbosity: int = VerbosityEnum.WARNING
-    los_units: str = 'hours'
+    plot_style: str = 'ggplot'
+    figsize: tuple = (15, 10)
+    bar_color_mean: str = 'steelblue'
+    plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75)
+    pctile_color: Tuple[str] | List[str] = ('black', 'grey')
+    pctile_linestyle: Tuple[str] | List[str] = ('-', '--')
+    pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75)
+    cap_color: str = 'r'
+    xlabel: str = 'Hour'
+    ylabel: str = 'Volume'
+    main_title: str = ''
+    main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16}
+    subtitle: str = ''
+    subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'}
+    legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'}
+    first_dow: str = 'mon'
+    plot_export_path: Path | str | None = None
     # Advanced parameters
     edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
     highres_bin_size_minutes: int = 5
     keep_highres_bydatetime: bool = False
+    verbosity: int = VerbosityEnum.WARNING
     # Attributes
     stops_preprocessed_df: pd.DataFrame | None = None
     los_field_name: str | None = None
@@ -369,7 +385,7 @@ class Scenario(BaseModel):
                          plot_style: str = 'ggplot',
                          figsize: tuple = (15, 10),
                          bar_color_mean: str = 'steelblue',
-                         percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                         plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                          pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                          pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                          pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
@@ -382,7 +398,7 @@ class Scenario(BaseModel):
                          subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
                          legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                          first_dow: str = 'mon',
-                         export_path: Path | str | None = None, ):
+                         plot_export_path: Path | str | None = None, ):
 
         bin_size_minutes = self.bin_size_minutes
         scenario_name = self.scenario_name
@@ -397,7 +413,7 @@ class Scenario(BaseModel):
                                    plot_style=plot_style,
                                    figsize=figsize,
                                    bar_color_mean=bar_color_mean,
-                                   percentiles=percentiles,
+                                   plot_percentiles=plot_percentiles,
                                    pctile_color=pctile_color,
                                    pctile_linestyle=pctile_linestyle,
                                    pctile_linewidth=pctile_linewidth,
@@ -410,7 +426,7 @@ class Scenario(BaseModel):
                                    ylabel=ylabel,
                                    first_dow=first_dow,
                                    scenario_name=scenario_name,
-                                   export_path=export_path)
+                                   plot_export_path=plot_export_path)
 
         return plot
 
@@ -431,7 +447,7 @@ class Scenario(BaseModel):
                         subtitle: str = '',
                         subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
                         legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
-                        export_path: Path | str | None = None, ):
+                        plot_export_path: Path | str | None = None, ):
 
         bin_size_minutes = self.bin_size_minutes
         scenario_name = self.scenario_name
@@ -446,7 +462,7 @@ class Scenario(BaseModel):
                                     plot_style=plot_style,
                                     figsize=figsize,
                                     bar_color_mean=bar_color_mean,
-                                    percentiles=percentiles,
+                                    plot_percentiles=percentiles,
                                     pctile_color=pctile_color,
                                     pctile_linestyle=pctile_linestyle,
                                     pctile_linewidth=pctile_linewidth,
@@ -458,7 +474,7 @@ class Scenario(BaseModel):
                                     xlabel=xlabel,
                                     ylabel=ylabel,
                                     scenario_name=scenario_name,
-                                    export_path=export_path)
+                                    plot_export_path=plot_export_path)
 
         return plot
 

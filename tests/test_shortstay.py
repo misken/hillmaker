@@ -31,6 +31,6 @@ hm.make_hills(scenario_name=scenario_name, stops_df=df,
               bin_size_minutes=bin_size_minutes,
               highres_bin_size_minutes=highres_bin_size_minutes,
               keep_highres_bydatetime=keep_highres_datetime,
-              output_path='./output', verbosity=verbosity,
+              csv_export_path='./output', verbosity=verbosity,
               export_summaries_csv=True,
               edge_bins=edge_bins)

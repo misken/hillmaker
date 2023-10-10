@@ -21,22 +21,38 @@ def make_hills(scenario_name: str,
                cats_to_exclude: str | None = None,
                occ_weight_field: str | None = None,
                cap: int | None = None,
-               nonstationary_stats: bool = True,
-               stationary_stats: bool = True,
+               los_units: str = 'hours',
+               csv_export_path: str | Path = Path('.'),
                export_bydatetime_csv: bool = True,
                export_summaries_csv: bool = True,
                make_all_dow_plots: bool = True,
                make_all_week_plots: bool = True,
                export_dow_plot: bool = True,
                export_week_plot: bool = True,
-               xlabel: str | None = None,
-               ylabel: str | None = None,
-               output_path: str | Path = Path('.'),
-               verbosity: int = VerbosityEnum.WARNING,
-               los_units: str = 'hours',
+               plot_style: str = 'ggplot',
+               figsize: tuple = (15, 10),
+               bar_color_mean: str = 'steelblue',
+               plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+               pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
+               pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
+               pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
+               cap_color: str = 'r',
+               xlabel: str = 'Hour',
+               ylabel: str = 'Volume',
+               main_title: str = '',
+               main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16},
+               subtitle: str = '',
+               subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
+               legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
+               first_dow: str = 'mon',
+               plot_export_path: Path | str | None = None,
+               verbosity: int = VerbosityEnum.INFO,
                edge_bins: int = 1,
                highres_bin_size_minutes: int = 5,
-               keep_highres_bydatetime: bool = False) -> Dict:
+               keep_highres_bydatetime: bool = False,
+               nonstationary_stats: bool = True,
+               stationary_stats: bool = True,
+               ) -> Dict:
     """
     Compute occupancy, arrival, and departure statistics by category, time bin of day and day of week.
 
@@ -47,6 +63,21 @@ def make_hills(scenario_name: str,
     Parameters
     ----------
 
+    plot_export_path
+    first_dow
+    legend_properties
+    subtitle_properties
+    subtitle
+    main_title_properties
+    main_title
+    cap_color
+    pctile_linewidth
+    pctile_linestyle
+    pctile_color
+    plot_percentiles
+    bar_color_mean
+    figsize
+    plot_style
     scenario_name : str
         Used in output filenames
     stops_df : DataFrame
@@ -74,10 +105,6 @@ def make_hills(scenario_name: str,
         which corresponds to a weight of 1.0.
     cap : int, optional
         Capacity of area being analyzed, default is None
-    nonstationary_stats : bool, optional
-       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    stationary_stats : bool, optional
-       If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
     export_bydatetime_csv : bool, optional
        If True, bydatetime DataFrames are exported to csv files. Default is True.
     export_summaries_csv : bool, optional
@@ -94,7 +121,7 @@ def make_hills(scenario_name: str,
         x-axis label, default='Hour'
     ylabel : str
         y-axis label, default='Patients'
-    output_path : str or Path, optional
+    csv_export_path : str or Path, optional
         Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
@@ -110,6 +137,10 @@ def make_hills(scenario_name: str,
         stays, the smaller the resolution should be. The current default is 5 minutes.
     keep_highres_bydatetime : bool, optional
         Save the high resolution bydatetime dataframe in hills attribute. Default is False.
+    nonstationary_stats : bool, optional
+       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
+    stationary_stats : bool, optional
+       If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
 
 
     Returns
@@ -123,19 +154,38 @@ def make_hills(scenario_name: str,
                         in_field=in_field, out_field=out_field,
                         start_analysis_dt=start_analysis_dt, end_analysis_dt=end_analysis_dt,
                         cat_field=cat_field,
-                        bin_size_minutes=bin_size_minutes, highres_bin_size_minutes=highres_bin_size_minutes,
-                        keep_highres_bydatetime=keep_highres_bydatetime,
+                        bin_size_minutes=bin_size_minutes,
                         cats_to_exclude=cats_to_exclude, occ_weight_field=occ_weight_field,
                         edge_bins=edge_bins,
-                        stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
-                        percentiles=percentiles, cap=cap,
+                        percentiles=percentiles, los_units=los_units,
+                        csv_export_path=csv_export_path,
+                        cap=cap,
                         make_all_dow_plots=make_all_dow_plots, make_all_week_plots=make_all_week_plots,
                         export_bydatetime_csv=export_bydatetime_csv,
                         export_summaries_csv=export_summaries_csv,
                         export_all_dow_plots=export_dow_plot,
                         export_all_week_plots=export_week_plot,
-                        xlabel=xlabel, ylabel=ylabel,
-                        output_path=output_path, verbosity=verbosity, los_units=los_units)
+                        cap_color=cap_color,
+                        plot_style=plot_style,
+                        figsize=figsize,
+                        bar_color_mean=bar_color_mean,
+                        plot_percentiles=plot_percentiles,
+                        pctile_color=pctile_color,
+                        pctile_linestyle=pctile_linestyle,
+                        pctile_linewidth=pctile_linewidth,
+                        main_title=main_title,
+                        main_title_properties=main_title_properties,
+                        subtitle=subtitle,
+                        subtitle_properties=subtitle_properties,
+                        legend_properties=legend_properties,
+                        xlabel=xlabel,
+                        ylabel=ylabel,
+                        first_dow=first_dow,
+                        plot_export_path=plot_export_path,
+                        highres_bin_size_minutes=highres_bin_size_minutes,
+                        keep_highres_bydatetime=keep_highres_bydatetime,
+                        stationary_stats=stationary_stats, nonstationary_stats=nonstationary_stats,
+                        verbosity=verbosity)
 
     hills = _make_hills(scenario)
     return hills
