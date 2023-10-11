@@ -27,8 +27,8 @@ bin_size_mins = 120
 output_path = './output'
 
 results = hm.make_hills(scenario_name, df, in_fld_name, out_fld_name,
-                     start_analysis, end_analysis, cat_fld_name,
-                     bin_size_minutes=bin_size_mins,
-                     output_path=output_path, verbose=1)
+                        start_analysis, end_analysis, cat_fld_name,
+                        bin_size_minutes=bin_size_mins,
+                        csv_export_path=output_path, verbose=1)
 
 print(results.keys())

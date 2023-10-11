@@ -28,7 +28,7 @@ def _metric_name(metric, capitalize=True):
     metric : str
         Some abbreviated version of occupancy, arrivals or departures
     capitalize : bool
-        Captilize first letter if True, default is True
+        Capitalize first letter if True, default is True
 
     Returns
     -------
@@ -49,10 +49,8 @@ def _dow_name(dow, capitalize=True):
 
     Parameters
     ----------
-    metric : str
-        One of mon, tue, wed, thu, fri, sat, or sun
     capitalize : bool
-        Captilize first letter if True, default is True
+        Capitalize first letter if True, default is True
 
     Returns
     -------
@@ -98,14 +96,30 @@ def make_plots(scenario: 'Scenario', hills: dict):
                 plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
 
                 if scenario.export_all_week_plots:
-                    export_path = scenario.output_path
+                    plot_export_path = scenario.plot_export_path
                 else:
-                    export_path = None
+                    plot_export_path = None
 
                 plot = make_week_hill_plot(fullwk_df, scenario_name=scenario.scenario_name, metric=metric,
-                                           bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
-                                           xlabel=scenario.xlabel, ylabel=scenario.ylabel,
-                                           export_path=export_path)
+                                           bin_size_minutes=scenario.bin_size_minutes,
+                                           cap=scenario.cap, cap_color=scenario.cap_color,
+                                           plot_style=scenario.plot_style,
+                                           figsize=scenario.figsize,
+                                           bar_color_mean=scenario.bar_color_mean,
+                                           plot_percentiles=scenario.plot_percentiles,
+                                           pctile_color=scenario.pctile_color,
+                                           pctile_linestyle=scenario.pctile_linestyle,
+                                           pctile_linewidth=scenario.pctile_linewidth,
+                                           main_title=scenario.main_title,
+                                           main_title_properties=scenario.main_title_properties,
+                                           subtitle=scenario.subtitle,
+                                           subtitle_properties=scenario.subtitle_properties,
+                                           legend_properties=scenario.legend_properties,
+                                           xlabel=scenario.xlabel,
+                                           ylabel=scenario.ylabel,
+                                           first_dow=scenario.first_dow,
+                                           plot_export_path=plot_export_path)
+
                 plots[plot_key] = plot
 
         logger.info(f"Full week plots created (seconds): {t.interval:.4f}")
@@ -122,13 +136,29 @@ def make_plots(scenario: 'Scenario', hills: dict):
                     plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
 
                     if scenario.export_all_dow_plots:
-                        export_path = scenario.output_path
+                        plot_export_path = scenario.plot_export_path
                     else:
-                        export_path = None
-                    plot = make_daily_hill_plot(dow_df, dow.lower(), scenario_name=scenario.scenario_name, metric=metric,
-                                                bin_size_minutes=scenario.bin_size_minutes, cap=scenario.cap,
-                                                xlabel=scenario.xlabel, ylabel=scenario.ylabel,
-                                                export_path=export_path)
+                        plot_export_path = None
+                    plot = make_daily_hill_plot(dow_df, dow.lower(), scenario_name=scenario.scenario_name,
+                                                metric=metric,
+                                                bin_size_minutes=scenario.bin_size_minutes,
+                                                cap=scenario.cap,
+                                                cap_color=scenario.cap_color,
+                                                plot_style=scenario.plot_style,
+                                                figsize=scenario.figsize,
+                                                bar_color_mean=scenario.bar_color_mean,
+                                                plot_percentiles=scenario.plot_percentiles,
+                                                pctile_color=scenario.pctile_color,
+                                                pctile_linestyle=scenario.pctile_linestyle,
+                                                pctile_linewidth=scenario.pctile_linewidth,
+                                                main_title=scenario.main_title,
+                                                main_title_properties=scenario.main_title_properties,
+                                                subtitle=scenario.subtitle,
+                                                subtitle_properties=scenario.subtitle_properties,
+                                                legend_properties=scenario.legend_properties,
+                                                xlabel=scenario.xlabel,
+                                                ylabel=scenario.ylabel,
+                                                plot_export_path=plot_export_path)
                     plots[plot_key] = plot
 
         logger.info(f"Individual day of week plots created (seconds): {t.interval:.4f}")
@@ -142,7 +172,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
                         plot_style: str = 'ggplot',
                         figsize: tuple = (15, 10),
                         bar_color_mean: str = 'steelblue',
-                        percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                        plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                         pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                         pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                         pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
@@ -156,7 +186,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
                         legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                         first_dow: str = 'mon',
                         scenario_name: str = '',
-                        export_path: Path | str | None = None, ):
+                        plot_export_path: Path | str | None = None, ):
     f"""
     Makes and optionally exports week plot for occupancy, arrivals, or departures.
 
@@ -175,7 +205,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
-    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
         Line color for each percentile series plotted. Order should match order of percentiles list.
@@ -209,7 +239,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
     scenario_name : str
         Used in output filenames, default is ''
-    export_path : str or None, default is None
+    plot_export_path : str or None, default is None
         If not None, plot is exported to `export_path`
     """
 
@@ -267,7 +297,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
             cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth)
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in percentiles:
+        for p in plot_percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
@@ -313,10 +343,10 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         ax1.legend(**legend_properties)
 
         # save figure
-        if export_path is not None:
+        if plot_export_path is not None:
             week_range_str = 'week'
             plot_png = f'{scenario_name}_{metric}_{week_range_str}.png'
-            png_wpath = Path(export_path, plot_png)
+            png_wpath = Path(plot_export_path, plot_png)
             plt.savefig(png_wpath, bbox_inches='tight')
 
         # Suppress plot output in notebook
@@ -334,7 +364,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
                          plot_style: str = 'ggplot',
                          figsize: tuple = (15, 10),
                          bar_color_mean: str = 'steelblue',
-                         percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                         plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                          pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                          pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                          pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
@@ -348,7 +378,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
                          legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                          first_dow: str = 'mon',
                          scenario_name: str = '',
-                         export_path: Path | str | None = None, ):
+                         plot_export_path: Path | str | None = None, ):
     f"""
     Makes and optionally exports week plot for two metrics (occupancy, arrivals, or departures) simultaneously.
 
@@ -371,7 +401,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
-    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
         Line color for each percentile series plotted. Order should match order of percentiles list.
@@ -405,7 +435,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
     scenario_name : str
         Used in output filenames, default is ''
-    export_path : str or None, default is None
+    plot_export_path : str or None, default is None
         If not None, plot is exported to `export_path`
     """
 
@@ -470,13 +500,13 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
             cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth)
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in percentiles:
+        for p in plot_percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric2}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
 
         # establish capacity horizontal line if supplied
-        if cap is not None and metric.lower()[0] == 'o':
+        if cap is not None:
             ax1.axhline(cap, color=cap_color, linestyle='--', label='Capacity')
 
         # Create formatter variables
@@ -516,10 +546,10 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         ax1.legend(**legend_properties)
 
         # save figure
-        if export_path is not None:
+        if plot_export_path is not None:
             week_range_str = 'week'
             plot_png = f'{scenario_name}_{metric1}_{metric2}_{week_range_str}.png'
-            png_wpath = Path(export_path, plot_png)
+            png_wpath = Path(plot_export_path, plot_png)
             plt.savefig(png_wpath, bbox_inches='tight')
 
         # Suppress plot output in notebook
@@ -534,7 +564,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                          plot_style: str = 'ggplot',
                          figsize: tuple = (15, 10),
                          bar_color_mean: str = 'steelblue',
-                         percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                         plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                          pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                          pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                          pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
@@ -547,7 +577,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                          subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
                          legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                          scenario_name: str = '',
-                         export_path: Path | str | None = None, ):
+                         plot_export_path: Path | str | None = None, ):
     f"""
     Makes and optionally exports week plot for occupancy, arrivals, or departures.
 
@@ -568,7 +598,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
-    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
         Line color for each percentile series plotted. Order should match order of percentiles list.
@@ -600,7 +630,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
     scenario_name : str
         Used in output filenames, default is ''
-    export_path : str or None, default is None
+    plot_export_path : str or None, default is None
         If not None, plot is exported to `export_path`
     """
 
@@ -643,7 +673,6 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
 
         # Set the tick locations for the axes object
         ax1.set_xticks(major_tick_locations)
-        # ax1.set_xticks(minor_tick_locations, minor=True)
 
         # Add data to the plot
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
@@ -657,7 +686,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                 cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in percentiles:
+        for p in plot_percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
@@ -673,7 +702,6 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
 
         # Format the tick labels
         ax1.xaxis.set_major_formatter(hour_formatter)
-        # ax1.xaxis.set_minor_formatter(qtrday_formatter)
 
         # Slide the major tick labels underneath the default location by 20 points
         # ax1.tick_params(which='major', pad=20)
@@ -703,10 +731,10 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         ax1.legend(**legend_properties)
 
         # save figure
-        if export_path is not None:
+        if plot_export_path is not None:
             week_range_str = day_of_week
             plot_png = f'{scenario_name}_{metric}_{week_range_str}.png'
-            png_wpath = Path(export_path, plot_png)
+            png_wpath = Path(plot_export_path, plot_png)
             plt.savefig(png_wpath, bbox_inches='tight')
 
         # Suppress plot output in notebook
@@ -845,7 +873,6 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
 
         # Set the tick locations for the axes object
         ax1.set_xticks(major_tick_locations)
-        # ax1.set_xticks(minor_tick_locations, minor=True)
 
         # Add data to the plot
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
@@ -865,7 +892,7 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
 
         # establish capacity horizontal line if supplied
-        if cap is not None and metric.lower()[0] == 'o':
+        if cap is not None:
             ax1.axhline(cap, color=cap_color, linestyle='--', label='Capacity')
 
         # Create formatter variables
@@ -875,7 +902,6 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
 
         # Format the tick labels
         ax1.xaxis.set_major_formatter(hour_formatter)
-        # ax1.xaxis.set_minor_formatter(qtrday_formatter)
 
         # Slide the major tick labels underneath the default location by 20 points
         # ax1.tick_params(which='major', pad=20)

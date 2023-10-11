@@ -144,18 +144,18 @@ def _make_hills(scenario):
     # Export results to csv if requested
     if scenario.export_bydatetime_csv:
         with HillTimer() as t:
-            export_bydatetime(hills['bydatetime'], scenario.scenario_name, scenario.output_path)
+            export_bydatetime(hills['bydatetime'], scenario.scenario_name, scenario.csv_export_path)
 
-        logger.info(f"By datetime exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"By datetime exported to csv in {scenario.csv_export_path} (seconds): {t.interval:.4f}")
 
     if scenario.export_summaries_csv:
         with HillTimer() as t:
             if scenario.nonstationary_stats:
-                export_summaries(hills['summaries'], scenario.scenario_name, scenario.output_path, 'nonstationary')
+                export_summaries(hills['summaries'], scenario.scenario_name, scenario.csv_export_path, 'nonstationary')
             if scenario.stationary_stats:
-                export_summaries(hills['summaries'], scenario.scenario_name, scenario.output_path, 'stationary')
+                export_summaries(hills['summaries'], scenario.scenario_name, scenario.csv_export_path, 'stationary')
 
-        logger.info(f"Summaries exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"Summaries exported to csv in {scenario.csv_export_path} (seconds): {t.interval:.4f}")
 
     # Plots
     if scenario.make_all_week_plots or scenario.make_all_dow_plots or \

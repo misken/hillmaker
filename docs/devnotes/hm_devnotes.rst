@@ -5,6 +5,16 @@ https://gist.github.com/sloria/7001839
 
 https://third-bit.com/sdxpy/intro/
 
+Simon Willonson's posts on CLI design and dev in general
+--------------------------------------------------------
+
+https://simonwillison.net/2023/Sep/30/cli-tools-python/
+https://simonwillison.net/2022/Oct/29/the-perfect-commit/
+https://simonwillison.net/2022/Nov/26/productivity/
+https://simonwillison.net/2021/Aug/28/dynamic-github-repository-templates/
+https://simonwillison.net/2020/Feb/11/cheating-at-unit-tests-pytest-black/
+
+
 
 
 

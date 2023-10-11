@@ -33,5 +33,5 @@ hillmaker.make_hills(scenario_name, df, in_fld_name, out_fld_name,
                      start_analysis, end_analysis, cat_fld_name,
                      total_str=tot_fld_name, bin_size_minutes=bin_size_mins,
                      nonstationary_stats=False,
-                     output_path='.',
+                     csv_export_path='.',
                      cats_to_exclude=excludecats, verbose=1)
