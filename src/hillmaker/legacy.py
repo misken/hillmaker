@@ -63,9 +63,6 @@ def make_hills(scenario_name: str,
 
     Parameters
     ----------
-
-    Parameters
-    ----------
     scenario_name : str
         Used in output filenames
     stops_df : DataFrame
