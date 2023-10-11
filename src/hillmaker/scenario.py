@@ -50,6 +50,8 @@ class Scenario(BaseModel):
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
     end_analysis_dt : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
+    config : str or Path, optional
+        Configuration file (TOML format) containing input parameter arguments and values.
     cat_field : str, optional
         Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
         Default is None
@@ -157,12 +159,11 @@ class Scenario(BaseModel):
     stops_df: pd.DataFrame
     in_field: str
     out_field: str
-    # TODO - what if a pandas Timestamp or numpy datetime64 is passed in?
-    # See https://github.com/pydantic/pydantic/discussions/6972
     start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     # Optional parameters
     # stop_data_csv: str | Path | None = None
+    config: Path | str | None = None
     cat_field: str | None = None
     bin_size_minutes: int = 60
     cats_to_exclude: List[str] | None = None
@@ -620,3 +621,4 @@ class Scenario(BaseModel):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
         return str(self.model_dump())
+

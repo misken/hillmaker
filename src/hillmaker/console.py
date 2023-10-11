@@ -11,7 +11,109 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib
 
+"""
+Parameters
+    ----------
+    scenario_name : str
+        Used in output filenames
+    stops_df : DataFrame
+        Base data containing one row per visit
+    in_field : str
+        Column name corresponding to the arrival times
+    out_field : str
+        Column name corresponding to the departure times
+    start_analysis_dt : datetime-like, str
+        Starting datetime for the analysis (must be convertible to pandas Timestamp)
+    end_analysis_dt : datetime-like, str
+        Ending datetime for the analysis (must be convertible to pandas Timestamp)
+    cat_field : str, optional
+        Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
+        Default is None
+    bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day, default is 60. This bin size is used for plots and reporting and
+        is an aggregation of computations done at the finer bin size resolution specified by `resolution_bin_size_mins`.
+        Use a value that divides into 1440 with no remainder.
+    cats_to_exclude : list, optional
+        Category values to ignore, default is None
+    occ_weight_field : str, optional
+        Column name corresponding to the weights to use for occupancy incrementing, default is None
+        which corresponds to a weight of 1.0
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
+    los_units : str, optional
+        The time units for length of stay analysis.
+        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
+        value allowed is 'seconds', largest is 'days'. The default is 'hours'.
 
+    export_bydatetime_csv : bool, optional
+       If True, bydatetime DataFrames are exported to csv files. Default is False.
+    export_summaries_csv : bool, optional
+       If True, summary DataFrames are exported to csv files. Default is False.
+    csv_export_path : str or Path, optional
+        Destination path for exported csv and png files, default is current directory
+
+    make_all_dow_plots : bool, optional
+       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
+    make_all_week_plots : bool, optional
+       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
+    export_all_dow_plots : bool, optional
+       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+    export_all_week_plots : bool, optional
+       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+    plot_export_path : str or None, default is None
+        If not None, plot is exported to `export_path`
+
+    plot_style : str, optional
+        Matplotlib built in style name. Default is 'ggplot'.
+    figsize : Tuple, optional
+        Figure size. Default is (15, 10)
+    bar_color_mean : str, optional
+        Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+        Which percentiles to plot. Default is (0.95)
+    pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
+        Line color for each percentile series plotted. Order should match order of percentiles list.
+        Default is ('black', 'grey').
+    pctile_linestyle : List or tuple of line styles (e.g. ['-', '--']), optional
+        Line style for each percentile series plotted. Default is ('-', '--').
+    pctile_linewidth : List or tuple of line widths in points (e.g. [1.0, 0.75])
+        Line width for each percentile series plotted. Default is (0.75, 0.75).
+    cap : int, optional
+        Capacity of area being analyzed, default is None
+    cap_color : str, optional
+        matplotlib color code, default='r'
+    xlabel : str, optional
+        x-axis label, default='Hour'
+    ylabel : str, optional
+        y-axis label, default='Patients'
+    main_title : str, optional
+        Main title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
+    main_title_properties : None or dict, optional
+        Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}
+    subtitle : str, optional
+        title for plot, default = 'All categories'
+    subtitle_properties : None or dict, optional
+        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
+    legend_properties : None or dict, optional
+        Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
+    first_dow : str, optional
+        Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
+
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
+    highres_bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
+        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
+        stays, the smaller the resolution should be. The current default is 5 minutes.
+    keep_highres_bydatetime : bool, optional
+        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
+    nonstationary_stats : bool, optional
+       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
+    stationary_stats : bool, optional
+       If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
+    verbosity : int, optional
+        Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
+"""
 def process_command_line(argv=None):
     """
     Parse command line arguments
