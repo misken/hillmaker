@@ -57,31 +57,25 @@ class Scenario(BaseModel):
         Number of minutes in each time bin of the day, default is 60. This bin size is used for plots and reporting and
         is an aggregation of computations done at the finer bin size resolution specified by `resolution_bin_size_mins`.
         Use a value that divides into 1440 with no remainder.
-    highres_bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
-        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
-        stays, the smaller the resolution should be. The current default is 5 minutes.
-    keep_highres_bydatetime : bool, optional
-        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
     cats_to_exclude : list, optional
         Category values to ignore, default is None
     occ_weight_field : str, optional
         Column name corresponding to the weights to use for occupancy incrementing, default is None
-        which corresponds to a weight of 1.0.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
+        which corresponds to a weight of 1.0
     percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
         Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    cap : int, optional
-        Capacity of area being analyzed, default is None. Used only to add capacity line to occupancy plots.
-    nonstationary_stats : bool, optional
-       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    stationary_stats : bool, optional
-       If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
+    los_units : str, optional
+        The time units for length of stay analysis.
+        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
+        value allowed is 'seconds', largest is 'days'. The default is 'hours'.
+
     export_bydatetime_csv : bool, optional
        If True, bydatetime DataFrames are exported to csv files. Default is False.
     export_summaries_csv : bool, optional
        If True, summary DataFrames are exported to csv files. Default is False.
+    csv_export_path : str or Path, optional
+        Destination path for exported csv and png files, default is current directory
+
     make_all_dow_plots : bool, optional
        If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
     make_all_week_plots : bool, optional
@@ -90,19 +84,60 @@ class Scenario(BaseModel):
        If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
     export_all_week_plots : bool, optional
        If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
-    xlabel : str
+    plot_export_path : str or None, default is None
+        If not None, plot is exported to `export_path`
+
+    plot_style : str, optional
+        Matplotlib built in style name. Default is 'ggplot'.
+    figsize : Tuple, optional
+        Figure size. Default is (15, 10)
+    bar_color_mean : str, optional
+        Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+        Which percentiles to plot. Default is (0.95)
+    pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
+        Line color for each percentile series plotted. Order should match order of percentiles list.
+        Default is ('black', 'grey').
+    pctile_linestyle : List or tuple of line styles (e.g. ['-', '--']), optional
+        Line style for each percentile series plotted. Default is ('-', '--').
+    pctile_linewidth : List or tuple of line widths in points (e.g. [1.0, 0.75])
+        Line width for each percentile series plotted. Default is (0.75, 0.75).
+    cap : int, optional
+        Capacity of area being analyzed, default is None
+    cap_color : str, optional
+        matplotlib color code, default='r'
+    xlabel : str, optional
         x-axis label, default='Hour'
-    ylabel : str
-        y-axis label, default='Occupancy'
-    csv_export_path : str or Path, optional
-        Destination path for exported csv and png files, default is current directory
+    ylabel : str, optional
+        y-axis label, default='Patients'
+    main_title : str, optional
+        Main title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
+    main_title_properties : None or dict, optional
+        Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}
+    subtitle : str, optional
+        title for plot, default = 'All categories'
+    subtitle_properties : None or dict, optional
+        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
+    legend_properties : None or dict, optional
+        Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
+    first_dow : str, optional
+        Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
+
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
+    highres_bin_size_minutes : int, optional
+        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
+        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
+        stays, the smaller the resolution should be. The current default is 5 minutes.
+    keep_highres_bydatetime : bool, optional
+        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
+    nonstationary_stats : bool, optional
+       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
+    stationary_stats : bool, optional
+       If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
-    los_units : str, optional
-        The time units for length of stay analysis.
-        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
-        value allowed is 'seconds', largest is 'days'. The default
-        is 'hours'.
+
 
     Attributes
     ----------
@@ -133,18 +168,19 @@ class Scenario(BaseModel):
     cats_to_exclude: List[str] | None = None
     occ_weight_field: str | None = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
-    nonstationary_stats: bool = True
-    stationary_stats: bool = True
     los_units: str = 'hours'
-    csv_export_path: str | Path = Path('.')
+
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
+    csv_export_path: str | Path = Path('.')
+
     make_all_dow_plots: bool = False
     make_all_week_plots: bool = False
     export_all_dow_plots: bool = False
     export_all_week_plots: bool = False
+    plot_export_path: Path | str | None = None
+
     # Plot options
-    cap: int | None = None
     plot_style: str = 'ggplot'
     figsize: tuple = (15, 10)
     bar_color_mean: str = 'steelblue'
@@ -152,6 +188,7 @@ class Scenario(BaseModel):
     pctile_color: Tuple[str] | List[str] = ('black', 'grey')
     pctile_linestyle: Tuple[str] | List[str] = ('-', '--')
     pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75)
+    cap: int | None = None
     cap_color: str = 'r'
     xlabel: str = 'Hour'
     ylabel: str = 'Volume'
@@ -161,11 +198,13 @@ class Scenario(BaseModel):
     subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'}
     legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'}
     first_dow: str = 'mon'
-    plot_export_path: Path | str | None = None
+
     # Advanced parameters
     edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
     highres_bin_size_minutes: int = 5
     keep_highres_bydatetime: bool = False
+    nonstationary_stats: bool = True
+    stationary_stats: bool = True
     verbosity: int = VerbosityEnum.WARNING
     # Attributes
     stops_preprocessed_df: pd.DataFrame | None = None
@@ -290,7 +329,7 @@ class Scenario(BaseModel):
 
     @model_validator(mode='after')
     def bin_size_relationships(self) -> 'Scenario':
-        
+
         if self.bin_size_minutes < self.highres_bin_size_minutes:
             raise ValueError(
                 f'highres_bin_size_minutes ({self.highres_bin_size_minutes}) must be <= bin_size_minutes ({self.bin_size_minutes})')
