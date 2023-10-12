@@ -1,0 +1,59 @@
+[scenario_data]
+scenario_name = "ssu_demo"
+stop_data_csv = "./fixtures/ssu_2024.csv"
+# stops_df = ssu_stops_df
+
+[fields]
+in_field = "InRoomTS"
+out_field = "OutRoomTS"
+cat_field = "PatType"
+# cats_to_exclude = ["IVT", "OTH"]
+# occ_weight_field = ""
+
+[analysis_dates]
+start_analysis_dt = 2024-01-01
+end_analysis_dt = 2024-03-30
+
+# Optional parameters
+[general_settings]
+bin_size_minutes = 60
+percentiles = [0.25, 0.5, 0.75, 0.95, 0.99]
+los_units = "hours"
+
+export_bydatetime_csv = true
+export_summaries_csv = true
+csv_export_path = "./output"
+
+make_all_dow_plots = true
+make_all_week_plots = true
+export_all_dow_plots = true
+export_all_week_plots = true
+plot_export_path = "./output"
+
+# Plot options
+[plot_settings]
+plot_style = "ggplot"
+figsize = [15, 10]
+bar_color_mean = "steelblue"
+plot_percentiles = [0.95, 0.75]
+pctile_color = ['black', 'grey']
+pctile_linestyle = ['-', '--']
+pctile_linewidth = [0.75, 0.75]
+cap = 100
+cap_color = "r"
+xlabel = "Hour"
+ylabel = "Volume"
+main_title = ""
+main_title_properties = {loc = 'left', fontsize = 16}
+subtitle = ""
+subtitle_properties = {loc = 'left', styl = 'italic'}
+legend_properties = {loc = 'best', frameon = true, facecolo = 'w'}
+first_dow = "mon"
+
+# Advanced parameters
+edge_bins = 1
+highres_bin_size_minutes = 5
+keep_highres_bydatetime = true
+nonstationary_stats = true
+stationary_stats = true
+verbosity = 1

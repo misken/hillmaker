@@ -1,6 +1,6 @@
 [scenario_data]
 scenario_name = "ss_example_3"
-stop_data_csv = "./fixtures/ShortStay.csv"
+stop_data_csv = "./fixtures/ssu_2024.csv"
 
 [fields]
 in_field = "InRoomTS"
@@ -9,13 +9,14 @@ out_field = "OutRoomTS"
 cat_field = "PatType"
 
 [analysis_dates]
-start_analysis_dt = 1996-01-01
-end_analysis_dt = 1996-09-30
+start_analysis_dt = 2024-01-01
+end_analysis_dt = 2024-03-30
 
 [settings]
-bin_size_mins = 60
+bin_size_minutes = 60
 verbosity = 1
-output_path = "./output"
+csv_export_path = './output'
+plot_export_path = './output'
 
 # Add any additional arguments here
 # Strings should be surrounded in double quotes

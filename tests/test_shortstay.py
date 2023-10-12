@@ -18,6 +18,7 @@ cat_field_name = 'PatType'
 verbosity = 1  # INFO level logging
 bin_size_minutes = 60
 csv_export_path = './output'
+plot_export_path = './output'
 highres_bin_size_minutes = 5
 keep_highres_datetime = True
 edge_bins = 1
