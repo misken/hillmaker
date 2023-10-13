@@ -79,13 +79,13 @@ class Scenario(BaseModel):
         Destination path for exported csv and png files, default is current directory
 
     make_all_dow_plots : bool, optional
-       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
+       If True, day of week plots are created for occupancy, arrivals, and departures. Default is True.
     make_all_week_plots : bool, optional
-       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
+       If True, full week plots are created for occupancy, arrivals, and departures. Default is True.
     export_all_dow_plots : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, day of week plots are exported for occupancy, arrivals, and departures. Default is False.
     export_all_week_plots : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, full week plots are exported for occupancy, arrivals, and departures. Default is False.
     plot_export_path : str or None, default is None
         If not None, plot is exported to `export_path`
 
