@@ -184,6 +184,14 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
+        "--cats_to_exclude",
+        nargs="*",  # 0 or more values expected => creates a list
+        type=str,
+        default=[],  # default if nothing is provided
+        help="Category values to exclude from the analysis."
+    )
+
+    optional.add_argument(
         '--occ_weight_field', type=str, default=None,
         help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used. Default is None."
     )
@@ -204,15 +212,15 @@ def process_command_line(argv=None):
     )
 
     # CSV export options
-    optional.add_argument(
-        '--export_bydatetime_csv', type=bool, default=True,
-        help="If True, bydatetime DataFrames are exported to csv files."
-    )
-
-    optional.add_argument(
-        '--export_summaries_csv', type=bool, default=True,
-        help="If True, summary DataFrames are exported to csv files."
-    )
+    # optional.add_argument(
+    #     '--export_bydatetime_csv', type=bool, default=True,
+    #     help="If True, bydatetime DataFrames are exported to csv files."
+    # )
+    #
+    # optional.add_argument(
+    #     '--export_summaries_csv', type=bool, default=True,
+    #     help="If True, summary DataFrames are exported to csv files."
+    # )
 
     optional.add_argument(
         '--csv_export_path', type=str, default='.',
@@ -221,25 +229,19 @@ def process_command_line(argv=None):
 
     # Plot export options
     optional.add_argument(
-        '--make_all_dow_plots', type=bool, default=True,
-        help="If True, day of week plots are created for occupancy, arrivals, and departures and exported to plot_export_path."
+        '--no_dow_plots', type=bool, action='store_true',
+        help="If set, no day of week plots are created."
     )
 
     optional.add_argument(
-        '--make_all_week_plots', type=bool, default=True,
-        help="If True, full week plots are created for occupancy, arrivals, and departures and exported to plot_export_path."
-    )
-
-    optional.add_argument(
-        '--export_all_dow_plots', type=bool, default=True,
-        help="If True, day of week plots are for occupancy, arrivals, and departures."
+        '--no_week_plots', type=bool, action='store_true',
+        help="If set, no weekly plots are created."
     )
 
     optional.add_argument(
         '--plot_export_path', type=str, default='.',
         help="Destination path for exported plots, default is current directory."
     )
-
 
     # Plot creation options
     optional.add_argument(
@@ -334,19 +336,6 @@ def process_command_line(argv=None):
     # legend_properties : None or dict, optional
     #     Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
 
-    # edge_bins: int, default 1
-    #     Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
-    # highres_bin_size_minutes : int, optional
-    #     Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
-    #     departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
-    #     stays, the smaller the resolution should be. The current default is 5 minutes.
-    # keep_highres_bydatetime : bool, optional
-    #     Save the high resolution bydatetime dataframe in hills attribute. Default is False.
-    # nonstationary_stats : bool, optional
-    #    If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    # stationary_stats : bool, optional
-    #    If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
-
     # Advanced optional arguments
     optional.add_argument(
         '--edge_bins', type=int, default=1,
@@ -361,25 +350,9 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--keep_highres_bydatetime', type=bool, default=False,
+        '--keep_highres_bydatetime', type=bool, action='store_true',
         help="Save the high resolution bydatetime dataframe in hills attribute."
     )
-
-    optional.add_argument(
-        '--nonstationary_stats', type=bool, default=True,
-        help=" If True, datetime bin stats are computed."
-    )
-
-    optional.add_argument(
-        '--stationary_stats', type=bool, default=True,
-        help="If True, overall, non-time bin dependent, stats are computed."
-    )
-
-
-
-
-
-
 
     optional.add_argument(
         '--verbosity', type=int, default=1,
@@ -389,12 +362,7 @@ def process_command_line(argv=None):
     # Be nice if this default came from application settings file
 
     #
-    # optional.add_argument(
-    #     "--cats_to_exclude",
-    #     nargs="*",  # 0 or more values expected => creates a list
-    #     type=str,
-    #     default=[],  # default if nothing is provided
-    # )
+
 
     # Add back help
     optional.add_argument(
@@ -462,19 +430,19 @@ def main(argv=None):
     stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
 
     # Set plot creation and export flags
-    if not args.make_all_dow_plots:
-        make_dow_plots = True
-        export_dow_plots = True
-    else:
+    if args.now_dow_plots:
         make_dow_plots = False
         export_dow_plots = False
-
-    if not args.make_all_week_plots:
-        make_week_plot = True
-        export_week_plot = True
     else:
+        make_dow_plots = True
+        export_dow_plots = True
+
+    if args.no_week_plots:
         make_week_plot = False
         export_week_plot = False
+    else:
+        make_week_plot = True
+        export_week_plot = True
 
     scenario = Scenario(scenario_name=args.scenario_name, stops_df=stops_df,
                         in_field=args.in_field, out_field=args.out_field,
