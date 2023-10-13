@@ -6,9 +6,8 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 
-from hillmaker.scenario import Scenario, VerbosityEnum
+from hillmaker.scenario import Scenario, VerbosityEnum, create_scenario
 from hillmaker.hills import _make_hills
-from hillmaker.utils import create_scenario
 
 
 def make_hills(scenario_name: str = None,
