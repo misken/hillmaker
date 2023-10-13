@@ -20,11 +20,6 @@ verbosity = 1  # INFO level logging
 bin_size_minutes = 60
 csv_export_path = './output'
 plot_export_path = './output'
-#highres_bin_size_minutes = 5
-#keep_highres_datetime = True
-#edge_bins = 1
-
-#df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
 
 # Use legacy function interface
 hills = hm.make_hills(scenario_name=scenario_name, data=file_stopdata,
