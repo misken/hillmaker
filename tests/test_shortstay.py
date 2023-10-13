@@ -1,6 +1,7 @@
 import pandas as pd
 
 import hillmaker as hm
+from hillmaker.utils import create_scenario
 
 file_stopdata = './fixtures/ssu_2024.csv'
 
@@ -19,23 +20,35 @@ verbosity = 1  # INFO level logging
 bin_size_minutes = 60
 csv_export_path = './output'
 plot_export_path = './output'
-highres_bin_size_minutes = 5
-keep_highres_datetime = True
-edge_bins = 1
+#highres_bin_size_minutes = 5
+#keep_highres_datetime = True
+#edge_bins = 1
 
-df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
+#df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
 
 # Use legacy function interface
-hills = hm.make_hills(scenario_name=scenario_name, stops_df=df,
+hills = hm.make_hills(scenario_name=scenario_name, data=file_stopdata,
                       in_field=in_field_name, out_field=out_field_name,
                       start_analysis_dt=start_date, end_analysis_dt=end_date,
                       cat_field=cat_field_name,
                       bin_size_minutes=bin_size_minutes,
-                      highres_bin_size_minutes=highres_bin_size_minutes,
-                      keep_highres_bydatetime=keep_highres_datetime,
                       csv_export_path=csv_export_path, verbosity=verbosity,
                       export_summaries_csv=True,
-                      edge_bins=edge_bins)
+                      make_all_dow_plots=make_all_dow_plots, plot_export_path=plot_export_path)
+
+hills_config = hm.make_hills(config='fixtures/ssu_example_1_config.toml')
+
+scenario_1 = create_scenario(config_path='fixtures/ssu_example_1_config.toml')
+scenario_1.make_hills()
+
+bydatetime = hm.get_bydatetime_df(hills)
+bydatetime_config = hm.get_bydatetime_df(hills_config)
+bydatetime_scenario_config = scenario_1.get_bydatetime_df()
+
+pd.testing.assert_frame_equal(bydatetime, bydatetime_config)
+pd.testing.assert_frame_equal(bydatetime, bydatetime_scenario_config)
 
 print(hills.keys())
-print(hills['plots'].keys())
+print(hills_config.keys())
+print(scenario_1.hills.keys())
+

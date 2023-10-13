@@ -12,7 +12,7 @@ from hillmaker.utils import create_scenario
 
 
 def make_hills(scenario_name: str = None,
-               stops_df: pd.DataFrame = None,
+               data: str | Path | pd.DataFrame = None,
                in_field: str = None, out_field: str = None,
                start_analysis_dt: str | date | datetime | pd.Timestamp | np.datetime64 = None,
                end_analysis_dt: str | date | datetime | pd.Timestamp | np.datetime64 = None,
@@ -23,8 +23,8 @@ def make_hills(scenario_name: str = None,
                csv_export_path: str | Path = Path('./'),
                make_all_dow_plots: bool = True,
                make_all_week_plots: bool = True,
-               export_all_dow_plots: bool = True,
-               export_all_week_plots: bool = True,
+               export_all_dow_plots: bool = False,
+               export_all_week_plots: bool = False,
                plot_export_path: str | Path = Path('./'),
                **kwargs) -> Dict:
     """
@@ -38,8 +38,8 @@ def make_hills(scenario_name: str = None,
     ----------
     scenario_name : str
         Used in output filenames
-    stops_df : DataFrame
-        Base data containing one row per visit
+    data : str, Path, or DataFrame
+        Base data containing one row per visit. If Path-like, data is read into a DataFrame.
     in_field : str
         Column name corresponding to the arrival times
     out_field : str
@@ -147,7 +147,7 @@ def make_hills(scenario_name: str = None,
 
     # Add named args to kwargs
     kwargs['scenario_name'] = scenario_name
-    kwargs['stops_df'] = stops_df
+    kwargs['data'] = data
     kwargs['in_field'] = in_field
     kwargs['out_field'] = out_field
     kwargs['start_analysis_dt'] = start_analysis_dt
