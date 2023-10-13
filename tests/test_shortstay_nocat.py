@@ -23,7 +23,7 @@ bin_size_minutes = 60
 
 df = pd.read_csv(file_stopdata, parse_dates=[in_field_name, out_field_name])
 
-hm.make_hills(scenario_name=scenario_name, stops_df=df,
+hm.make_hills(scenario_name=scenario_name, data=df,
               in_field=in_field_name, out_field=out_field_name,
               start_analysis_dt=start_date, end_analysis_dt=end_date,
               bin_size_minutes=bin_size_minutes,

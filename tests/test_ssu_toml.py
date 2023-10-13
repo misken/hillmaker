@@ -1,9 +1,12 @@
 from pathlib import Path
-from hillmaker.utils import create_scenario
+import hillmaker as hm
 
 config_file = Path('./fixtures/ssu_example_3.toml')
-scenario_3 = create_scenario(toml_path=config_file)
-print(scenario_3)
+
+hills = hm.make_hills(config=config_file)
+#scenario_3 = create_scenario(toml_path=config_file)
+print(hills.keys())
+print(hills['plots'].keys())
 
 
 

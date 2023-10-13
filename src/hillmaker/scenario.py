@@ -40,8 +40,8 @@ class Scenario(BaseModel):
     ----------
     scenario_name : str
         Used in output filenames
-    stops_df : DataFrame
-        Base data containing one row per visit
+    data : str, Path, or DataFrame
+        Base data containing one row per visit. If Path-like, data is read into a DataFrame.
     in_field : str
         Column name corresponding to the arrival times
     out_field : str
@@ -50,6 +50,8 @@ class Scenario(BaseModel):
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
     end_analysis_dt : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
+    config : str or Path, optional
+        Configuration file (TOML format) containing input parameter arguments and values.
     cat_field : str, optional
         Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
         Default is None
@@ -154,15 +156,13 @@ class Scenario(BaseModel):
 
     # Required parameters
     scenario_name: str
-    stops_df: pd.DataFrame
+    data: str | Path | pd.DataFrame
     in_field: str
     out_field: str
-    # TODO - what if a pandas Timestamp or numpy datetime64 is passed in?
-    # See https://github.com/pydantic/pydantic/discussions/6972
     start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     # Optional parameters
-    # stop_data_csv: str | Path | None = None
+    # config: Path | str | None = None
     cat_field: str | None = None
     bin_size_minutes: int = 60
     cats_to_exclude: List[str] | None = None
@@ -174,8 +174,8 @@ class Scenario(BaseModel):
     export_summaries_csv: bool = False
     csv_export_path: str | Path = Path('.')
 
-    make_all_dow_plots: bool = False
-    make_all_week_plots: bool = False
+    make_all_dow_plots: bool = True
+    make_all_week_plots: bool = True
     export_all_dow_plots: bool = False
     export_all_week_plots: bool = False
     plot_export_path: Path | str | None = None
@@ -211,12 +211,16 @@ class Scenario(BaseModel):
     los_field_name: str | None = None
     hills: dict | None = None
 
-    # Ensure required fields and submitted optional fields exist
-    @field_validator('in_field', 'out_field', 'cat_field', 'occ_weight_field')
-    def field_exists(cls, v: str, info: FieldValidationInfo):
-        if v is not None and v not in info.data['stops_df'].columns:
-            raise ValueError(f'{v} is not a column in the dataframe')
-        return v
+    @field_validator('data')
+    def stop_data(cls, v: str | Path | pd.DataFrame, info: FieldValidationInfo):
+        """If data is a DataFrame return it, else read the csv file into a DataFrame and return that."""
+        if isinstance(v, pd.DataFrame):
+            return v
+        else:
+            in_field = info.data['in_field']
+            out_field = info.data['out_field']
+            stops_df = pd.read_csv(info.data['data'], parse_dates=[in_field, out_field])
+            return stops_df
 
     @field_validator('start_analysis_dt')
     def validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
@@ -302,6 +306,27 @@ class Scenario(BaseModel):
         return v
 
     @model_validator(mode='after')
+    def stop_data(self) -> 'Scenario':
+        """If data is a DataFrame return it, else read the csv file into a DataFrame and return that."""
+        if isinstance(self.data, pd.DataFrame):
+            return self
+        else:
+            stops_df = pd.read_csv(self.data, parse_dates=[self.in_field, self.out_field])
+            self.data = stops_df
+            return self
+
+    @model_validator(mode='after')
+    def fields_exist(self) -> 'Scenario':
+        """Make sure fields exist """
+
+        fields_to_check = [self.in_field, self.out_field, self.cat_field, self.occ_weight_field]
+        for field in fields_to_check:
+            if field is not None and field not in self.data.columns:
+                raise ValueError(f'{field} is not a column in the dataframe')
+
+        return self
+
+    @model_validator(mode='after')
     def date_relationships(self) -> 'Scenario':
         """
         Start date for analysis must be before end date.
@@ -314,8 +339,8 @@ class Scenario(BaseModel):
         if self.end_analysis_dt <= self.start_analysis_dt:
             raise ValueError(f'end date must be > start date')
 
-        min_intime = self.stops_df[self.in_field].min()
-        max_outtime = self.stops_df[self.out_field].max()
+        min_intime = self.data[self.in_field].min()
+        max_outtime = self.data[self.out_field].max()
 
         if max_outtime < self.start_analysis_dt:
             raise ValueError(
@@ -353,8 +378,8 @@ class Scenario(BaseModel):
         """
 
         # Count missing timestamps
-        num_recs_missing_entry_ts = self.stops_df[self.in_field].isna().sum()
-        num_recs_missing_exit_ts = self.stops_df[self.out_field].isna().sum()
+        num_recs_missing_entry_ts = self.data[self.in_field].isna().sum()
+        num_recs_missing_exit_ts = self.data[self.out_field].isna().sum()
         if num_recs_missing_entry_ts > 0:
             logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
         if num_recs_missing_exit_ts > 0:
@@ -362,9 +387,9 @@ class Scenario(BaseModel):
 
         # Create mutable copy of stops_df containing only necessary fields
         stops_preprocessed_df = pd.DataFrame(
-            {self.in_field: self.stops_df[self.in_field], self.out_field: self.stops_df[self.out_field]})
+            {self.in_field: self.data[self.in_field], self.out_field: self.data[self.out_field]})
         if self.cat_field is not None:
-            stops_preprocessed_df[self.cat_field] = self.stops_df[self.cat_field]
+            stops_preprocessed_df[self.cat_field] = self.data[self.cat_field]
 
         # Filter out records that don't overlap the analysis span or have missing entry and/or exit timestamps
         stops_preprocessed_df = \
