@@ -1,7 +1,6 @@
 [scenario_data]
 scenario_name = "ssu_demo"
-stop_data_csv = "./fixtures/ssu_2024.csv"
-# stops_df = ssu_stops_df
+data = "./fixtures/ssu_2024.csv"
 
 [fields]
 in_field = "InRoomTS"
@@ -46,8 +45,8 @@ ylabel = "Volume"
 main_title = ""
 main_title_properties = {loc = 'left', fontsize = 16}
 subtitle = ""
-subtitle_properties = {loc = 'left', styl = 'italic'}
-legend_properties = {loc = 'best', frameon = true, facecolo = 'w'}
+subtitle_properties = {loc = 'left', style = 'italic'}
+legend_properties = {loc = 'best', frameon = true, facecolor = 'w'}
 first_dow = "mon"
 
 # Advanced parameters

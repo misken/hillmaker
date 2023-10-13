@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from pathlib import Path
 import logging
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from enum import IntEnum
 
 import pandas as pd
@@ -79,13 +79,13 @@ class Scenario(BaseModel):
         Destination path for exported csv and png files, default is current directory
 
     make_all_dow_plots : bool, optional
-       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
+       If True, day of week plots are created for occupancy, arrivals, and departures. Default is True.
     make_all_week_plots : bool, optional
-       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
+       If True, full week plots are created for occupancy, arrivals, and departures. Default is True.
     export_all_dow_plots : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, day of week plots are exported for occupancy, arrivals, and departures. Default is False.
     export_all_week_plots : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
+       If True, full week plots are exported for occupancy, arrivals, and departures. Default is False.
     plot_export_path : str or None, default is None
         If not None, plot is exported to `export_path`
 
@@ -210,17 +210,6 @@ class Scenario(BaseModel):
     stops_preprocessed_df: pd.DataFrame | None = None
     los_field_name: str | None = None
     hills: dict | None = None
-
-    @field_validator('data')
-    def stop_data(cls, v: str | Path | pd.DataFrame, info: FieldValidationInfo):
-        """If data is a DataFrame return it, else read the csv file into a DataFrame and return that."""
-        if isinstance(v, pd.DataFrame):
-            return v
-        else:
-            in_field = info.data['in_field']
-            out_field = info.data['out_field']
-            stops_df = pd.read_csv(info.data['data'], parse_dates=[in_field, out_field])
-            return stops_df
 
     @field_validator('start_analysis_dt')
     def validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
@@ -645,3 +634,67 @@ class Scenario(BaseModel):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
         return str(self.model_dump())
+
+def create_scenario(params_dict: Optional[Dict] = None,
+                    config_path: Optional[str | Path] = None, **kwargs):
+    """Function to create a `Scenario` from a dict, a TOML config file, and/or keyword args """
+
+    # Create empty dict for input parameters
+    params = {}
+
+    # If params_dict is not None, merge into params
+    if params_dict is not None:
+        params.update(params_dict)
+
+    # If toml_path is not None, merge into params
+    if config_path is not None:
+        with open(config_path, "rb") as f:
+            params_toml_dict = tomllib.load(f)
+            params = update_params_from_toml(params, params_toml_dict)
+
+    # Args passed to function get ultimate say
+    if len(kwargs) > 0:
+        params.update(kwargs)
+
+    # Now, from the params dictionary, create pydantic Parameters model
+    # Be nice to construct model so that some default values
+    # can be based on app settings
+    # Get application settings
+    # app_settings: Settings = Settings()
+
+    # Create Pydantic model to parse and validate inputs
+    scenario = Scenario(**params)
+    return scenario
+
+
+def update_params_from_toml(params_dict, toml_dict):
+    """
+    Update dict of input parameters from toml_config dictionary
+
+    Parameters
+    ----------
+    params_dict : dict
+    toml_dict : dict from loading TOML config file
+
+    Returns
+    -------
+    Updated parameters dict
+    """
+
+    # Flatten toml config (we know there are no key clashes and only one nesting level)
+    # Update args dict from config dict
+    for outerkey, outerval in toml_dict.items():
+        for key, val in outerval.items():
+            params_dict[key] = val
+
+    return params_dict
+
+
+def from_config(config: Path | str):
+    scenario = Scenario.create_scenario(toml_path=config)
+    return scenario
+
+
+def from_dict(params_dict: dict):
+    scenario = Scenario.create_scenario(params_dict=params_dict)
+    return scenario
