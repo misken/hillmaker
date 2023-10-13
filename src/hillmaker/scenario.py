@@ -211,17 +211,6 @@ class Scenario(BaseModel):
     los_field_name: str | None = None
     hills: dict | None = None
 
-    @field_validator('data')
-    def stop_data(cls, v: str | Path | pd.DataFrame, info: FieldValidationInfo):
-        """If data is a DataFrame return it, else read the csv file into a DataFrame and return that."""
-        if isinstance(v, pd.DataFrame):
-            return v
-        else:
-            in_field = info.data['in_field']
-            out_field = info.data['out_field']
-            stops_df = pd.read_csv(info.data['data'], parse_dates=[in_field, out_field])
-            return stops_df
-
     @field_validator('start_analysis_dt')
     def validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
         """
