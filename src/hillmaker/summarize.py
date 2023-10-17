@@ -304,7 +304,7 @@ def summarize_los(stops_preprocessed_df: DataFrame, los_field: str, cat_field: s
 
     # Gather results
     results = {'los_stats': los_stats_styled,
-               'los_histo_all': plot_all.figure}
+               'los_histo': plot_all.figure}
 
     # Plot by category if cat_field is not None
     if cat_field is not None:
@@ -315,7 +315,7 @@ def summarize_los(stops_preprocessed_df: DataFrame, los_field: str, cat_field: s
         g_bycat = sns.FacetGrid(data=stops_preprocessed_df, col=cat_field, sharex=False, sharey=False, col_wrap=3)
         plot_bycat = g_bycat.map(sns.histplot, los_field)
         plt.close()  # Supress plot showing up in notebook
-        results['los_bycat_stats'] = los_bycat_stats_styled
+        results['los_stats_bycat'] = los_bycat_stats_styled
         results['los_histo_bycat'] = plot_bycat.figure
 
     return results

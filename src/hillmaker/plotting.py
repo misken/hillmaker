@@ -232,7 +232,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
     subtitle : str, optional
         subtitle for plot, default = ''
     subtitle_properties : None or dict, optional
-        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
+        Dict of subtitle properties, default={{'loc': 'left', 'style': 'italic'}}
     legend_properties : None or dict, optional
         Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
     first_dow : str, optional

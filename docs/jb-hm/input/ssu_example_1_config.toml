@@ -1,6 +1,6 @@
 [scenario_data]
 scenario_name = "ss_example_1_config"
-data = "./fixtures/ssu_2024.csv"
+data = "./data/ssu_2024.csv"
 
 [fields]
 in_field = "InRoomTS"
