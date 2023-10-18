@@ -374,7 +374,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
+                width=bar_width, color=bar_color_mean, edgecolor=None, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -574,7 +574,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, arr_summary_df_plot['mean'], label=f'Mean {metric1}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
+                width=bar_width, color=bar_color_mean, edgecolor=None, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -759,7 +759,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
+                width=bar_width, color=bar_color_mean, edgecolor=None, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -958,7 +958,7 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, arr_summary_df_plot['mean'], label=f'Mean {metric1}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
+                width=bar_width, color=bar_color_mean, edgecolor=None, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
