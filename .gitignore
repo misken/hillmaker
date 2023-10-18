@@ -13,8 +13,14 @@ tests/output/
 
 # examples
 examples/scripts/output/
+examples/data/
 examples/notebooks/output/
 examples/notebooks/.ipynb_checkpoints/
 #examples/notebooks/*.html
+
+# docs
+docs/jb-hm/_build
+docs/jb-hm/data
+docs/jb-hm/output
 
 

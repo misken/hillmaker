@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from pathlib import Path
 import logging
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from enum import IntEnum
 
 import pandas as pd
@@ -10,6 +10,7 @@ from pydantic import BaseModel, field_validator, model_validator, confloat, Fiel
 
 # import hillmaker as hm
 from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
+from hillmaker.hills import get_los_plot, get_los_stats
 from hillmaker.plotting import make_week_hill_plot, make_daily_hill_plot
 from hillmaker.summarize import compute_implied_operating_hours
 
@@ -40,8 +41,8 @@ class Scenario(BaseModel):
     ----------
     scenario_name : str
         Used in output filenames
-    stops_df : DataFrame
-        Base data containing one row per visit
+    data : str, Path, or DataFrame
+        Base data containing one row per visit. If Path-like, data is read into a DataFrame.
     in_field : str
         Column name corresponding to the arrival times
     out_field : str
@@ -50,6 +51,8 @@ class Scenario(BaseModel):
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
     end_analysis_dt : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
+    config : str or Path, optional
+        Configuration file (TOML format) containing input parameter arguments and values.
     cat_field : str, optional
         Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
         Default is None
@@ -57,52 +60,87 @@ class Scenario(BaseModel):
         Number of minutes in each time bin of the day, default is 60. This bin size is used for plots and reporting and
         is an aggregation of computations done at the finer bin size resolution specified by `resolution_bin_size_mins`.
         Use a value that divides into 1440 with no remainder.
+    cats_to_exclude : list, optional
+        Category values to ignore, default is None
+    occ_weight_field : str, optional
+        Column name corresponding to the weights to use for occupancy incrementing, default is None
+        which corresponds to a weight of 1.0
+    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
+        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
+    los_units : str, optional
+        The time units for length of stay analysis.
+        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
+        value allowed is 'seconds', largest is 'days'. The default is 'hours'.
+
+    export_bydatetime_csv : bool, optional
+       If True, bydatetime DataFrames are exported to csv files. Default is False.
+    export_summaries_csv : bool, optional
+       If True, summary DataFrames are exported to csv files. Default is False.
+    csv_export_path : str or Path, optional
+        Destination path for exported csv and png files, default is current directory
+
+    make_all_dow_plots : bool, optional
+       If True, day of week plots are created for occupancy, arrivals, and departures. Default is True.
+    make_all_week_plots : bool, optional
+       If True, full week plots are created for occupancy, arrivals, and departures. Default is True.
+    export_all_dow_plots : bool, optional
+       If True, day of week plots are exported for occupancy, arrivals, and departures. Default is False.
+    export_all_week_plots : bool, optional
+       If True, full week plots are exported for occupancy, arrivals, and departures. Default is False.
+    plot_export_path : str or None, default is None
+        If not None, plot is exported to `export_path`
+
+    plot_style : str, optional
+        Matplotlib built in style name. Default is 'ggplot'.
+    figsize : Tuple, optional
+        Figure size. Default is (15, 10)
+    bar_color_mean : str, optional
+        Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+        Which percentiles to plot. Default is (0.95, 0.75)
+    pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
+        Line color for each percentile series plotted. Order should match order of percentiles list.
+        Default is ('black', 'grey').
+    pctile_linestyle : List or tuple of line styles (e.g. ['-', '--']), optional
+        Line style for each percentile series plotted. Default is ('-', '--').
+    pctile_linewidth : List or tuple of line widths in points (e.g. [1.0, 0.75])
+        Line width for each percentile series plotted. Default is (0.75, 0.75).
+    cap : int, optional
+        Capacity of area being analyzed, default is None
+    cap_color : str, optional
+        matplotlib color code, default='r'
+    xlabel : str, optional
+        x-axis label, default='Hour'
+    ylabel : str, optional
+        y-axis label, default='Patients'
+    main_title : str, optional
+        Main title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
+    main_title_properties : None or dict, optional
+        Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}
+    subtitle : str, optional
+        title for plot, default = 'All categories'
+    subtitle_properties : None or dict, optional
+        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
+    legend_properties : None or dict, optional
+        Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
+    first_dow : str, optional
+        Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
+
+    edge_bins: int, default 1
+        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
     highres_bin_size_minutes : int, optional
         Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
         departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
         stays, the smaller the resolution should be. The current default is 5 minutes.
     keep_highres_bydatetime : bool, optional
         Save the high resolution bydatetime dataframe in hills attribute. Default is False.
-    cats_to_exclude : list, optional
-        Category values to ignore, default is None
-    occ_weight_field : str, optional
-        Column name corresponding to the weights to use for occupancy incrementing, default is None
-        which corresponds to a weight of 1.0.
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
-    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
-        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    cap : int, optional
-        Capacity of area being analyzed, default is None. Used only to add capacity line to occupancy plots.
     nonstationary_stats : bool, optional
        If True, datetime bin stats are computed. Else, they aren't computed. Default is True
     stationary_stats : bool, optional
        If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    export_bydatetime_csv : bool, optional
-       If True, bydatetime DataFrames are exported to csv files. Default is False.
-    export_summaries_csv : bool, optional
-       If True, summary DataFrames are exported to csv files. Default is False.
-    make_all_dow_plots : bool, optional
-       If True, day of week plots are created for occupancy, arrival, and departure. Default is True.
-    make_all_week_plots : bool, optional
-       If True, full week plots are created for occupancy, arrival, and departure. Default is True.
-    export_all_dow_plots : bool, optional
-       If True, day of week plots are exported for occupancy, arrival, and departure. Default is False.
-    export_all_week_plots : bool, optional
-       If True, full week plots are exported for occupancy, arrival, and departure. Default is False.
-    xlabel : str
-        x-axis label, default='Hour'
-    ylabel : str
-        y-axis label, default='Occupancy'
-    output_path : str or Path, optional
-        Destination path for exported csv and png files, default is current directory
     verbosity : int, optional
         Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
-    los_units : str, optional
-        The time units for length of stay analysis.
-        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
-        value allowed is 'seconds', largest is 'days'. The default
-        is 'hours'.
+
 
     Attributes
     ----------
@@ -119,48 +157,60 @@ class Scenario(BaseModel):
 
     # Required parameters
     scenario_name: str
-    stops_df: pd.DataFrame
+    data: str | Path | pd.DataFrame
     in_field: str
     out_field: str
-    # TODO - what if a pandas Timestamp or numpy datetime64 is passed in?
-    # See https://github.com/pydantic/pydantic/discussions/6972
     start_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     end_analysis_dt: date | datetime | pd.Timestamp | np.datetime64
     # Optional parameters
-    # stop_data_csv: str | Path | None = None
+    # config: Path | str | None = None
     cat_field: str | None = None
     bin_size_minutes: int = 60
-    highres_bin_size_minutes: int = 5
-    keep_highres_bydatetime: bool = False
     cats_to_exclude: List[str] | None = None
     occ_weight_field: str | None = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
-    nonstationary_stats: bool = True
-    stationary_stats: bool = True
-    edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
-    output_path: str | Path = Path('.')
+    los_units: str = 'hours'
+
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
+    csv_export_path: str | Path = Path('.')
+
     make_all_dow_plots: bool = False
     make_all_week_plots: bool = False
     export_all_dow_plots: bool = False
     export_all_week_plots: bool = False
+    plot_export_path: Path | str | None = None
+
+    # Plot options
+    plot_style: str = 'ggplot'
+    figsize: tuple = (15, 10)
+    bar_color_mean: str = 'steelblue'
+    plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75)
+    pctile_color: Tuple[str] | List[str] = ('black', 'grey')
+    pctile_linestyle: Tuple[str] | List[str] = ('-', '--')
+    pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75)
     cap: int | None = None
-    xlabel: str | None = 'Hour'
-    ylabel: str | None = 'Patients'
+    cap_color: str = 'r'
+    xlabel: str = 'Hour'
+    ylabel: str = 'Volume'
+    main_title: str = ''
+    main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16}
+    subtitle: str = ''
+    subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'}
+    legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'}
+    first_dow: str = 'mon'
+
+    # Advanced parameters
+    edge_bins: EdgeBinsEnum = EdgeBinsEnum.FRACTIONAL
+    highres_bin_size_minutes: int = 5
+    keep_highres_bydatetime: bool = False
+    nonstationary_stats: bool = True
+    stationary_stats: bool = True
     verbosity: int = VerbosityEnum.WARNING
-    los_units: str = 'hours'
     # Attributes
     stops_preprocessed_df: pd.DataFrame | None = None
     los_field_name: str | None = None
     hills: dict | None = None
-
-    # Ensure required fields and submitted optional fields exist
-    @field_validator('in_field', 'out_field', 'cat_field', 'occ_weight_field')
-    def field_exists(cls, v: str, info: FieldValidationInfo):
-        if v is not None and v not in info.data['stops_df'].columns:
-            raise ValueError(f'{v} is not a column in the dataframe')
-        return v
 
     @field_validator('start_analysis_dt')
     def validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
@@ -246,6 +296,27 @@ class Scenario(BaseModel):
         return v
 
     @model_validator(mode='after')
+    def stop_data(self) -> 'Scenario':
+        """If data is a DataFrame return it, else read the csv file into a DataFrame and return that."""
+        if isinstance(self.data, pd.DataFrame):
+            return self
+        else:
+            stops_df = pd.read_csv(self.data, parse_dates=[self.in_field, self.out_field])
+            self.data = stops_df
+            return self
+
+    @model_validator(mode='after')
+    def fields_exist(self) -> 'Scenario':
+        """Make sure fields exist """
+
+        fields_to_check = [self.in_field, self.out_field, self.cat_field, self.occ_weight_field]
+        for field in fields_to_check:
+            if field is not None and field not in self.data.columns:
+                raise ValueError(f'{field} is not a column in the dataframe')
+
+        return self
+
+    @model_validator(mode='after')
     def date_relationships(self) -> 'Scenario':
         """
         Start date for analysis must be before end date.
@@ -258,8 +329,8 @@ class Scenario(BaseModel):
         if self.end_analysis_dt <= self.start_analysis_dt:
             raise ValueError(f'end date must be > start date')
 
-        min_intime = self.stops_df[self.in_field].min()
-        max_outtime = self.stops_df[self.out_field].max()
+        min_intime = self.data[self.in_field].min()
+        max_outtime = self.data[self.out_field].max()
 
         if max_outtime < self.start_analysis_dt:
             raise ValueError(
@@ -268,6 +339,19 @@ class Scenario(BaseModel):
         if min_intime > self.end_analysis_dt:
             raise ValueError(
                 f'earliest arrival time of {min_intime} is after end analysis date of {self.end_analysis_dt}')
+
+        return self
+
+    @model_validator(mode='after')
+    def bin_size_relationships(self) -> 'Scenario':
+
+        if self.bin_size_minutes < self.highres_bin_size_minutes:
+            raise ValueError(
+                f'highres_bin_size_minutes ({self.highres_bin_size_minutes}) must be <= bin_size_minutes ({self.bin_size_minutes})')
+
+        if self.edge_bins == EdgeBinsEnum.FRACTIONAL and not self.keep_highres_bydatetime:
+            # No need to compute bydatetime at high resolution
+            self.highres_bin_size_minutes = self.bin_size_minutes
 
         return self
 
@@ -284,8 +368,8 @@ class Scenario(BaseModel):
         """
 
         # Count missing timestamps
-        num_recs_missing_entry_ts = self.stops_df[self.in_field].isna().sum()
-        num_recs_missing_exit_ts = self.stops_df[self.out_field].isna().sum()
+        num_recs_missing_entry_ts = self.data[self.in_field].isna().sum()
+        num_recs_missing_exit_ts = self.data[self.out_field].isna().sum()
         if num_recs_missing_entry_ts > 0:
             logger.warning(f'{num_recs_missing_entry_ts} records with missing entry timestamps - records ignored')
         if num_recs_missing_exit_ts > 0:
@@ -293,9 +377,9 @@ class Scenario(BaseModel):
 
         # Create mutable copy of stops_df containing only necessary fields
         stops_preprocessed_df = pd.DataFrame(
-            {self.in_field: self.stops_df[self.in_field], self.out_field: self.stops_df[self.out_field]})
+            {self.in_field: self.data[self.in_field], self.out_field: self.data[self.out_field]})
         if self.cat_field is not None:
-            stops_preprocessed_df[self.cat_field] = self.stops_df[self.cat_field]
+            stops_preprocessed_df[self.cat_field] = self.data[self.cat_field]
 
         # Filter out records that don't overlap the analysis span or have missing entry and/or exit timestamps
         stops_preprocessed_df = \
@@ -369,7 +453,7 @@ class Scenario(BaseModel):
                          subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
                          legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
                          first_dow: str = 'mon',
-                         export_path: Path | str | None = None, ):
+                         plot_export_path: Path | str | None = None, ):
 
         bin_size_minutes = self.bin_size_minutes
         scenario_name = self.scenario_name
@@ -398,7 +482,7 @@ class Scenario(BaseModel):
                                    ylabel=ylabel,
                                    first_dow=first_dow,
                                    scenario_name=scenario_name,
-                                   export_path=export_path)
+                                   plot_export_path=plot_export_path)
 
         return plot
 
@@ -420,7 +504,7 @@ class Scenario(BaseModel):
                         subtitle: str = '',
                         subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
                         legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
-                        export_path: Path | str | None = None, ):
+                        plot_export_path: Path | str | None = None, ):
 
         bin_size_minutes = self.bin_size_minutes
         scenario_name = self.scenario_name
@@ -448,7 +532,7 @@ class Scenario(BaseModel):
                                     xlabel=xlabel,
                                     ylabel=ylabel,
                                     scenario_name=scenario_name,
-                                    export_path=export_path)
+                                    plot_export_path=plot_export_path)
 
         return plot
 
@@ -514,6 +598,40 @@ class Scenario(BaseModel):
         df = get_bydatetime_df(self.hills, by_category=by_category)
         return df
 
+    def get_los_plot(self, by_category: bool = True):
+        """
+        Get length of stay histogram from length of stay summary
+
+        Parameters
+        ----------
+        by_category : bool
+            Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
+        Returns
+        -------
+        Matplotlib plot
+
+        """
+        plot = get_los_plot(self.hills, by_category=by_category)
+        return plot
+
+    def get_los_stats(self, by_category: bool = True):
+        """
+        Get length of stay stats table from length of stay summary
+
+        Parameters
+        ----------
+        by_category : bool
+            Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
+        Returns
+        -------
+        pandas Styler
+
+        """
+        stats = get_los_stats(self.hills, by_category=by_category)
+        return stats
+
     def compute_implied_operating_hours(self, by_category: bool = True,
                                         statistic: str = 'mean', threshold: float = 0.2):
         """
@@ -555,3 +673,67 @@ class Scenario(BaseModel):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
         return str(self.model_dump())
+
+def create_scenario(params_dict: Optional[Dict] = None,
+                    config_path: Optional[str | Path] = None, **kwargs):
+    """Function to create a `Scenario` from a dict, a TOML config file, and/or keyword args """
+
+    # Create empty dict for input parameters
+    params = {}
+
+    # If params_dict is not None, merge into params
+    if params_dict is not None:
+        params.update(params_dict)
+
+    # If toml_path is not None, merge into params
+    if config_path is not None:
+        with open(config_path, "rb") as f:
+            params_toml_dict = tomllib.load(f)
+            params = update_params_from_toml(params, params_toml_dict)
+
+    # Args passed to function get ultimate say
+    if len(kwargs) > 0:
+        params.update(kwargs)
+
+    # Now, from the params dictionary, create pydantic Parameters model
+    # Be nice to construct model so that some default values
+    # can be based on app settings
+    # Get application settings
+    # app_settings: Settings = Settings()
+
+    # Create Pydantic model to parse and validate inputs
+    scenario = Scenario(**params)
+    return scenario
+
+
+def update_params_from_toml(params_dict, toml_dict):
+    """
+    Update dict of input parameters from toml_config dictionary
+
+    Parameters
+    ----------
+    params_dict : dict
+    toml_dict : dict from loading TOML config file
+
+    Returns
+    -------
+    Updated parameters dict
+    """
+
+    # Flatten toml config (we know there are no key clashes and only one nesting level)
+    # Update args dict from config dict
+    for outerkey, outerval in toml_dict.items():
+        for key, val in outerval.items():
+            params_dict[key] = val
+
+    return params_dict
+
+
+def from_config(config: Path | str):
+    scenario = Scenario.create_scenario(toml_path=config)
+    return scenario
+
+
+def from_dict(params_dict: dict):
+    scenario = Scenario.create_scenario(params_dict=params_dict)
+    return scenario

@@ -3,13 +3,14 @@ from argparse import ArgumentParser, Namespace, SUPPRESS
 
 import pandas as pd
 
-from hillmaker.utils import update_params_from_toml
+from hillmaker.scenario import update_params_from_toml, create_scenario
 from hillmaker import Scenario
 
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
+
 
 
 def process_command_line(argv=None):
@@ -31,8 +32,9 @@ def process_command_line(argv=None):
                             description='Occupancy analysis by time of day and day of week',
                             add_help=False)
 
-    required = parser.add_argument_group('required arguments (either on command line or via config file)')
-    optional = parser.add_argument_group('optional arguments')
+    required = parser.add_argument_group('Required arguments (either on command line or via config file)')
+    optional = parser.add_argument_group('Optional arguments')
+    advanced_optional = parser.add_argument_group('Advanced optional arguments')
 
     # Add arguments
     required.add_argument(
@@ -41,7 +43,7 @@ def process_command_line(argv=None):
     )
 
     required.add_argument(
-        '--stop_data_csv', type=str,
+        '--data', type=str,
         help="Path to csv file containing the stop data to be processed"
     )
 
@@ -57,17 +59,19 @@ def process_command_line(argv=None):
 
     required.add_argument(
         '--start_analysis_dt', type=str,
-        help="Starting datetime for the analysis (must be convertible to pandas Timestamp)"
+        help="Starting datetime for the analysis (use yyyy-mm-dd format)"
     )
 
     required.add_argument(
         '--end_analysis_dt', type=str,
-        help="Ending datetime for the analysis (must be convertible to pandas Timestamp)"
+        help="Ending datetime for the analysis (use yyyy-mm-dd format)"
     )
 
+    # Optional general arguments
     optional.add_argument(
         '--config', type=str, default=None,
-        help="Configuration file (TOML format) containing input parameter arguments and values."
+        help="""Configuration file (TOML format) containing input parameter arguments and values. 
+        Input parameters set via a config file will override parameters values passed via the command line."""
     )
 
     optional.add_argument(
@@ -76,39 +80,119 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--bin_size_mins', type=int, default=60,
-        help="Number of minutes in each time bin of the day (default=60) for aggregate statistics."
+        '--bin_size_minutes', type=int, default=60,
+        help="Number of minutes in each time bin of the day (default=60) for aggregate statistics and plots."
     )
 
     optional.add_argument(
-        '--highres_bin_size_mins', type=int, default=60,
-        help="Number of minutes in each time bin of the day (default=60) for high resolution occupancy computation."
+        "--cats_to_exclude",
+        nargs="*",  # 0 or more values expected => creates a list
+        type=str,
+        default=None,  # default if nothing is provided
+        help="Category values to exclude from the analysis."
     )
 
     optional.add_argument(
         '--occ_weight_field', type=str, default=None,
-        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used."
+        help="Column name corresponding to occupancy weights. If None, then weight of 1.0 is used. Default is None."
     )
 
     optional.add_argument(
-        '--output_path', type=str, default='.',
+        "--percentiles",
+        nargs="*",  # 0 or more values expected => creates a list
+        type=float,
+        default=(0.25, 0.5, 0.75, 0.95, 0.99),
+        help="Which percentiles to compute"
+    )
+
+    optional.add_argument(
+        '--los_units', type=str, default='hours',
+        help="""The time units for length of stay analysis.
+        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
+        value allowed is 'seconds', largest is 'days'. The default is 'hours'."""
+    )
+
+    # CSV export options
+    # optional.add_argument(
+    #     '--export_bydatetime_csv', type=bool, default=True,
+    #     help="If True, bydatetime DataFrames are exported to csv files."
+    # )
+    #
+    # optional.add_argument(
+    #     '--export_summaries_csv', type=bool, default=True,
+    #     help="If True, summary DataFrames are exported to csv files."
+    # )
+
+    optional.add_argument(
+        '--csv_export_path', type=str, default='.',
         help="Destination path for exported csv files, default is current directory."
     )
 
+    # Plot export options
     optional.add_argument(
-        '--no_plots', action='store_true',
-        help="If set (true), all plots are suppressed. By default, plots are exported to OUTPUT_PATH."
-
+        '--no_dow_plots', action='store_true',
+        help="If set, no day of week plots are created."
     )
 
     optional.add_argument(
-        '--xlabel', type=str, default='Hour',
-        help="x-axis label for plots"
+        '--no_week_plots', action='store_true',
+        help="If set, no weekly plots are created."
     )
 
     optional.add_argument(
-        '--ylabel', type=str, default='Hour',
-        help="y-axis label for plots"
+        '--plot_export_path', type=str, default='.',
+        help="Destination path for exported plots, default is current directory."
+    )
+
+    # Plot creation options
+    optional.add_argument(
+        '--plot_style', type=str, default='ggplot',
+        help="Matplotlib style name."
+    )
+
+    optional.add_argument(
+        "--figsize",
+        nargs=2,  # 0 or more values expected => creates a list
+        type=int,
+        default=(15, 10),
+        help="Figure size"
+    )
+
+    optional.add_argument(
+        '--bar_color_mean', type=str, default='steelblue',
+        help="Matplotlib color name for the bars representing mean values."
+    )
+
+    optional.add_argument(
+        "--plot_percentiles",
+        nargs="+",  # 0 or more values expected => creates a list
+        type=float,
+        default=(0.95, 0.75),
+        help="Which percentiles to plot"
+    )
+
+    optional.add_argument(
+        "--pctile_color",
+        nargs="+",  # 0 or more values expected => creates a list
+        type=str,
+        default=('black', 'grey'),
+        help="Line color for each percentile series plotted. Order should match order of percentiles list."
+    )
+
+    optional.add_argument(
+        "--pctile_linestyle",
+        nargs="+",  # 0 or more values expected => creates a list
+        type=str,
+        default=('-', '--'),
+        help="Line style for each percentile series plotted."
+    )
+
+    optional.add_argument(
+        "--pctile_linewidth",
+        nargs="*",  # 0 or more values expected => creates a list
+        type=float,
+        default=(0.75, 0.75),
+        help="Line width for each percentile series plotted."
     )
 
     optional.add_argument(
@@ -117,29 +201,64 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
-        '--edge_bins', type=int, default=1,
-        help="Occupancy contribution method for arrival and departure bins. 1=fractional (the default), 2=whole bin"
+        '--cap_color', type=str, default='r',
+        help="Matplotlib color code."
     )
 
     optional.add_argument(
+        '--xlabel', type=str, default='Hour',
+        help="x-axis label for plots."
+    )
+
+    optional.add_argument(
+        '--ylabel', type=str, default='Volume',
+        help="y-axis label for plots."
+    )
+
+    optional.add_argument(
+        '--main_title', type=str, default='',
+        help="Main title for plot. Default = '{Occupancy, Arrivals, Departures} by time of day and day of week'"
+    )
+
+    optional.add_argument(
+        '--subtitle', type=str, default='',
+        help="Subtitle for plot. Default = 'Scenario: {scenario_name}'"
+    )
+
+    optional.add_argument(
+        '--first_dow', type=str, default='mon',
+        help="Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'"
+    )
+
+    # main_title_properties : None or dict, optional
+    #     Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}
+    # subtitle_properties : None or dict, optional
+    #     Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
+    # legend_properties : None or dict, optional
+    #     Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
+
+    # Advanced optional arguments
+    advanced_optional.add_argument(
+        '--edge_bins', type=int, default=1,
+        help="Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin"
+    )
+
+    advanced_optional.add_argument(
+        '--highres_bin_size_minutes', type=int, default=5,
+        help="""Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
+         departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
+         stays, the smaller the resolution should be if using edge_bins=2. See docs for more details."""
+    )
+
+    advanced_optional.add_argument(
+        '--keep_highres_bydatetime', action='store_true',
+        help="Save the high resolution bydatetime dataframe in hills attribute."
+    )
+
+    advanced_optional.add_argument(
         '--verbosity', type=int, default=1,
         help="Used to set level in loggers. 0=logging.WARNING, 1=logging.INFO (default), 2=logging.DEBUG"
     )
-
-    # Be nice if this default came from application settings file
-    # optional.add_argument(
-    #     "--percentiles",
-    #     nargs="*",  # 0 or more values expected => creates a list
-    #     type=float,
-    #     default=(0.25, 0.5, 0.75, 0.95, 0.99),  # default if nothing is provided
-    # )
-    #
-    # optional.add_argument(
-    #     "--cats_to_exclude",
-    #     nargs="*",  # 0 or more values expected => creates a list
-    #     type=str,
-    #     default=[],  # default if nothing is provided
-    # )
 
     # Add back help
     optional.add_argument(
@@ -193,43 +312,39 @@ def main(argv=None):
     # Get input arguments
     args = process_command_line(argv)
 
-    # Update input args if config file passed
-    if args.config is not None:
-        # Read inputs from config file
-        with open(args.config, mode="rb") as toml_file:
-            toml_config = tomllib.load(toml_file)
-            args = update_args_from_toml(args, toml_config)
-
     # Make sure all required args are specified
     check_for_required_args(args)
 
-    # Read in stop data to DataFrame
-    stops_df = pd.read_csv(args.stop_data_csv, parse_dates=[args.in_field, args.out_field])
-
-    # Make hills
-    if not args.no_plots:
-        make_week_plot = True
-        make_dow_plots = True
-        export_week_plot = True
-        export_dow_plots = True
+    # Set plot creation and export flags
+    args_dict = vars(args)
+    if args.no_dow_plots:
+        args_dict['make_all_dow_plots'] = False
+        args_dict['export_all_dow_plots'] = False
     else:
-        make_week_plot = False
-        make_dow_plots = False
-        export_week_plot = False
-        export_dow_plots = False
+        args_dict['make_all_dow_plots'] = True
+        args_dict['export_all_dow_plots'] = True
+    args_dict.pop('no_dow_plots', None)
 
-    scenario = Scenario(scenario_name=args.scenario_name, stops_df=stops_df,
-                        in_field=args.in_field, out_field=args.out_field,
-                        start_analysis_dt=args.start_analysis_dt, end_analysis_dt=args.end_analysis_dt,
-                        cat_field=args.cat_field, bin_size_minutes=args.bin_size_mins,
-                        highres_bin_size_minutes=args.highres_bin_size_minutes,
-                        output_path=args.output_path, verbosity=args.verbosity,
-                        export_bydatetime_csv=True, export_summaries_csv=True,
-                        make_all_week_plots=make_week_plot, make_all_dow_plots=make_dow_plots,
-                        export_all_week_plots=export_week_plot,
-                        export_all_dow_plots=export_dow_plots,
-                        cap=args.cap, xlabel=args.xlabel, ylabel=args.ylabel,
-                        edge_bins=args.edge_bins, los_units='hours')
+    if args.no_week_plots:
+        args_dict['make_all_week_plots'] = False
+        args_dict['export_all_week_plots'] = False
+    else:
+        args_dict['make_all_week_plots'] = True
+        args_dict['export_all_week_plots'] = True
+    args_dict.pop('no_week_plots', None)
+
+    # Set additional args
+    args_dict['export_bydatetime_csv'] = True
+    args_dict['export_summaries_csv'] = True
+
+    # Update input args if config file passed
+    if args.config is not None:
+        config_file = args.config
+        args_dict.pop('config', None)
+        scenario = create_scenario(params_dict=args_dict, config_path=config_file)
+    else:
+        args_dict.pop('config', None)
+        scenario = create_scenario(params_dict=args_dict)
 
     scenario.make_hills()
 
@@ -248,7 +363,7 @@ def check_for_required_args(args):
     """
 
     # Make sure all required args are present
-    required_args = ['scenario_name', 'stop_data_csv', 'in_field', 'out_field',
+    required_args = ['scenario_name', 'data', 'in_field', 'out_field',
                      'start_analysis_dt', 'start_analysis_dt']
     # Convert args namespace to a dict
     args_dict = vars(args)

@@ -33,11 +33,11 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
                     end_analysis_np: np.datetime64 | Timestamp,
                     cat_field: str | List[str] = None,
                     bin_size_minutes: int = 60,
-                    highres_bin_size_minutes: int = 5,
-                    keep_highres_bydatetime: bool = False,
                     cat_to_exclude: List[str] = None,
                     occ_weight_field: str = None,
-                    edge_bins: int = 1
+                    edge_bins: int = 1,
+                    highres_bin_size_minutes: int = 5,
+                    keep_highres_bydatetime: bool = False,
                     ):
     """
     Create bydatetime table from which summary statistics can be computed.
@@ -66,12 +66,6 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
     bin_size_minutes: int, default=60
         Bin size in minutes. Should divide evenly into 1440.
 
-    highres_bin_size_minutes: int, default=5
-        Resolution bin size in minutes. Should divide evenly into 1440 and be <= `bin_size_mins`.
-
-    keep_highres_bydatetime : bool, optional
-        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
-
     cat_to_exclude: list of str, default=None
         Categories to ignore
 
@@ -81,6 +75,12 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
 
     edge_bins: int, default=1
         Occupancy contribution method for arrival and departure bins. 1=fractional, 2=whole bin
+
+    highres_bin_size_minutes: int, default=5
+        Resolution bin size in minutes. Should divide evenly into 1440 and be <= `bin_size_mins`.
+
+    keep_highres_bydatetime : bool, optional
+        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
 
     Returns
     -------
@@ -330,7 +330,8 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt,
         res_df['date'] = res_df['datetime'].map(lambda x: x.date())
         res_df['bin_of_day'] = res_df['datetime'].map(lambda x: hmlib.bin_of_day(x, bin_size_minutes))
 
-        # Aggregate by bin_size_minutes
+        # Aggregate by bin_size_minutes if necessary
+
         if catfield:
             for c in catfield:
                 res_df[c] = cat
@@ -348,7 +349,8 @@ def arrays_to_df(results_arrays, start_analysis_dt, end_analysis_dt,
         agg_df = agg_df.reset_index(drop=False)
 
         # Compute datetime
-        agg_df['datetime'] = agg_df.apply(lambda x: pd.Timestamp(x.date) + pd.Timedelta(x.bin_of_day * bin_size_minutes, 'm'), axis=1)
+        agg_df['datetime'] = agg_df.apply(
+            lambda x: pd.Timestamp(x.date) + pd.Timedelta(x.bin_of_day * bin_size_minutes, 'm'), axis=1)
 
         # Add additional fields
         agg_df['day_of_week'] = agg_df['datetime'].map(lambda x: x.weekday())

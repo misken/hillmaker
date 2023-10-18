@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 from hillmaker.bydatetime import make_bydatetime
 from hillmaker.summarize import summarize, summarize_los
 from hillmaker.hmlib import HillTimer
-from hillmaker.plotting import make_week_dow_plots
+from hillmaker.plotting import make_plots
 
 
 def setup_logger(verbosity: int):
@@ -99,8 +99,18 @@ def compute_hills_stats(scenario):
     logger.info(f"Length of stay summary created (seconds): {t.interval:.4f}")
 
     # Gather results
-    hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs, 'length_of_stay': los_summary,
-             'settings': {'scenario_name': scenario.scenario_name, 'cat_field': scenario.cat_field}}
+    hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs, 'los_summary': los_summary,
+             'settings': {'scenario_name': scenario.scenario_name,
+                          'in_field': scenario.in_field,
+                          'out_field': scenario.out_field,
+                          'start_analysis_dt': scenario.start_analysis_dt,
+                          'end_analysis_dt': scenario.start_analysis_dt,
+                          'cat_field': scenario.cat_field,
+                          'occ_weight_field': scenario.occ_weight_field,
+                          'bin_size_minutes': scenario.bin_size_minutes,
+                          'los_units': scenario.los_units,
+                          'edge_bins': scenario.edge_bins,
+                          'highres_bin_size_minutes': scenario.highres_bin_size_minutes}}
 
     if scenario.keep_highres_bydatetime:
         hills['bydatetime_highres'] = bydt_highres_dfs
@@ -144,24 +154,24 @@ def _make_hills(scenario):
     # Export results to csv if requested
     if scenario.export_bydatetime_csv:
         with HillTimer() as t:
-            export_bydatetime(hills['bydatetime'], scenario.scenario_name, scenario.output_path)
+            export_bydatetime(hills['bydatetime'], scenario.scenario_name, scenario.csv_export_path)
 
-        logger.info(f"By datetime exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"By datetime exported to csv in {scenario.csv_export_path} (seconds): {t.interval:.4f}")
 
     if scenario.export_summaries_csv:
         with HillTimer() as t:
             if scenario.nonstationary_stats:
-                export_summaries(hills['summaries'], scenario.scenario_name, scenario.output_path, 'nonstationary')
+                export_summaries(hills['summaries'], scenario.scenario_name, scenario.csv_export_path, 'nonstationary')
             if scenario.stationary_stats:
-                export_summaries(hills['summaries'], scenario.scenario_name, scenario.output_path, 'stationary')
+                export_summaries(hills['summaries'], scenario.scenario_name, scenario.csv_export_path, 'stationary')
 
-        logger.info(f"Summaries exported to csv in {scenario.output_path} (seconds): {t.interval:.4f}")
+        logger.info(f"Summaries exported to csv in {scenario.csv_export_path} (seconds): {t.interval:.4f}")
 
     # Plots
     if scenario.make_all_week_plots or scenario.make_all_dow_plots or \
             scenario.export_all_week_plots or scenario.export_all_dow_plots:
         with HillTimer() as t:
-            plots = make_week_dow_plots(scenario, hills)
+            plots = make_plots(scenario, hills)
             hills['plots'] = plots
 
     # All done
@@ -302,6 +312,55 @@ def get_bydatetime_df(hills: dict, by_category: bool = True):
         print(f'Key does not exist.\n{error}')
         return None
 
+
+def get_los_plot(hills: dict, by_category: bool = True):
+    """
+    Get length of stay histogram from length of stay summary
+
+    Parameters
+    ----------
+    hills : dict
+        Created by `make_hills`
+    by_category : bool
+        Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
+    Returns
+    -------
+    plot object from matplotlib
+
+    """
+
+    if by_category:
+        plot = hills['los_summary']['los_histo_bycat']
+    else:
+        plot = hills['los_summary']['los_histo']
+
+    return plot
+
+
+def get_los_stats(hills: dict, by_category: bool = True):
+    """
+    Get stats from length of stay summary
+
+    Parameters
+    ----------
+    hills : dict
+        Created by `make_hills`
+    by_category : bool
+        Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
+    Returns
+    -------
+    pandas Styler object
+
+    """
+
+    if by_category:
+        stats = hills['los_summary']['los_stats_bycat']
+    else:
+        stats = hills['los_summary']['los_stats']
+
+    return stats
 
 def export_bydatetime(bydt_dfs, scenario_name, export_path):
     """

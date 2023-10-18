@@ -21,9 +21,9 @@ output_path = './output'
 df = pd.read_csv(file_stopdata, parse_dates=[in_fld_name, out_fld_name])
 
 results = hm.make_hills(scenario, df, in_fld_name, out_fld_name,
-                     start, end, cat_fld_name,
-                     bin_size_minutes=bin_mins,
-                     output_path=output_path,
-                     verbose=1)
+                        start, end, cat_fld_name,
+                        bin_size_minutes=bin_mins,
+                        csv_export_path=output_path,
+                        verbose=1)
 
 print(results.keys())
