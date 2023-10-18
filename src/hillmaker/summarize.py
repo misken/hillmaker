@@ -154,9 +154,9 @@ def summarize_nonstationary(bydt_df: pd.DataFrame, catfield: str | List[str] = N
     if verbosity > 1:
         print(occ_stats.head())
 
-    occ_stats_summary = occ_stats.unstack()
-    arr_stats_summary = arr_stats.unstack()
-    dep_stats_summary = dep_stats.unstack()
+    occ_stats_summary = occ_stats.unstack().reset_index(drop=False)
+    arr_stats_summary = arr_stats.unstack().reset_index(drop=False)
+    dep_stats_summary = dep_stats.unstack().reset_index(drop=False)
 
     if verbosity > 1:
         print(occ_stats_summary.head())
@@ -212,9 +212,9 @@ def summarize_stationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None
     arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats, percentiles)
     dep_stats = bydt_dfgrp['departures'].apply(summary_stats, percentiles)
 
-    occ_stats_summary = occ_stats.unstack()
-    arr_stats_summary = arr_stats.unstack()
-    dep_stats_summary = dep_stats.unstack()
+    occ_stats_summary = occ_stats.unstack().reset_index(drop=False)
+    arr_stats_summary = arr_stats.unstack().reset_index(drop=False)
+    dep_stats_summary = dep_stats.unstack().reset_index(drop=False)
 
     summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
                  'departures': dep_stats_summary}
