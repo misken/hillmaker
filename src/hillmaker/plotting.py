@@ -254,6 +254,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
                         plot_style: str = 'ggplot',
                         figsize: tuple = (15, 10),
                         bar_color_mean: str = 'steelblue',
+                        alpha: float = 0.5,
                         percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                         pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                         pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
@@ -287,6 +288,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    alpha: float, optional
+        Value between 0 and 1 specifying the opacity of the mean bars. Default is 0.5
     percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
@@ -371,7 +374,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean)
+                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -442,15 +445,14 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
                          metric1: str = 'arrivals',
                          metric2: str = 'occupancy',
                          bin_size_minutes: int = 60,
-                         cap: int = None,
                          plot_style: str = 'ggplot',
                          figsize: tuple = (15, 10),
                          bar_color_mean: str = 'steelblue',
+                         alpha: float = 0.5,
                          percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                          pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                          pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                          pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
-                         cap_color: str = 'r',
                          xlabel: str = 'Hour',
                          ylabel: str = 'Volume',
                          main_title: str = '',
@@ -483,6 +485,8 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    alpha: float, optional
+        Value between 0 and 1 specifying the opacity of the mean bars. Default is 0.5
     percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
@@ -495,10 +499,6 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60. Use a value that
         divides into 1440 with no remainder
-    cap : int, optional
-        Capacity of area being analyzed, default is None
-    cap_color : str, optional
-        matplotlib color code, default='r'
     xlabel : str, optional
         x-axis label, default='Hour'
     ylabel : str, optional
@@ -574,7 +574,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, arr_summary_df_plot['mean'], label=f'Mean {metric1}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean)
+                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -586,10 +586,6 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric2}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
-
-        # establish capacity horizontal line if supplied
-        if cap is not None and metric.lower()[0] == 'o':
-            ax1.axhline(cap, color=cap_color, linestyle='--', label='Capacity')
 
         # Create formatter variables
         day_fmt = '' if num_days == 1 else '%a'
@@ -645,6 +641,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                          plot_style: str = 'ggplot',
                          figsize: tuple = (15, 10),
                          bar_color_mean: str = 'steelblue',
+                         alpha: float = 0.5,
                          percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                          pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                          pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
@@ -679,6 +676,8 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    alpha: float, optional
+        Value between 0 and 1 specifying the opacity of the mean bars. Default is 0.5
     percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
@@ -760,7 +759,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, occ_summary_df_plot['mean'], label=f'Mean {metric}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean)
+                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -832,15 +831,14 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
                           metric1: str = 'arrivals',
                           metric2: str = 'occupancy',
                           bin_size_minutes: int = 60,
-                          cap: int = None,
                           plot_style: str = 'ggplot',
                           figsize: tuple = (15, 10),
                           bar_color_mean: str = 'steelblue',
+                          alpha: float = 0.5,
                           percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                           pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                           pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                           pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
-                          cap_color: str = 'r',
                           xlabel: str = 'Hour',
                           ylabel: str = 'Volume',
                           main_title: str = '',
@@ -874,6 +872,8 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    alpha: float, optional
+        Value between 0 and 1 specifying the opacity of the mean bars. Default is 0.5
     percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
@@ -886,10 +886,6 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
     bin_size_minutes : int, optional
         Number of minutes in each time bin of the day, default is 60. Use a value that
         divides into 1440 with no remainder
-    cap : int, optional
-        Capacity of area being analyzed, default is None
-    cap_color : str, optional
-        matplotlib color code, default='r'
     xlabel : str, optional
         x-axis label, default='Hour'
     ylabel : str, optional
@@ -962,7 +958,7 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
         # Mean occupancy as bars - here's the GOTCHA involving the bar width
         bar_width = 1 / (1440 / bin_size_minutes)
         ax1.bar(timestamps, arr_summary_df_plot['mean'], label=f'Mean {metric1}',
-                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean)
+                width=bar_width, color=bar_color_mean, edgecolor=bar_color_mean, alpha=alpha)
 
         # Percentiles as lines
         # Style the line for the occupancy percentile
@@ -974,10 +970,6 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric2}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
-
-        # establish capacity horizontal line if supplied
-        if cap is not None and metric.lower()[0] == 'o':
-            ax1.axhline(cap, color=cap_color, linestyle='--', label='Capacity')
 
         # Create formatter variables
         # day_fmt = '' if num_days == 1 else '%a'
