@@ -90,7 +90,6 @@ def make_plots(scenario: 'Scenario', hills: dict):
         with HillTimer() as t:
             for metric in hills['summaries']['nonstationary']['dow_binofday']:
                 fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
-                fullwk_df = fullwk_df.reset_index()
 
                 week_range_str = 'week'
                 plot_key = f'{scenario.scenario_name}_{metric}_plot_{week_range_str}'
@@ -129,7 +128,6 @@ def make_plots(scenario: 'Scenario', hills: dict):
         with HillTimer() as t:
             for metric in hills['summaries']['nonstationary']['dow_binofday']:
                 fullwk_df = hills['summaries']['nonstationary']['dow_binofday'][metric]
-                fullwk_df = fullwk_df.reset_index()
                 for dow in fullwk_df['dow_name'].unique():
                     dow_df = fullwk_df.loc[fullwk_df['dow_name'] == dow]
                     week_range_str = dow
@@ -273,7 +271,6 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
         # Adjust the summary df for first_dow
         occ_summary_df_plot = summary_df.copy()
-        occ_summary_df_plot.reset_index(inplace=True, drop=False)
         occ_summary_df_plot['plot_dow'] = occ_summary_df_plot['day_of_week'].map(lambda d: _plot_dow(d, first_dow_val))
         occ_summary_df_plot.sort_values(by=['plot_dow', 'bin_of_day'], inplace=True)
 
@@ -470,13 +467,11 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
 
         # Adjust the summary df for first_dow
         arr_summary_df_plot = summary_df1.copy()
-        arr_summary_df_plot.reset_index(inplace=True, drop=False)
         arr_summary_df_plot['plot_dow'] = arr_summary_df_plot['day_of_week'].map(lambda d: _plot_dow(d, first_dow_val))
         arr_summary_df_plot.sort_values(by=['plot_dow', 'bin_of_day'], inplace=True)
 
         # Adjust the summary df for first_dow
         occ_summary_df_plot = summary_df2.copy()
-        occ_summary_df_plot.reset_index(inplace=True, drop=False)
         occ_summary_df_plot['plot_dow'] = occ_summary_df_plot['day_of_week'].map(lambda d: _plot_dow(d, first_dow_val))
         occ_summary_df_plot.sort_values(by=['plot_dow', 'bin_of_day'], inplace=True)
 
@@ -663,7 +658,6 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         timestamps = pd.date_range(base_date_for_first_dow, periods=num_bins, freq=f'{bin_size_minutes}Min').tolist()
         # Adjust the summary df for dow to plot
         occ_summary_df_plot = summary_df.copy()
-        occ_summary_df_plot.reset_index(inplace=True, drop=False)
         occ_summary_df_plot = occ_summary_df_plot[occ_summary_df_plot['day_of_week'] == dow_val].copy()
         occ_summary_df_plot.sort_values(by=['bin_of_day'], inplace=True)
 
@@ -857,13 +851,11 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
 
         # Adjust the summary df for dow to plot
         arr_summary_df_plot = summary_df1.copy()
-        arr_summary_df_plot.reset_index(inplace=True, drop=False)
         arr_summary_df_plot = arr_summary_df_plot[arr_summary_df_plot['day_of_week'] == dow_val].copy()
         arr_summary_df_plot.sort_values(by=['bin_of_day'], inplace=True)
 
         # Adjust the summary df for dow to plot
         occ_summary_df_plot = summary_df2.copy()
-        occ_summary_df_plot.reset_index(inplace=True, drop=False)
         occ_summary_df_plot = occ_summary_df_plot[occ_summary_df_plot['day_of_week'] == dow_val].copy()
         occ_summary_df_plot.sort_values(by=['bin_of_day'], inplace=True)
 

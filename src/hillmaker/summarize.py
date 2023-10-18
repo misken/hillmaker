@@ -349,7 +349,7 @@ def compute_implied_operating_hours(occupancy_summary_df, cat_field=None, statis
 
     """
 
-    occ_sum = occupancy_summary_df.copy().reset_index()
+    occ_sum = occupancy_summary_df.copy()
     overall_max_occ = occ_sum['mean'].max()
     cutoff = threshold * overall_max_occ
 
