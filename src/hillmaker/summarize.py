@@ -154,9 +154,9 @@ def summarize_nonstationary(bydt_df: pd.DataFrame, catfield: str | List[str] = N
     if verbosity > 1:
         print(occ_stats.head())
 
-    occ_stats_summary = occ_stats.unstack()
-    arr_stats_summary = arr_stats.unstack()
-    dep_stats_summary = dep_stats.unstack()
+    occ_stats_summary = occ_stats.unstack().reset_index(drop=False)
+    arr_stats_summary = arr_stats.unstack().reset_index(drop=False)
+    dep_stats_summary = dep_stats.unstack().reset_index(drop=False)
 
     if verbosity > 1:
         print(occ_stats_summary.head())
@@ -212,9 +212,9 @@ def summarize_stationary(bydt_df: pd.DataFrame, catfield: str | List[str] = None
     arr_stats = bydt_dfgrp['arrivals'].apply(summary_stats, percentiles)
     dep_stats = bydt_dfgrp['departures'].apply(summary_stats, percentiles)
 
-    occ_stats_summary = occ_stats.unstack()
-    arr_stats_summary = arr_stats.unstack()
-    dep_stats_summary = dep_stats.unstack()
+    occ_stats_summary = occ_stats.unstack().reset_index(drop=False)
+    arr_stats_summary = arr_stats.unstack().reset_index(drop=False)
+    dep_stats_summary = dep_stats.unstack().reset_index(drop=False)
 
     summaries = {'occupancy': occ_stats_summary, 'arrivals': arr_stats_summary,
                  'departures': dep_stats_summary}
@@ -304,7 +304,7 @@ def summarize_los(stops_preprocessed_df: DataFrame, los_field: str, cat_field: s
 
     # Gather results
     results = {'los_stats': los_stats_styled,
-               'los_histo_all': plot_all.figure}
+               'los_histo': plot_all.figure}
 
     # Plot by category if cat_field is not None
     if cat_field is not None:
@@ -315,7 +315,7 @@ def summarize_los(stops_preprocessed_df: DataFrame, los_field: str, cat_field: s
         g_bycat = sns.FacetGrid(data=stops_preprocessed_df, col=cat_field, sharex=False, sharey=False, col_wrap=3)
         plot_bycat = g_bycat.map(sns.histplot, los_field)
         plt.close()  # Supress plot showing up in notebook
-        results['los_bycat_stats'] = los_bycat_stats_styled
+        results['los_stats_bycat'] = los_bycat_stats_styled
         results['los_histo_bycat'] = plot_bycat.figure
 
     return results
@@ -349,7 +349,7 @@ def compute_implied_operating_hours(occupancy_summary_df, cat_field=None, statis
 
     """
 
-    occ_sum = occupancy_summary_df.copy().reset_index()
+    occ_sum = occupancy_summary_df.copy()
     overall_max_occ = occ_sum['mean'].max()
     cutoff = threshold * overall_max_occ
 

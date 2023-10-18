@@ -10,6 +10,7 @@ from pydantic import BaseModel, field_validator, model_validator, confloat, Fiel
 
 # import hillmaker as hm
 from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
+from hillmaker.hills import get_los_plot, get_los_stats
 from hillmaker.plotting import make_week_hill_plot, make_daily_hill_plot
 from hillmaker.summarize import compute_implied_operating_hours
 
@@ -96,7 +97,7 @@ class Scenario(BaseModel):
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
     plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
-        Which percentiles to plot. Default is (0.95)
+        Which percentiles to plot. Default is (0.95, 0.75)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
         Line color for each percentile series plotted. Order should match order of percentiles list.
         Default is ('black', 'grey').
@@ -174,8 +175,8 @@ class Scenario(BaseModel):
     export_summaries_csv: bool = False
     csv_export_path: str | Path = Path('.')
 
-    make_all_dow_plots: bool = True
-    make_all_week_plots: bool = True
+    make_all_dow_plots: bool = False
+    make_all_week_plots: bool = False
     export_all_dow_plots: bool = False
     export_all_week_plots: bool = False
     plot_export_path: Path | str | None = None
@@ -592,6 +593,40 @@ class Scenario(BaseModel):
         """
         df = get_bydatetime_df(self.hills, by_category=by_category)
         return df
+
+    def get_los_plot(self, by_category: bool = True):
+        """
+        Get length of stay histogram from length of stay summary
+
+        Parameters
+        ----------
+        by_category : bool
+            Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
+        Returns
+        -------
+        Matplotlib plot
+
+        """
+        plot = get_los_plot(self.hills, by_category=by_category)
+        return plot
+
+    def get_los_stats(self, by_category: bool = True):
+        """
+        Get length of stay stats table from length of stay summary
+
+        Parameters
+        ----------
+        by_category : bool
+            Default=True corresponds to category specific statistics. A value of False gives overall statistics.
+
+        Returns
+        -------
+        pandas Styler
+
+        """
+        stats = get_los_stats(self.hills, by_category=by_category)
+        return stats
 
     def compute_implied_operating_hours(self, by_category: bool = True,
                                         statistic: str = 'mean', threshold: float = 0.2):

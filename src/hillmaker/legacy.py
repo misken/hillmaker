@@ -110,15 +110,15 @@ def make_hills(scenario_name: str = None,
     ylabel : str, optional
         y-axis label, default='Patients'
     main_title : str, optional
-        Main title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
+        Main title for plot, default = '{Occupancy or Arrivals or Departures} by time of day and day of week'
     main_title_properties : None or dict, optional
-        Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}
+        Dict of main title properties, default={{'loc': 'left', 'fontsize': 16}}
     subtitle : str, optional
-        title for plot, default = 'All categories'
+        subtitle for plot, default = 'Scenario: {scenario_name}'
     subtitle_properties : None or dict, optional
-        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
+        Dict of subtitle properties, default={'loc': 'left', 'style': 'italic'}
     legend_properties : None or dict, optional
-        Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
+        Dict of legend properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
     first_dow : str, optional
         Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
 
@@ -142,7 +142,7 @@ def make_hills(scenario_name: str = None,
     -------
     dict of DataFrames and plots
        The bydatetime DataFrames, all summary DataFrames and any plots created.
-        """
+    """
 
     # Add named args to kwargs
     kwargs['scenario_name'] = scenario_name

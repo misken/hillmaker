@@ -58,5 +58,5 @@ changed with this recent version.
 * [Using hillmaker from R with reticulate](https://bitsofanalytics.org/posts/hillmaker-r-sfcs/hillmaker_r_sfcs.html)
 * [Numpy speeds up hillmaker dramatically](https://bitsofanalytics.org/posts/hillmaker-speedup/)
 
-I published [a paper a long time ago regarding the use of hillmaker in practice](https://www.researchgate.net/publication/7322712_Hillmaker_An_open_source_occupancy_analysis_tool).
+I published [a paper a long time ago regarding the use of hillmaker in practice](https://www.researchgate.net/publication/220385298_Modeling_and_Analysis_of_Occupancy_Data_A_Healthcare_Capacity_Planning_Application).
 It describes an ancient version of hillmaker but does describe typical use cases.
