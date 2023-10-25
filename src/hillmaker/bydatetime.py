@@ -102,14 +102,14 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
     min_outtime = stops_df[outfield].min()
     max_outtime = stops_df[outfield].max()
 
-    logger.info(f"min of intime: {min_intime}")
-    logger.info(f"max of intime: {max_intime}")
-    logger.info(f"min of outtime: {min_outtime}")
-    logger.info(f"max of outtime: {max_outtime}")
+    logger.debug(f"min of intime: {min_intime}")
+    logger.debug(f"max of intime: {max_intime}")
+    logger.debug(f"min of outtime: {min_outtime}")
+    logger.debug(f"max of outtime: {max_outtime}")
 
     # Check for mismatch between analysis dates and dates in stops_df
     check_date_ranges(start_analysis_np, end_analysis_np, min_intime, max_outtime)
-    logger.info(
+    logger.debug(
         f'start analysis: {np.datetime_as_string(start_analysis_np, unit="D")}, end analysis: {np.datetime_as_string(end_analysis_np, unit="D")}')
 
     # Occupancy weights
@@ -172,9 +172,9 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
 
         # Compute entry and exit bin arrays
         entry_bin = hmlib.bin_of_analysis_range(in_ts_np, start_analysis_np, highres_bin_size_minutes)
-        logger.info(f'min of entry time_bin = {np.amin(entry_bin)}')
+        logger.debug(f'min of entry time_bin = {np.amin(entry_bin)}')
         exit_bin = hmlib.bin_of_analysis_range(out_ts_np, start_analysis_np, highres_bin_size_minutes)
-        logger.info(f'max of exit time_bin = {np.amax(exit_bin)} and num_bins={num_bins}')
+        logger.debug(f'max of exit time_bin = {np.amax(exit_bin)} and num_bins={num_bins}')
 
         # Compute inbin and outbin fraction arrays
         entry_bin_frac = in_bin_occ_frac(entry_bin, in_ts_np, out_ts_np,
@@ -194,7 +194,7 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
 
         # Do the occupancy incrementing
         rec_counts = update_occ_incs(entry_bin, exit_bin, list_of_inc_arrays, rec_type, num_bins)
-        logger.info(f'cat {cat} {rec_counts}')
+        logger.debug(f'cat {cat} {rec_counts}')
 
         occ = np.zeros(num_bins, dtype=np.float64)
         update_occ(occ, entry_bin, rec_type, list_of_inc_arrays)
@@ -222,8 +222,8 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
         num_departures_stops = cat_df.loc[(cat_df[outfield] >= start_analysis_np) &
                                           (cat_df[outfield] <= end_analysis_np)].index.size
 
-        logger.info(f'cat {cat} num_arrivals_hm {num_arrivals_hm:.0f} num_arrivals_stops {num_arrivals_stops}')
-        logger.info(
+        logger.debug(f'cat {cat} num_arrivals_hm {num_arrivals_hm:.0f} num_arrivals_stops {num_arrivals_stops}')
+        logger.debug(
             f'cat {cat} num_departures_hm {num_departures_hm:.0f} num_departures_stops {num_departures_stops}')
 
         if num_arrivals_hm != num_arrivals_stops:
@@ -241,7 +241,7 @@ def make_bydatetime(stops_df: pd.DataFrame, infield: str, outfield: str,
             (cat_df[occ_weight_field] * (cat_df[outfield] - cat_df[infield]).dt.total_seconds()).sum() / 60
         tot_occ_stops = tot_occ_mins_stops / highres_bin_size_minutes
 
-        logger.info(f'cat {cat} tot_occ_hm {tot_occ_him:.2f} tot_occ_stops {tot_occ_stops:.2f}')
+        logger.debug(f'cat {cat} tot_occ_hm {tot_occ_him:.2f} tot_occ_stops {tot_occ_stops:.2f}')
         if (tot_occ_him - tot_occ_stops) / tot_occ_stops > OCC_TOLERANCE:
             logger.warning(
                 f'cat {cat} Weighted occupancy differs by more than {OCC_TOLERANCE})')

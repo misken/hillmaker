@@ -319,7 +319,7 @@ class Scenario(BaseModel):
     @model_validator(mode='after')
     def date_relationships(self) -> 'Scenario':
         """
-        Start date for analysis must be before end date.
+        Start date for analysis must be before end date and on or after earliest arrival.
 
         Returns
         -------
@@ -339,6 +339,14 @@ class Scenario(BaseModel):
         if min_intime > self.end_analysis_dt:
             raise ValueError(
                 f'earliest arrival time of {min_intime} is after end analysis date of {self.end_analysis_dt}')
+
+        if (min_intime - self.start_analysis_dt) > pd.Timedelta(48, 'h'):
+            raise ValueError(
+                f'start analysis date of {self.start_analysis_dt} is > 48 hours before earliest arrival of {min_intime}')
+        
+        if (self.end_analysis_dt - max_outtime) > pd.Timedelta(48, 'h'):
+            raise ValueError(
+                f'end analysis date of {self.end_analysis_dt} is > 48 hours before latest departure of {max_outtime}')
 
         return self
 
@@ -673,6 +681,7 @@ class Scenario(BaseModel):
         """Pretty string representation of a scenario"""
         # TODO - write str method for Scenario class
         return str(self.model_dump())
+
 
 def create_scenario(params_dict: Optional[Dict] = None,
                     config_path: Optional[str | Path] = None, **kwargs):
