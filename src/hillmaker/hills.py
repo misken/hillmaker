@@ -76,7 +76,7 @@ def compute_hills_stats(scenario):
                                                      occ_weight_field=scenario.occ_weight_field,
                                                      edge_bins=scenario.edge_bins)
 
-    logger.info(f"Datetime matrix created (seconds): {t.interval:.4f}")
+    logger.debug(f"Datetime matrix created (seconds): {t.interval:.4f}")
 
     # Create the summary stats DataFrames
     summary_dfs = {}
@@ -88,7 +88,7 @@ def compute_hills_stats(scenario):
                                     percentiles=scenario.percentiles,
                                     verbosity=scenario.verbosity)
 
-        logger.info(f"Summaries by datetime created (seconds): {t.interval:.4f}")
+        logger.debug(f"Summaries by datetime created (seconds): {t.interval:.4f}")
 
     # Compute los summary
     with HillTimer() as t:
@@ -96,7 +96,7 @@ def compute_hills_stats(scenario):
                                     scenario.los_field_name,
                                     cat_field=scenario.cat_field)
 
-    logger.info(f"Length of stay summary created (seconds): {t.interval:.4f}")
+    logger.debug(f"Length of stay summary created (seconds): {t.interval:.4f}")
 
     # Gather results
     hills = {'bydatetime': bydt_dfs, 'summaries': summary_dfs, 'los_summary': los_summary,
@@ -146,7 +146,7 @@ def _make_hills(scenario):
     # Compute stats
     with HillTimer() as t:
         starttime = t.start
-        logger.info(f"Starting scenario {scenario.scenario_name} at {starttime}")
+        logger.info(f"Starting scenario {scenario.scenario_name}")
         hills = compute_hills_stats(scenario)
 
     logger.info(f"bydatetime and summaries by datetime created (seconds): {t.interval:.4f}")
@@ -180,7 +180,7 @@ def _make_hills(scenario):
     hills['runtime'] = runtime
     
     logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
-    logger.info(f"Scenario {scenario.scenario_name} complete at {endtime}\n")
+    logger.debug(f"Scenario {scenario.scenario_name} complete at {endtime}\n")
 
     return hills
 
@@ -427,9 +427,11 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
             Path(export_path).mkdir(parents=True, exist_ok=True)
             csv_wpath = Path(export_path, file_summary_csv)
 
-            catfield = df.index.names
+            # catfield = df.index.names
 
-            if temporal_key == 'nonstationary' or catfield[0] is not None:
-                df.to_csv(csv_wpath, index=True, float_format='%.6f')
-            else:
-                df.to_csv(csv_wpath, index=False, float_format='%.6f')
+            df.to_csv(csv_wpath, index=False, float_format='%.6f')
+
+            # if temporal_key == 'nonstationary' or catfield[0] is not None:
+            #     df.to_csv(csv_wpath, index=True, float_format='%.6f')
+            # else:
+            #     df.to_csv(csv_wpath, index=False, float_format='%.6f')
