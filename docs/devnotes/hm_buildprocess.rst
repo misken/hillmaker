@@ -51,7 +51,9 @@ Do this when just about ready to release new version.
 
 Now do last minute fixes and updates such as:
 
-* bump the version number in setup.py
+https://pythonpackaging.info/07-Package-Release.html
+
+* bump the version number in setup.py, __init__.py, documentation
 * add to the release notes doc
 * make any necessary readme.md changes
 * fix any last second bugs
