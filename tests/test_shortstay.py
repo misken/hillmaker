@@ -1,7 +1,7 @@
 import pandas as pd
 
 import hillmaker as hm
-from hillmaker.utils import create_scenario
+from hillmaker.scenario import create_scenario
 
 file_stopdata = './fixtures/ssu_2024.csv'
 

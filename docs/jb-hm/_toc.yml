@@ -22,5 +22,5 @@ parts:
     chapters:
     - file: api_reference
     - file: datasets
-    - file: logging
+
 

@@ -14,11 +14,6 @@ https://simonwillison.net/2022/Nov/26/productivity/
 https://simonwillison.net/2021/Aug/28/dynamic-github-repository-templates/
 https://simonwillison.net/2020/Feb/11/cheating-at-unit-tests-pytest-black/
 
-
-
-
-
-
 Originally the 'develop' branch was going to be for the OO design version. However, after thinking about it
 and talking with JW, I think this branch will now focus on creating a solid guts version, non OO, that can
 be used from a python script or interactively. It will just focus on the base computations, a text in and text out IO

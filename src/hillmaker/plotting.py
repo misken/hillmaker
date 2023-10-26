@@ -105,7 +105,7 @@ def make_plots(scenario: 'Scenario', hills: dict):
                                            plot_style=scenario.plot_style,
                                            figsize=scenario.figsize,
                                            bar_color_mean=scenario.bar_color_mean,
-                                           plot_percentiles=scenario.plot_percentiles,
+                                           percentiles=scenario.plot_percentiles,
                                            pctile_color=scenario.pctile_color,
                                            pctile_linestyle=scenario.pctile_linestyle,
                                            pctile_linewidth=scenario.pctile_linewidth,
@@ -145,7 +145,7 @@ def make_plots(scenario: 'Scenario', hills: dict):
                                                 plot_style=scenario.plot_style,
                                                 figsize=scenario.figsize,
                                                 bar_color_mean=scenario.bar_color_mean,
-                                                plot_percentiles=scenario.plot_percentiles,
+                                                percentiles=scenario.plot_percentiles,
                                                 pctile_color=scenario.pctile_color,
                                                 pctile_linestyle=scenario.pctile_linestyle,
                                                 pctile_linewidth=scenario.pctile_linewidth,
@@ -297,7 +297,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
             cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth)
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in plot_percentiles:
+        for p in percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
@@ -495,7 +495,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
             cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth)
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in plot_percentiles:
+        for p in percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric2}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
@@ -680,7 +680,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                 cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in plot_percentiles:
+        for p in percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
