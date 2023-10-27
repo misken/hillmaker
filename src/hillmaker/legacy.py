@@ -92,6 +92,8 @@ def make_hills(scenario_name: str = None,
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    alpha : float, optional
+        Transparency level for bars. Default = 0.5.
     plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional

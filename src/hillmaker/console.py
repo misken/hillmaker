@@ -164,6 +164,11 @@ def process_command_line(argv=None):
     )
 
     optional.add_argument(
+        '--alpha', type=float, default=0.5,
+        help="Transparency for bars, default=0.5."
+    )
+
+    optional.add_argument(
         "--plot_percentiles",
         nargs="+",  # 0 or more values expected => creates a list
         type=float,
