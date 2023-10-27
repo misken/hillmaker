@@ -3,6 +3,7 @@ from pathlib import Path
 import logging
 from typing import List, Tuple, Dict, Optional
 from enum import IntEnum
+from argparse import Namespace
 
 import pandas as pd
 import numpy as np
@@ -96,6 +97,8 @@ class Scenario(BaseModel):
         Figure size. Default is (15, 10)
     bar_color_mean : str, optional
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
+    alpha : float, optional
+        Transparency level for bars. Default = 0.5.
     plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95, 0.75)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
@@ -185,6 +188,7 @@ class Scenario(BaseModel):
     plot_style: str = 'ggplot'
     figsize: tuple = (15, 10)
     bar_color_mean: str = 'steelblue'
+    alpha: float = 0.5
     plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75)
     pctile_color: Tuple[str] | List[str] = ('black', 'grey')
     pctile_linestyle: Tuple[str] | List[str] = ('-', '--')
@@ -442,105 +446,70 @@ class Scenario(BaseModel):
         self.hills = _make_hills(self)
         # return self
 
-    def make_weekly_plot(self, metric: str = 'occupancy',
-                         cap: int = None,
-                         plot_style: str = 'ggplot',
-                         figsize: tuple = (15, 10),
-                         bar_color_mean: str = 'steelblue',
-                         alpha: float = 0.5,
-                         percentiles: Tuple[float] | List[float] = (0.95, 0.75),
-                         pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
-                         pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
-                         pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
-                         cap_color: str = 'r',
-                         xlabel: str = 'Hour',
-                         ylabel: str = 'Volume',
-                         main_title: str = '',
-                         main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16},
-                         subtitle: str = '',
-                         subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
-                         legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
-                         first_dow: str = 'mon',
-                         plot_export_path: Path | str | None = None, ):
+    def make_weekly_plot(self, metric: str = 'occupancy', **kwargs):
 
-        bin_size_minutes = self.bin_size_minutes
-        scenario_name = self.scenario_name
+        params_dict = vars(self)
+        params_dict.update(kwargs)
+        params = Namespace(**params_dict)
 
         metric_code = metric.lower()[0]
         summary_df = self.get_summary_df(metric_code, by_category=False, stationary=False)
 
         plot = make_week_hill_plot(summary_df=summary_df, metric=metric,
-                                   bin_size_minutes=bin_size_minutes,
-                                   cap=cap,
-                                   cap_color=cap_color,
-                                   plot_style=plot_style,
-                                   figsize=figsize,
-                                   bar_color_mean=bar_color_mean,
-                                   alpha=alpha,
-                                   percentiles=percentiles,
-                                   pctile_color=pctile_color,
-                                   pctile_linestyle=pctile_linestyle,
-                                   pctile_linewidth=pctile_linewidth,
-                                   main_title=main_title,
-                                   main_title_properties=main_title_properties,
-                                   subtitle=subtitle,
-                                   subtitle_properties=subtitle_properties,
-                                   legend_properties=legend_properties,
-                                   xlabel=xlabel,
-                                   ylabel=ylabel,
-                                   first_dow=first_dow,
-                                   scenario_name=scenario_name,
-                                   plot_export_path=plot_export_path)
+                                   bin_size_minutes=params.bin_size_minutes,
+                                   cap=params.cap,
+                                   cap_color=params.cap_color,
+                                   plot_style=params.plot_style,
+                                   figsize=params.figsize,
+                                   bar_color_mean=params.bar_color_mean,
+                                   alpha=params.alpha,
+                                   plot_percentiles=params.plot_percentiles,
+                                   pctile_color=params.pctile_color,
+                                   pctile_linestyle=params.pctile_linestyle,
+                                   pctile_linewidth=params.pctile_linewidth,
+                                   main_title=params.main_title,
+                                   main_title_properties=params.main_title_properties,
+                                   subtitle=params.subtitle,
+                                   subtitle_properties=params.subtitle_properties,
+                                   legend_properties=params.legend_properties,
+                                   xlabel=params.xlabel,
+                                   ylabel=params.ylabel,
+                                   first_dow=params.first_dow,
+                                   scenario_name=params.scenario_name,
+                                   plot_export_path=params.plot_export_path)
 
         return plot
 
-    def make_daily_plot(self, day_of_week: str, metric: str = 'occupancy',
-                        cap: int = None,
-                        plot_style: str = 'ggplot',
-                        figsize: tuple = (15, 10),
-                        bar_color_mean: str = 'steelblue',
-                        alpha: float = 0.5,
-                        percentiles: Tuple[float] | List[float] = (0.95, 0.75),
-                        pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
-                        pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
-                        pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
-                        cap_color: str = 'r',
-                        xlabel: str = 'Hour',
-                        ylabel: str = 'Volume',
-                        main_title: str = '',
-                        main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16},
-                        subtitle: str = '',
-                        subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'},
-                        legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'},
-                        plot_export_path: Path | str | None = None, ):
+    def make_daily_plot(self, day_of_week: str, metric: str = 'occupancy', **kwargs):
 
-        bin_size_minutes = self.bin_size_minutes
-        scenario_name = self.scenario_name
+        params_dict = vars(self)
+        params_dict.update(kwargs)
+        params = Namespace(**params_dict)
 
         metric_code = metric.lower()[0]
         summary_df = self.get_summary_df(metric_code, by_category=False, stationary=False)
 
         plot = make_daily_hill_plot(summary_df=summary_df, day_of_week=day_of_week, metric=metric,
-                                    bin_size_minutes=bin_size_minutes,
-                                    cap=cap,
-                                    cap_color=cap_color,
-                                    plot_style=plot_style,
-                                    figsize=figsize,
-                                    bar_color_mean=bar_color_mean,
-                                    alpha=alpha,
-                                    percentiles=percentiles,
-                                    pctile_color=pctile_color,
-                                    pctile_linestyle=pctile_linestyle,
-                                    pctile_linewidth=pctile_linewidth,
-                                    main_title=main_title,
-                                    main_title_properties=main_title_properties,
-                                    subtitle=subtitle,
-                                    subtitle_properties=subtitle_properties,
-                                    legend_properties=legend_properties,
-                                    xlabel=xlabel,
-                                    ylabel=ylabel,
-                                    scenario_name=scenario_name,
-                                    plot_export_path=plot_export_path)
+                                    bin_size_minutes=params.bin_size_minutes,
+                                    cap=params.cap,
+                                    cap_color=params.cap_color,
+                                    plot_style=params.plot_style,
+                                    figsize=params.figsize,
+                                    bar_color_mean=params.bar_color_mean,
+                                    alpha=params.alpha,
+                                    plot_percentiles=params.plot_percentiles,
+                                    pctile_color=params.pctile_color,
+                                    pctile_linestyle=params.pctile_linestyle,
+                                    pctile_linewidth=params.pctile_linewidth,
+                                    main_title=params.main_title,
+                                    main_title_properties=params.main_title_properties,
+                                    subtitle=params.subtitle,
+                                    subtitle_properties=params.subtitle_properties,
+                                    legend_properties=params.legend_properties,
+                                    xlabel=params.xlabel,
+                                    ylabel=params.ylabel,
+                                    scenario_name=params.scenario_name,
+                                    plot_export_path=params.plot_export_path)
 
         return plot
 
