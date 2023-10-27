@@ -105,7 +105,7 @@ def make_plots(scenario: 'Scenario', hills: dict):
                                            plot_style=scenario.plot_style,
                                            figsize=scenario.figsize,
                                            bar_color_mean=scenario.bar_color_mean,
-                                           percentiles=scenario.plot_percentiles,
+                                           plot_percentiles=scenario.plot_percentiles,
                                            pctile_color=scenario.pctile_color,
                                            pctile_linestyle=scenario.pctile_linestyle,
                                            pctile_linewidth=scenario.pctile_linewidth,
@@ -145,7 +145,7 @@ def make_plots(scenario: 'Scenario', hills: dict):
                                                 plot_style=scenario.plot_style,
                                                 figsize=scenario.figsize,
                                                 bar_color_mean=scenario.bar_color_mean,
-                                                percentiles=scenario.plot_percentiles,
+                                                plot_percentiles=scenario.plot_percentiles,
                                                 pctile_color=scenario.pctile_color,
                                                 pctile_linestyle=scenario.pctile_linestyle,
                                                 pctile_linewidth=scenario.pctile_linewidth,
@@ -171,7 +171,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
                         figsize: tuple = (15, 10),
                         bar_color_mean: str = 'steelblue',
                         alpha: float = 0.5,
-                        percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                        plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                         pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                         pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                         pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
@@ -206,7 +206,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
     alpha: float, optional
         Value between 0 and 1 specifying the opacity of the mean bars. Default is 0.5
-    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
         Line color for each percentile series plotted. Order should match order of percentiles list.
@@ -297,7 +297,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
             cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth)
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in percentiles:
+        for p in plot_percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
@@ -557,7 +557,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                          figsize: tuple = (15, 10),
                          bar_color_mean: str = 'steelblue',
                          alpha: float = 0.5,
-                         percentiles: Tuple[float] | List[float] = (0.95, 0.75),
+                         plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75),
                          pctile_color: Tuple[str] | List[str] = ('black', 'grey'),
                          pctile_linestyle: Tuple[str] | List[str] = ('-', '--'),
                          pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75),
@@ -593,7 +593,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         Matplotlib color name for the bars representing mean values. Default is 'steelblue'
     alpha: float, optional
         Value between 0 and 1 specifying the opacity of the mean bars. Default is 0.5
-    percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
+    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
         Which percentiles to plot. Default is (0.95)
     pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
         Line color for each percentile series plotted. Order should match order of percentiles list.
@@ -680,7 +680,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
                 cycler(color=pctile_color) + cycler(linestyle=pctile_linestyle) + cycler(linewidth=pctile_linewidth))
         ax1.set_prop_cycle(cycler_pctiles)
 
-        for p in percentiles:
+        for p in plot_percentiles:
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
