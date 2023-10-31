@@ -172,11 +172,11 @@ class Scenario(BaseModel):
     cats_to_exclude: List[str] | None = None
     occ_weight_field: str | None = None
     percentiles: Tuple[confloat(ge=0.0, le=1.0)] | List[confloat(ge=0.0, le=1.0)] = (0.25, 0.5, 0.75, 0.95, 0.99)
-    los_units: str = 'hours'
+    los_units: str | None = 'hours'
 
     export_bydatetime_csv: bool = False
     export_summaries_csv: bool = False
-    csv_export_path: str | Path = Path('.')
+    csv_export_path: Path | str | None = Path('.')
 
     make_all_dow_plots: bool = False
     make_all_week_plots: bool = True
@@ -185,21 +185,21 @@ class Scenario(BaseModel):
     plot_export_path: Path | str | None = None
 
     # Plot options
-    plot_style: str = 'ggplot'
+    plot_style: str | None = 'ggplot'
     figsize: tuple = (15, 10)
-    bar_color_mean: str = 'steelblue'
+    bar_color_mean: str | None = 'steelblue'
     alpha: float = 0.5
     plot_percentiles: Tuple[float] | List[float] = (0.95, 0.75)
     pctile_color: Tuple[str] | List[str] = ('black', 'grey')
     pctile_linestyle: Tuple[str] | List[str] = ('-', '--')
     pctile_linewidth: Tuple[float] | List[float] = (0.75, 0.75)
     cap: int | None = None
-    cap_color: str = 'r'
-    xlabel: str = 'Hour'
-    ylabel: str = 'Volume'
-    main_title: str = ''
+    cap_color: str | None = 'r'
+    xlabel: str | None = 'Hour'
+    ylabel: str | None = 'Volume'
+    main_title: str | None = ''
     main_title_properties: None | Dict = {'loc': 'left', 'fontsize': 16}
-    subtitle: str = ''
+    subtitle: str | None = ''
     subtitle_properties: None | Dict = {'loc': 'left', 'style': 'italic'}
     legend_properties: None | Dict = {'loc': 'best', 'frameon': True, 'facecolor': 'w'}
     first_dow: str = 'mon'
@@ -217,7 +217,7 @@ class Scenario(BaseModel):
     hills: dict | None = None
 
     @field_validator('start_analysis_dt')
-    def validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
+    def _validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
         """
         Ensure start date for analysis is convertible to numpy datetime64 and do the conversion.
 
@@ -239,7 +239,7 @@ class Scenario(BaseModel):
             raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
 
     @field_validator('end_analysis_dt')
-    def validate_end_date(cls, v: date | datetime, info: FieldValidationInfo):
+    def _validate_end_date(cls, v: date | datetime, info: FieldValidationInfo):
         """
         Ensure end date for analysis is convertible to numpy datetime64 and do the conversion.
         Adjust end date to include entire day.
@@ -262,7 +262,7 @@ class Scenario(BaseModel):
             raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
 
     @field_validator('bin_size_minutes')
-    def bin_size_minutes_divides(cls, v: int):
+    def _bin_size_minutes_divides(cls, v: int):
         """
         Ensure bin_size_minutes divides into 1440 with no remainder
 
@@ -279,7 +279,7 @@ class Scenario(BaseModel):
         return v
 
     @field_validator('los_units')
-    def los_units_strings(cls, v: str):
+    def _los_units_strings(cls, v: str):
         """
         Ensure los_units is a valid time unit string
 
@@ -300,7 +300,7 @@ class Scenario(BaseModel):
         return v
 
     @model_validator(mode='after')
-    def stop_data(self) -> 'Scenario':
+    def _stop_data(self) -> 'Scenario':
         """If data is a DataFrame return it, else read the csv file into a DataFrame and return that."""
         if isinstance(self.data, pd.DataFrame):
             return self
@@ -310,7 +310,7 @@ class Scenario(BaseModel):
             return self
 
     @model_validator(mode='after')
-    def fields_exist(self) -> 'Scenario':
+    def _fields_exist(self) -> 'Scenario':
         """Make sure fields exist """
 
         fields_to_check = [self.in_field, self.out_field, self.cat_field, self.occ_weight_field]
@@ -321,7 +321,7 @@ class Scenario(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def date_relationships(self) -> 'Scenario':
+    def _date_relationships(self) -> 'Scenario':
         """
         Start date for analysis must be before end date and on or after earliest arrival.
 
@@ -355,7 +355,7 @@ class Scenario(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def bin_size_relationships(self) -> 'Scenario':
+    def _bin_size_relationships(self) -> 'Scenario':
 
         if self.bin_size_minutes < self.highres_bin_size_minutes:
             raise ValueError(
@@ -368,7 +368,7 @@ class Scenario(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def preprocess_stops_df(self) -> 'Scenario':
+    def _preprocess_stops_df(self) -> 'Scenario':
         """
         Create preprocessed dataframe that only contains necessary fields and does not include records with missing
         timestamps for the entry and/or exit time.
@@ -448,7 +448,7 @@ class Scenario(BaseModel):
 
     def make_weekly_plot(self, metric: str = 'occupancy', **kwargs):
 
-        params_dict = vars(self)
+        params_dict = vars(self).copy()
         params_dict.update(kwargs)
         params = Namespace(**params_dict)
 
@@ -482,7 +482,7 @@ class Scenario(BaseModel):
 
     def make_daily_plot(self, day_of_week: str, metric: str = 'occupancy', **kwargs):
 
-        params_dict = vars(self)
+        params_dict = vars(self).copy()
         params_dict.update(kwargs)
         params = Namespace(**params_dict)
 
@@ -777,6 +777,11 @@ class Scenario(BaseModel):
         scenario_str = f'{scenario_str}occ_weight_field = {self.occ_weight_field}\n'
         scenario_str = f'{scenario_str}percentiles = {self.percentiles}\n'
         scenario_str = f'{scenario_str}los_units = {self.los_units}\n\n'
+
+        scenario_str = f'{scenario_str}Dataframe export options\n{25*"-"}\n'
+        scenario_str = f'{scenario_str}export_bydatetime_csv = {self.export_bydatetime_csv}\n'
+        scenario_str = f'{scenario_str}export_summaries_csv = {self.export_summaries_csv}\n'
+        scenario_str = f'{scenario_str}csv_export_path = {self.csv_export_path}\n\n'
 
         scenario_str = f'{scenario_str}Macro-level plot options\n{25*"-"}\n'
         scenario_str = f'{scenario_str}make_all_dow_plots = {self.make_all_dow_plots}\n'
