@@ -778,6 +778,11 @@ class Scenario(BaseModel):
         scenario_str = f'{scenario_str}percentiles = {self.percentiles}\n'
         scenario_str = f'{scenario_str}los_units = {self.los_units}\n\n'
 
+        scenario_str = f'{scenario_str}Dataframe export options\n{25*"-"}\n'
+        scenario_str = f'{scenario_str}export_bydatetime_csv = {self.export_bydatetime_csv}\n'
+        scenario_str = f'{scenario_str}export_summaries_csv = {self.export_summaries_csv}\n'
+        scenario_str = f'{scenario_str}csv_export_path = {self.csv_export_path}\n\n'
+
         scenario_str = f'{scenario_str}Macro-level plot options\n{25*"-"}\n'
         scenario_str = f'{scenario_str}make_all_dow_plots = {self.make_all_dow_plots}\n'
         scenario_str = f'{scenario_str}make_all_week_plots = {self.make_all_week_plots}\n'
