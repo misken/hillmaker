@@ -15,11 +15,10 @@ parts:
     chapters:
     - file: computing_occupancy
     - file: analysis_date_range
-    - file: hillmaker_outputs
-    - file: history
   - caption: Reference
     chapters:
     - file: api_reference
     - file: datasets
+    - file: history
 
 

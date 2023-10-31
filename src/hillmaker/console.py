@@ -71,7 +71,7 @@ def process_command_line(argv=None):
     optional.add_argument(
         '--config', type=str, default=None,
         help="""Configuration file (TOML format) containing input parameter arguments and values. 
-        Input parameters set via a config file will override parameters values passed via the command line."""
+        Input parameters set via command line arguments will override parameters values set via the config file."""
     )
 
     optional.add_argument(
@@ -317,11 +317,11 @@ def main(argv=None):
     # Get input arguments
     args = process_command_line(argv)
 
-    # Make sure all required args are specified
-    check_for_required_args(args)
+
 
     # Set plot creation and export flags
     args_dict = vars(args)
+
     if args.no_dow_plots:
         args_dict['make_all_dow_plots'] = False
         args_dict['export_all_dow_plots'] = False
@@ -346,7 +346,7 @@ def main(argv=None):
     if args.config is not None:
         config_file = args.config
         args_dict.pop('config', None)
-        scenario = create_scenario(params_dict=args_dict, config_path=config_file)
+        scenario = create_scenario(config_path=config_file, **args_dict)
     else:
         args_dict.pop('config', None)
         scenario = create_scenario(params_dict=args_dict)
