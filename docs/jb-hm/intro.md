@@ -8,21 +8,15 @@ entities arrive, occupy capacity for some amount of time, and then depart. hillm
 gets its name from the hill-like nature of plots based on temporal occupancy
 statistics.
 
-```{image} ../images/ssu_occ_1.png
+The hillmaker project can be found at https://github.com/misken/hillmaker.
+
+The data files and notebooks used in the documentation can be found at https://github.com/misken/hillmaker-examples.
+
+```{image} ./images/example1_occupancy_week.png
 :alt: hills
 :width: 400px
 :align: center
 ```
-
-You can install hillmaker from PyPI using pip:
-
-```
-pip install hillmaker
-```
-
-#```{include} ../readme.md
-#```
-
 
 ```{tableofcontents}
 ```

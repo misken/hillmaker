@@ -1,4 +1,18 @@
-hillmaker API reference
-========================
+API Reference
+=============
 
-COMING SOON
+Scenario
+--------
+.. automodule:: hillmaker.scenario
+    :members:
+
+
+legacy
+--------
+.. automodule:: hillmaker.legacy
+    :members:
+
+hills
+-----
+.. automodule:: hillmaker.hills
+    :members:
