@@ -31,6 +31,11 @@ Where to get it
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: Coming soon
 
+Future plans
+------------
+
+A new release will happen in November of 2023. There are major changes to the API including a new object oriented way of working with hillmaker and expansion of its plotting capabilities. There is also actual documentation that will be hosted at Read the Docs. 
+
 Quick Start
 -----------
 
