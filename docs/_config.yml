@@ -15,6 +15,7 @@ execute:
 sphinx:
   extra_extensions:
   - 'sphinx.ext.autodoc'
+  - 'sphinx.ext.napoleon'
 
 # Define the name of the latex output file for PDF builds
 #latex:
