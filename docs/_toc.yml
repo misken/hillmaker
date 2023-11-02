@@ -1,0 +1,24 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+parts:
+  - caption: Tutorials
+    chapters:
+    - file: getting_started
+    - file: using_make_hills
+    - file: using_oo_api
+    - file: using_cli
+  - caption: Topic Guides
+    chapters:
+    - file: example_occupancy_analysis
+    - file: computing_occupancy
+    - file: analysis_date_range
+  - caption: Reference
+    chapters:
+    - file: api_reference
+    - file: datasets
+    - file: history
+
+
