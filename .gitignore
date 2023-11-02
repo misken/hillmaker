@@ -1,5 +1,6 @@
-archive/*
-/dist
+archive/
+dist/
+
 # ignore temporary Python stuff
 *.pyc
 .ipynb_checkpoints/
@@ -10,6 +11,7 @@ src/hillmaker.egg-info/
 # tests
 tests/output/
 
+devnotes/
 
 # examples
 examples/scripts/output/
@@ -19,8 +21,8 @@ examples/notebooks/.ipynb_checkpoints/
 #examples/notebooks/*.html
 
 # docs
-docs/jb-hm/_build
-docs/jb-hm/data
-docs/jb-hm/output
+docs/_build/
+docs/data/
+docs/output/
 
 
