@@ -8,9 +8,9 @@ entities arrive, occupy capacity for some amount of time, and then depart. hillm
 gets its name from the hill-like nature of plots based on temporal occupancy
 statistics.
 
-The hillmaker project can be found at https://github.com/misken/hillmaker.
+The hillmaker project can be found at [https://github.com/misken/hillmaker](https://github.com/misken/hillmaker).
 
-The data files and notebooks used in the documentation can be found at https://github.com/misken/hillmaker-examples.
+The data files and notebooks used in the documentation can be found at [https://github.com/misken/hillmaker-examples](https://github.com/misken/hillmaker-examples).
 
 ```{image} ./images/example1_occupancy_week.png
 :alt: hills
