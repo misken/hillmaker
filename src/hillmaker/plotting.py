@@ -340,7 +340,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         # Legend
         if legend_properties is None:
             legend_properties = {}
-        ax1.legend(**legend_properties)
+        else:
+            ax1.legend(**legend_properties)
 
         # save figure
         if plot_export_path is not None:
@@ -533,9 +534,8 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         ax1.set_ylabel(ylabel)
 
         # Legend
-        if legend_properties is None:
-            legend_properties = {}
-        ax1.legend(**legend_properties)
+        if legend_properties is not None:
+            ax1.legend(**legend_properties)
 
         # save figure
         if plot_export_path is not None:
@@ -722,7 +722,8 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         # Legend
         if legend_properties is None:
             legend_properties = {}
-        ax1.legend(**legend_properties)
+        else:
+            ax1.legend(**legend_properties)
 
         # save figure
         if plot_export_path is not None:
