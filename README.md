@@ -8,7 +8,7 @@ entities arrive, occupy capacity for some amount of time, and then depart. It
 gets its name from the hill-like nature of plots based on temporal occupancy
 statistics.
 
-![hillmaker Screenshot](docs/images/ssu_occ_1.png "hillmaker screenshot")
+![hillmaker Screenshot](docs/images/example1_occupancy_week.png "hillmaker screenshot")
 
 - usable via a CLI, a function based API and and objected oriented API
 - takes a pandas DataFrame or csv file as the input data type
