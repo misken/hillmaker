@@ -1,8 +1,9 @@
+python_version >= 3.10
 setuptools~=65.5.1
-pandas~=1.4.0
+pandas~=1.5.0
 numpy~=1.22
-tomli >= 1.1.0 ; python_version >= "3.10"
-matplotlib
+tomli >= 2.0.1
+matplotlib >= 3.7.1
 pydantic >= 2.1.1
-seaborn
+seaborn >= 0.12.2
 

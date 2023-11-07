@@ -22,7 +22,36 @@ Where to get it
 
 * Source code: http://github.com/misken/hillmaker
 * Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
-* Documentation: See notebooks and scripts at http://github.com/misken/hillmaker-examples for now
+* Documentation: https://hillmaker.readthedocs.io/en/latest/intro.html
+* More Examples: See notebooks and scripts at http://github.com/misken/hillmaker-examples
+
+hillmaker 0.8.0
+===============
+
+This is a major release with numerous API changes.
+
+**Release date:** 2023-11-??
+
+**New features and API changes**
+
+- usable via a CLI, a function based API and and objected oriented API,
+- added many input parameters for controlling hillmaker computations and outputs,
+- can specify inputs via TOML formatted config file if desired,
+- enhanced plotting capabilities,
+- length of stay summary report,
+- input validation handled via a `pydantic <https://docs.pydantic.dev/latest/>`_ model,
+- documentation at https://hillmaker.readthedocs.io/en/latest/intro.html,
+- unit tests for occupancy computations,
+- added extensive conservation of flow checks,
+- detailed logging,
+- detailed docstrings.
+
+
+**Bug Fixes**
+
+- edge_bins = 2 (entire bin) was being treated as edge_bins = 1 (fractional arrival and departure bins) (GH0043_)
+
+.. _GH0043: https://github.com/misken/hillmaker/issues/43
 
 hillmaker 0.4.6
 ===============
@@ -31,7 +60,9 @@ hillmaker 0.4.6
 
 **Bug Fixes**
 
-- if no category field is specified, the plots were not being generated. This is fixed now. [[GH42]](https://github.com/misken/hillmaker/issues/42)
+- if no category field is specified, the plots were not being generated. This is fixed now. (GH0042_)
+
+.. _GH0042: https://github.com/misken/hillmaker/issues/42
 
 hillmaker 0.4.5
 ===============
