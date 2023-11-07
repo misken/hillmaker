@@ -1,3 +1,9 @@
+"""
+The :mod:`hillmaker.scenario` module defines the `Scenario` class and the OO API for using hillmaker.
+"""
+
+# Copyright 2022-2023 Mark Isken, Jacob Norman
+
 from datetime import datetime, date
 from pathlib import Path
 import logging
@@ -7,7 +13,7 @@ from argparse import Namespace
 
 import pandas as pd
 import numpy as np
-from pydantic import BaseModel, field_validator, model_validator, confloat, FieldValidationInfo, ConfigDict
+from pydantic import BaseModel, field_validator, model_validator, confloat, ConfigDict
 
 # import hillmaker as hm
 from hillmaker.hills import compute_hills_stats, _make_hills, get_plot, get_summary_df, get_bydatetime_df
@@ -52,8 +58,6 @@ class Scenario(BaseModel):
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
     end_analysis_dt : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    config : str or Path, optional
-        Configuration file (TOML format) containing input parameter arguments and values.
     cat_field : str, optional
         Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
         Default is None
@@ -154,6 +158,91 @@ class Scenario(BaseModel):
     hills : dict (initialized to None)
         Stores results of `make_hills`.
 
+    Examples
+    --------
+    Example 1 - using keyword arguments::
+
+        # Required inputs
+        scenario_name = 'ssu_oo_1'
+        stops_df = ssu_stops_df
+        in_field_name = 'InRoomTS'
+        out_field_name = 'OutRoomTS'
+        start_date = '2024-06-01'
+        end_date = pd.Timestamp('8/31/2024')
+
+        # Optional inputs
+        cat_field_name = 'PatType'
+        bin_size_minutes = 60
+
+        scenario_1 = hm.Scenario(scenario_name=scenario_name,
+                             data=stops_df,
+                             in_field=in_field_name,
+                             out_field=out_field_name,
+                             start_analysis_dt=start_date,
+                             end_analysis_dt=end_date,
+                             cat_field=cat_field_name,
+                             bin_size_minutes=bin_size_minutes)
+
+    Example 2 - using TOML config file
+
+    Here's what an example config file might look like.::
+
+        [scenario_data]
+        scenario_name = "ss_oo_2"
+        data = "./data/ssu_2024.csv"
+
+        [fields]
+        in_field = "InRoomTS"
+        out_field = "OutRoomTS"
+        # Just remove the following line if no category field
+        cat_field = "PatType"
+
+        [analysis_dates]
+        start_analysis_dt = 2024-01-02
+        end_analysis_dt = 2024-03-30
+
+        [settings]
+        bin_size_minutes = 120
+        verbosity = 1
+        csv_export_path = './output'
+        plot_export_path = './output'
+
+        # Add any additional arguments here
+        # Strings should be surrounded in double quotes
+        # Floats and ints are specified in the normal way as values
+        # Dates are specified as shown above
+
+        # For arguments that take lists, the entries look
+        # just like Python lists and following the other rules above
+
+        # cats_to_exclude = ["IVT", "OTH"]
+        # percentiles = [0.5, 0.8, 0.9]
+
+        # For arguments that take dictionaries, do this:
+        # main_title_properties = {loc = 'left', fontsize = 16}
+        # subtitle_properties = {loc = 'left', style = 'italic'}
+        # legend_properties = {loc = 'best', frameon = true, facecolor = 'w'}
+
+    Then we can pass the filename like this::
+
+        scenario_2 = hm.create_scenario(config_path='./input/ssu_oo_2.toml')
+
+    Example 3 - using a dictionary of input values::
+
+        ssu_oo_3_dict = {
+        'scenario_name': 'ssu_oo_3',
+        'data': ssu_stops_df,
+        'in_field': 'InRoomTS',
+        'out_field': 'OutRoomTS',
+        'start_analysis_dt': '2024-01-01',
+        'end_analysis_dt': '2024-09-30',
+        'cat_field': 'PatType',
+        'bin_size_minutes': 60
+        }
+
+        ssu_oo_3 = hm.create_scenario(params_dict=ssu_oo_3_dict)
+        print(ssu_oo_3)
+
 
     """
     model_config = ConfigDict(arbitrary_types_allowed=True, extra='forbid')
@@ -217,17 +306,17 @@ class Scenario(BaseModel):
     hills: dict | None = None
 
     @field_validator('start_analysis_dt')
-    def _validate_start_date(cls, v: date | datetime, info: FieldValidationInfo):
+    def _validate_start_date(cls, v: date | datetime):
         """
         Ensure start date for analysis is convertible to numpy datetime64 and do the conversion.
 
         Parameters
         ----------
-        v
-        info
+        v : date | datetime
 
         Returns
         -------
+        datetime64
 
         """
 
@@ -239,18 +328,18 @@ class Scenario(BaseModel):
             raise ValueError(f'Cannot convert {v} to to a numpy datetime64 object.\n{error}')
 
     @field_validator('end_analysis_dt')
-    def _validate_end_date(cls, v: date | datetime, info: FieldValidationInfo):
+    def _validate_end_date(cls, v: date | datetime):
         """
         Ensure end date for analysis is convertible to numpy datetime64 and do the conversion.
         Adjust end date to include entire day.
 
         Parameters
         ----------
-        v
-        info
+        v : date | datetime
 
         Returns
         -------
+        datetime64
 
         """
 
@@ -346,11 +435,11 @@ class Scenario(BaseModel):
 
         if (min_intime - self.start_analysis_dt) > pd.Timedelta(48, 'h'):
             raise ValueError(
-                f'start analysis date of {self.start_analysis_dt} is > 48 hours before earliest arrival of {min_intime}')
+                f'start analysis date {self.start_analysis_dt} is > 48 hours before earliest arrival of {min_intime}')
         
         if (self.end_analysis_dt - max_outtime) > pd.Timedelta(48, 'h'):
             raise ValueError(
-                f'end analysis date of {self.end_analysis_dt} is > 48 hours before latest departure of {max_outtime}')
+                f'end analysis date {self.end_analysis_dt} is > 48 hours before latest departure of {max_outtime}')
 
         return self
 
@@ -434,19 +523,30 @@ class Scenario(BaseModel):
         dict stored in `hills` attribute of Scenario object
 
         """
-        # Get dict version of pydantic model
-        # inputs_dict = self.model_dump()
-        # # Remove output related attributes
-        # non_input_attributes = ['hills', 'stops_preprocessed_df']
-        # for att in non_input_attributes:
-        #     inputs_dict.pop(att, None)
-        #
-        # # Pass remaining parameters to hillmaker.make_hills()
 
         self.hills = _make_hills(self)
         # return self
 
     def make_weekly_plot(self, metric: str = 'occupancy', **kwargs):
+        """
+        Create weekly plot
+
+        Parameters
+        ----------
+        metric : str
+            Some abbreviated version of occupancy, arrivals or departures
+        kwargs : dict
+            Plot related keyword arguments
+
+        Returns
+        -------
+        matplotlib.Figure
+
+        Example
+        -------
+        scenario_1.make_weekly_plot(metric='occupancy', plot_export_path='./output', cap=40, plot_style='default')
+
+        """
 
         params_dict = vars(self).copy()
         params_dict.update(kwargs)
@@ -481,6 +581,28 @@ class Scenario(BaseModel):
         return plot
 
     def make_daily_plot(self, day_of_week: str, metric: str = 'occupancy', **kwargs):
+        """
+        Create daily plot
+
+        Parameters
+        ----------
+        day_of_week : str
+            One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
+        metric : str
+            One of 'occupancy', 'arrivals', 'departures'
+        kwargs : dict
+            Plot related keyword arguments
+
+        Returns
+        -------
+        matplotlib.Figure
+
+        Example
+        -------
+        scenario_1.make_daily_plot(day_of_week = 'mon', metric='arrivals',
+                                    plot_export_path='./output', plot_style='default')
+
+        """
 
         params_dict = vars(self).copy()
         params_dict.update(kwargs)
@@ -647,112 +769,10 @@ class Scenario(BaseModel):
         return styler
 
     def __str__(self):
-        """Pretty string representation of a scenario
-            Parameters
-    ----------
-    scenario_name : str
-        Used in output filenames
-    data : str, Path, or DataFrame
-        Base data containing one row per visit. If Path-like, data is read into a DataFrame.
-    in_field : str
-        Column name corresponding to the arrival times
-    out_field : str
-        Column name corresponding to the departure times
-    start_analysis_dt : datetime-like, str
-        Starting datetime for the analysis (must be convertible to pandas Timestamp)
-    end_analysis_dt : datetime-like, str
-        Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    config : str or Path, optional
-        Configuration file (TOML format) containing input parameter arguments and values.
-    cat_field : str, optional
-        Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
-        Default is None
-    bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day, default is 60. This bin size is used for plots and reporting and
-        is an aggregation of computations done at the finer bin size resolution specified by `resolution_bin_size_mins`.
-        Use a value that divides into 1440 with no remainder.
-    cats_to_exclude : list, optional
-        Category values to ignore, default is None
-    occ_weight_field : str, optional
-        Column name corresponding to the weights to use for occupancy incrementing, default is None
-        which corresponds to a weight of 1.0
-    percentiles : list or tuple of floats (e.g. [0.5, 0.75, 0.95]), optional
-        Which percentiles to compute. Default is (0.25, 0.5, 0.75, 0.95, 0.99)
-    los_units : str, optional
-        The time units for length of stay analysis.
-        See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
-        value allowed is 'seconds', largest is 'days'. The default is 'hours'.
-
-    export_bydatetime_csv : bool, optional
-       If True, bydatetime DataFrames are exported to csv files. Default is False.
-    export_summaries_csv : bool, optional
-       If True, summary DataFrames are exported to csv files. Default is False.
-    csv_export_path : str or Path, optional
-        Destination path for exported csv and png files, default is current directory
-
-    make_all_dow_plots : bool, optional
-       If True, day of week plots are created for occupancy, arrivals, and departures. Default is False.
-    make_all_week_plots : bool, optional
-       If True, full week plots are created for occupancy, arrivals, and departures. Default is True.
-    export_all_dow_plots : bool, optional
-       If True, day of week plots are exported for occupancy, arrivals, and departures. Default is False.
-    export_all_week_plots : bool, optional
-       If True, full week plots are exported for occupancy, arrivals, and departures. Default is False.
-    plot_export_path : str or None, default is None
-        If not None, plot is exported to `export_path`
-
-    plot_style : str, optional
-        Matplotlib built in style name. Default is 'ggplot'.
-    figsize : Tuple, optional
-        Figure size. Default is (15, 10)
-    bar_color_mean : str, optional
-        Matplotlib color name for the bars representing mean values. Default is 'steelblue'
-    plot_percentiles : list or tuple of floats (e.g. [0.75, 0.95]), optional
-        Which percentiles to plot. Default is (0.95, 0.75)
-    pctile_color : list or tuple of color codes (e.g. ['blue', 'green'] or list('gb'), optional
-        Line color for each percentile series plotted. Order should match order of percentiles list.
-        Default is ('black', 'grey').
-    pctile_linestyle : List or tuple of line styles (e.g. ['-', '--']), optional
-        Line style for each percentile series plotted. Default is ('-', '--').
-    pctile_linewidth : List or tuple of line widths in points (e.g. [1.0, 0.75])
-        Line width for each percentile series plotted. Default is (0.75, 0.75).
-    cap : int, optional
-        Capacity of area being analyzed, default is None
-    cap_color : str, optional
-        matplotlib color code, default='r'
-    xlabel : str, optional
-        x-axis label, default='Hour'
-    ylabel : str, optional
-        y-axis label, default='Patients'
-    main_title : str, optional
-        Main title for plot, default = 'Occupancy by time of day and day of week - {scenario_name}'
-    main_title_properties : None or dict, optional
-        Dict of `suptitle` properties, default={{'loc': 'left', 'fontsize': 16}}
-    subtitle : str, optional
-        title for plot, default = 'All categories'
-    subtitle_properties : None or dict, optional
-        Dict of `title` properties, default={{'loc': 'left', 'style': 'italic'}}
-    legend_properties : None or dict, optional
-        Dict of `legend` properties, default={{'loc': 'best', 'frameon': True, 'facecolor': 'w'}}
-    first_dow : str, optional
-        Controls which day of week appears first in plot. One of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat, 'sun'
-
-    edge_bins: int, default 1
-        Occupancy contribution method for arrival and departure bins. 1=fractional, 2=entire bin
-    highres_bin_size_minutes : int, optional
-        Number of minutes in each time bin of the day used for initial computation of the number of arrivals,
-        departures, and the occupancy level. This value should be <= `bin_size_minutes`. The shorter the duration of
-        stays, the smaller the resolution should be. The current default is 5 minutes.
-    keep_highres_bydatetime : bool, optional
-        Save the high resolution bydatetime dataframe in hills attribute. Default is False.
-    nonstationary_stats : bool, optional
-       If True, datetime bin stats are computed. Else, they aren't computed. Default is True
-    stationary_stats : bool, optional
-       If True, overall, non-time bin dependent, stats are computed. Else, they aren't computed. Default is True
-    verbosity : int, optional
-        Used to set level in loggers. 0=logging.WARNING (default=0), 1=logging.INFO, 2=logging.DEBUG
         """
-        # TODO - write str method for Scenario class
+        Pretty string representation of a scenario
+
+        """
 
         scenario_str = f'Required inputs\n{25 * "-"}\n'
         scenario_str = f'{scenario_str}scenario_name = {self.scenario_name}\n'
@@ -878,11 +898,11 @@ def update_params_from_toml(params_dict, toml_dict):
     return params_dict
 
 
-def from_config(config: Path | str):
-    scenario = Scenario.create_scenario(toml_path=config)
-    return scenario
-
-
-def from_dict(params_dict: dict):
-    scenario = Scenario.create_scenario(params_dict=params_dict)
-    return scenario
+# def from_config(config: Path | str):
+#     scenario = Scenario.create_scenario(toml_path=config)
+#     return scenario
+#
+#
+# def from_dict(params_dict: dict):
+#     scenario = Scenario.create_scenario(params_dict=params_dict)
+#     return scenario

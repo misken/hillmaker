@@ -1,4 +1,9 @@
+"""
+The :mod:`hillmaker.plotting` module includes functions for creating daily and weekly plots.
+"""
+
 # Copyright 2022-2023 Mark Isken, Jacob Norman
+
 import logging
 from typing import Tuple, List, Dict
 from pathlib import Path

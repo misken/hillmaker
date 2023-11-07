@@ -2,7 +2,6 @@
 
 # Copyright 2022-2023 Mark Isken, Jacob Norman
 
-
 from pathlib import Path
 import logging
 
@@ -178,7 +177,7 @@ def _make_hills(scenario):
     endtime = t.end
     runtime = endtime - starttime
     hills['runtime'] = runtime
-    
+
     logger.info(f"Total time (seconds): {endtime - starttime:.4f}")
     logger.debug(f"Scenario {scenario.scenario_name} complete at {endtime}\n")
 
@@ -362,6 +361,7 @@ def get_los_stats(hills: dict, by_category: bool = True):
 
     return stats
 
+
 def export_bydatetime(bydt_dfs, scenario_name, export_path):
     """
     Export bydatetime DataFrames to csv files.
@@ -427,11 +427,4 @@ def export_summaries(summary_all_dfs, scenario_name, export_path, temporal_key):
             Path(export_path).mkdir(parents=True, exist_ok=True)
             csv_wpath = Path(export_path, file_summary_csv)
 
-            # catfield = df.index.names
-
             df.to_csv(csv_wpath, index=False, float_format='%.6f')
-
-            # if temporal_key == 'nonstationary' or catfield[0] is not None:
-            #     df.to_csv(csv_wpath, index=True, float_format='%.6f')
-            # else:
-            #     df.to_csv(csv_wpath, index=False, float_format='%.6f')
