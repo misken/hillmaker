@@ -1,4 +1,9 @@
-from typing import Tuple, List
+"""
+The :mod:`hillmaker.legacy` module provides a function based API for using hillmaker.
+"""
+
+# Copyright 2022-2023 Mark Isken, Jacob Norman
+
 from pathlib import Path
 from datetime import datetime, date
 from typing import Dict
@@ -6,7 +11,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 
-from hillmaker.scenario import Scenario, VerbosityEnum, create_scenario
+from hillmaker.scenario import create_scenario
 from hillmaker.hills import _make_hills
 
 
@@ -47,8 +52,6 @@ def make_hills(scenario_name: str = None,
         Starting datetime for the analysis (must be convertible to pandas Timestamp)
     end_analysis_dt : datetime-like, str
         Ending datetime for the analysis (must be convertible to pandas Timestamp)
-    config : str or Path, optional
-        Configuration file (TOML format) containing input parameter arguments and values.
     cat_field : str, optional
         Column name corresponding to the categories. If none is specified, then only overall occupancy is summarized.
         Default is None
@@ -66,7 +69,7 @@ def make_hills(scenario_name: str = None,
     los_units : str, optional
         The time units for length of stay analysis.
         See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
-        value allowed is 'seconds', largest is 'days'. The default is 'hours'.
+        value allowed is 'seconds', largest is 'days'). The default is 'hours'.
 
     export_bydatetime_csv : bool, optional
        If True, bydatetime DataFrames are exported to csv files. Default is False.
@@ -144,6 +147,57 @@ def make_hills(scenario_name: str = None,
     -------
     dict of DataFrames and plots
        The bydatetime DataFrames, all summary DataFrames and any plots created.
+
+    Example
+    -------
+    Use like this::
+
+        # Required inputs
+        scenario_name = 'ssu_summer24'
+        in_field_name = 'InRoomTS'
+        out_field_name = 'OutRoomTS'
+        start_date = '2024-06-01'
+        end_date = '2024-08-31'
+
+        # Optional inputs
+        cat_field_name = 'PatType'
+        bin_size_minutes = 30
+        csv_export_path = './output'
+
+        # Optional plotting inputs
+        plot_export_path = './output'
+        plot_style = 'default'
+        bar_color_mean = 'grey'
+        percentiles = [0.85, 0.95]
+        plot_percentiles = [0.95, 0.85]
+        pctile_color = ['blue', 'green']
+        pctile_linewidth = [0.8, 1.0]
+        cap = 110
+        cap_color = 'black'
+        main_title = 'Occupancy summary'
+        main_title_properties = {'loc': 'center', 'fontsize':20}
+        subtitle = 'Summer 2024 analysis'
+        subtitle_properties = {'loc': 'center'}
+        xlabel = ''
+        ylabel = 'Patients'
+
+        # Optional plotting related inputs
+
+        # Use legacy function interface
+        hills = hm.make_hills(scenario_name=scenario_name, data=ssu_stops_df,
+                              in_field=in_field_name, out_field=out_field_name,
+                              start_analysis_dt=start_date, end_analysis_dt=end_date,
+                              cat_field=cat_field_name,
+                              bin_size_minutes=bin_size_minutes,
+                              csv_export_path=csv_export_path,
+                              plot_export_path=plot_export_path, plot_style = plot_style,
+                              percentiles=percentiles, plot_percentiles=plot_percentiles,
+                              pctile_color=pctile_color, pctile_linewidth=pctile_linewidth,
+                              cap=cap, cap_color=cap_color,
+                              main_title=main_title, main_title_properties=main_title_properties,
+                              subtitle=subtitle, subtitle_properties=subtitle_properties,
+                              xlabel=xlabel, ylabel=ylabel
+                             )
     """
 
     # Add named args to kwargs

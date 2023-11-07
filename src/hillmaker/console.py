@@ -1,16 +1,16 @@
+"""
+The :mod:`hillmaker.console` module provides a command line interface for using hillmaker.
+"""
+
 import sys
 from argparse import ArgumentParser, Namespace, SUPPRESS
 
-import pandas as pd
-
 from hillmaker.scenario import update_params_from_toml, create_scenario
-from hillmaker import Scenario
 
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
-
 
 
 def process_command_line(argv=None):
@@ -111,17 +111,6 @@ def process_command_line(argv=None):
         See https://pandas.pydata.org/docs/reference/api/pandas.Timedelta.html for allowable values (smallest
         value allowed is 'seconds', largest is 'days'. The default is 'hours'."""
     )
-
-    # CSV export options
-    # optional.add_argument(
-    #     '--export_bydatetime_csv', type=bool, default=True,
-    #     help="If True, bydatetime DataFrames are exported to csv files."
-    # )
-    #
-    # optional.add_argument(
-    #     '--export_summaries_csv', type=bool, default=True,
-    #     help="If True, summary DataFrames are exported to csv files."
-    # )
 
     optional.add_argument(
         '--csv_export_path', type=str, default='.',
@@ -317,8 +306,6 @@ def main(argv=None):
     # Get input arguments
     args = process_command_line(argv)
 
-
-
     # Set plot creation and export flags
     args_dict = vars(args)
 
@@ -354,27 +341,28 @@ def main(argv=None):
     scenario.make_hills()
 
 
-def check_for_required_args(args):
-    """
-
-    Parameters
-    ----------
-    args: Namespace
-
-    Returns
-    -------
-    Raises ValueError if a required arg is missing
-
-    """
-
-    # Make sure all required args are present
-    required_args = ['scenario_name', 'data', 'in_field', 'out_field',
-                     'start_analysis_dt', 'start_analysis_dt']
-    # Convert args namespace to a dict
-    args_dict = vars(args)
-    for req_arg in required_args:
-        if args_dict[req_arg] is None:
-            raise ValueError(f'{req_arg} is required')
+# def check_for_required_args(args):
+#     """
+#     Make sure required arguments are present.
+#
+#     Parameters
+#     ----------
+#     args: Namespace
+#
+#     Returns
+#     -------
+#     Raises ValueError if a required arg is missing
+#
+#     """
+#
+#     # Make sure all required args are present
+#     required_args = ['scenario_name', 'data', 'in_field', 'out_field',
+#                      'start_analysis_dt', 'start_analysis_dt']
+#     # Convert args namespace to a dict
+#     args_dict = vars(args)
+#     for req_arg in required_args:
+#         if args_dict[req_arg] is None:
+#             raise ValueError(f'{req_arg} is required')
 
 
 if __name__ == '__main__':
