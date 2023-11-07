@@ -40,10 +40,12 @@ bydatetime = hm.get_bydatetime_df(hills)
 bydatetime_config = hm.get_bydatetime_df(hills_config)
 bydatetime_scenario_config = scenario_1.get_bydatetime_df()
 
-pd.testing.assert_frame_equal(bydatetime, bydatetime_config)
-pd.testing.assert_frame_equal(bydatetime, bydatetime_scenario_config)
-
 print(hills.keys())
 print(hills_config.keys())
 print(scenario_1.hills.keys())
+
+pd.testing.assert_frame_equal(bydatetime, bydatetime_config)
+pd.testing.assert_frame_equal(bydatetime, bydatetime_scenario_config)
+
+
 
