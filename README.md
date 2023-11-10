@@ -30,8 +30,8 @@ See [Release Notes](https://github.com/misken/hillmaker/blob/develop/RELEASE.rst
 Where to get it
 ---------------
 
-* Source code: http://github.com/misken/hillmaker
-* Binary and source on PyPI: https://pypi.python.org/pypi/hillmaker
+* Project repo: http://github.com/misken/hillmaker
+* PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: https://hillmaker.readthedocs.io/en/latest/intro.html
 * More Examples: See notebooks and scripts at http://github.com/misken/hillmaker-examples
 
@@ -39,19 +39,17 @@ Quick Start
 -----------
 
 See the [Getting Started](https://hillmaker.readthedocs.io/en/latest/getting_started.html) page in the hillmaker docs.
-Also, companion repo, https://github.com/misken/hillmaker-examples/ contains
-Jupyter notebooks and Python scripts illustrating the use of hillmaker. 
+
 
 Installation
 -------------
 
 You can install using pip. 
 
-    pip install tomli  # Not necessary if using Python >= 3.11
     pip install hillmaker
 
 
-Learn more about hillmaker
---------------------------
+Learn more about the history of hillmaker
+-----------------------------------------
 
 See the [History](https://hillmaker.readthedocs.io/en/latest/history.html) page at the hillmaker docs.
