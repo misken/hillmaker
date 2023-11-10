@@ -35,6 +35,11 @@ Where to get it
 * Documentation: https://hillmaker.readthedocs.io/en/latest/intro.html
 * More Examples: See notebooks and scripts at http://github.com/misken/hillmaker-examples
 
+Future plans
+------------
+
+A new release will happen in November of 2023. There are major changes to the API including a new object oriented way of working with hillmaker and expansion of its plotting capabilities. There is also actual documentation that will be hosted at Read the Docs.
+
 Quick Start
 -----------
 
