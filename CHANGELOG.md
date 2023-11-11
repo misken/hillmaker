@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - an objected oriented API
-- added many input parameters for controlling hillmaker computations and outputs, (GH0050_, #54, #51)
+- added many input parameters for controlling hillmaker computations and outputs, ([#50][i50] #54, #51)
 - can specify inputs via TOML formatted config file if desired, (#33)
 - length of stay summary report,
 - input validation handled via a `pydantic <https://docs.pydantic.dev/latest/>`_ model, (#34)
@@ -32,4 +32,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.0] - 2023-11-??
 
-
+[i50]: https://github.com/misken/hillmaker/issues/50
