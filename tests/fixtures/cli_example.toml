@@ -1,0 +1,5 @@
+[settings]
+main_title_properties = {loc = 'left', fontsize = 14}
+subtitle_properties = {loc = 'left', style = 'normal'}
+legend_properties = {loc = 'right', frameon = true, facecolor = 'w'}
+

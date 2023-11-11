@@ -17,7 +17,6 @@ bin_size_minutes = 60
 verbosity = 1
 csv_export_path = './output'
 plot_export_path = './output'
-make_all_dow_plots = false
 
 # Add any additional arguments here
 # Strings should be surrounded in double quotes
@@ -29,3 +28,8 @@ make_all_dow_plots = false
 
 # cats_to_exclude = ["IVT", "OTH"]
 # percentiles = [0.5, 0.8, 0.9]
+
+# For arguments that take dictionaries, do this:
+# main_title_properties = {loc = 'left', fontsize = 16}
+# subtitle_properties = {loc = 'left', style = 'italic'}
+# legend_properties = {loc = 'best', frameon = true, facecolor = 'w'}
