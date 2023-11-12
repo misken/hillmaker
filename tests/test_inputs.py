@@ -7,7 +7,7 @@ from hillmaker.scenario import create_scenario
 
 
 def test_bad_analysis_date_range():
-    file_stopdata = './fixtures/ssu_2024.csv'
+    file_stopdata = './tests/fixtures/ssu_2024.csv'
 
     # Required inputs
     scenario_name = 'ss_example_1'
