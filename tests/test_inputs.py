@@ -2,7 +2,6 @@ import pandas as pd
 from pydantic import ValidationError
 import pytest
 
-import hillmaker as hm
 from hillmaker.scenario import create_scenario
 
 

@@ -1,7 +1,6 @@
 import pandas as pd
 from math import isclose
 
-import hillmaker as hm
 from hillmaker.scenario import create_scenario
 
 
