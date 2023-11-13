@@ -52,6 +52,19 @@ How to contribute
 
 Use the GitHub issue tracking system to report problems with the software, seek support, or suggest improvements. 
 Code contributions can be suggested using GitHub pull requests. Check documentation for details.
+
+The `develop` branch contains the latest working code that has not been released yet. Any contributed code should
+branch off of `develop`.
+
+If you use Conda to manage your virtual environments, you can use `environment.yml` to create a Conda
+virtual environment named `hillmaker_dev` that will install dependencies for doing hillmaker development.
+
+    conda env create -f environment.yml
+
+If you don't use Conda, you can use `pip` along with `requirements.txt` to set up your development environment.
+
+    pip install -r requirements.txt
+
 Learn more about the history of hillmaker
 -----------------------------------------
 
