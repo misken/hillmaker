@@ -5,6 +5,7 @@ The :mod:`hillmaker.plotting` module includes functions for creating daily and w
 # Copyright 2022-2023 Mark Isken, Jacob Norman
 
 import logging
+import typing
 from typing import Tuple, List, Dict
 from pathlib import Path
 
@@ -15,6 +16,9 @@ from cycler import cycler
 
 # from hillmaker.scenario import Scenario
 from hillmaker.hmlib import HillTimer, pctile_field_name
+
+# if typing.TYPE_CHECKING:
+#     from hillmaker.scenario import Scenario
 
 
 def _plot_dow(dow, first_dow):
@@ -71,7 +75,7 @@ def _dow_name(dow, capitalize=True):
     return dow_name
 
 
-def make_plots(scenario: 'Scenario', hills: dict):
+def make_plots(scenario, hills: dict):
     """
     Create weekly and all dow plots for arrivals, departures, and occupancy
 

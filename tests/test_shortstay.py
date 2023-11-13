@@ -5,7 +5,7 @@ from hillmaker.scenario import create_scenario
 
 
 def test_shortstay():
-    file_stopdata = './fixtures/ssu_2024.csv'
+    file_stopdata = 'tests/fixtures/ssu_2024.csv'
 
     # Required inputs
     scenario_name = 'ss_example_1'
@@ -20,8 +20,8 @@ def test_shortstay():
     cat_field_name = 'PatType'
     verbosity = 1  # INFO level logging
     bin_size_minutes = 60
-    csv_export_path = './output'
-    plot_export_path = './output'
+    csv_export_path = 'tests/output'
+    plot_export_path = 'tests/output'
 
     # Use legacy function interface
     hills = hm.make_hills(scenario_name=scenario_name, data=file_stopdata,
@@ -33,9 +33,9 @@ def test_shortstay():
                           export_summaries_csv=True,
                           make_all_dow_plots=make_all_dow_plots, plot_export_path=plot_export_path)
 
-    hills_config = hm.make_hills(config='fixtures/ssu_example_1_config.toml')
+    hills_config = hm.make_hills(config='tests/fixtures/ssu_example_1_config.toml')
 
-    scenario_1 = create_scenario(config_path='fixtures/ssu_example_1_config.toml')
+    scenario_1 = create_scenario(config_path='tests/fixtures/ssu_example_1_config.toml')
     scenario_1.make_hills()
 
     bydatetime = hm.get_bydatetime_df(hills)
