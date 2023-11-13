@@ -4,14 +4,13 @@ Review Checklist: https://joss.readthedocs.io/en/latest/review_checklist.html
 
 ## Automated testing
 
-Currently tests are run manually via pytest. Setup GitHub actions to make this happen automatically. 
-
-On Nov 10 I added a simple "Python Application" workflow in GitHub actions based on the template provided by GitHub.
-Currently it's just linked to develop branch.
+Got this successfully setup. See the YAML file in .github/workflows.
 
 ## Conda environment
 
 Create a conda environment YAML file that someone could use for doing development.
+
+- created hillmaker_dev by cloning py310 and then pip installing with -r requirements.txt. Then did a cpipedot.
 
 ## Changelog
 
