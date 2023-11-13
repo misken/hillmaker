@@ -15,6 +15,7 @@ parts:
     - file: example_occupancy_analysis
     - file: computing_occupancy
     - file: analysis_date_range
+    - file: operating_hours
   - caption: Reference
     chapters:
     - file: api_reference
