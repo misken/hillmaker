@@ -11,16 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- an objected oriented API ([#37][d37])
-- added many input parameters for controlling hillmaker computations and outputs ([#50][i50] [#51][i51], [#54][i54])
+- object oriented API ([#37][d37])
+- many input parameters for controlling hillmaker computations and outputs ([#50][i50] [#51][i51], [#54][i54])
 - can specify inputs via TOML formatted config file if desired ([#33][i33])
 - length of stay summary report ([#26][i26])
-- input validation handled via a `pydantic <https://docs.pydantic.dev/latest/>`_ model, ([#34][i34])
+- input validation handled via a [pydantic](https://docs.pydantic.dev/latest/) model, ([#34][i34])
 - documentation at https://hillmaker.readthedocs.io/en/latest/intro.html ([#9][i9])
 - unit tests for occupancy computations ([#14][i14])
 - added extensive conservation of flow checks ([#25][i25])
 - detailed logging ([#21][i21])
-
 
 ### Changed
 
@@ -28,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - function based API input arguments for controlling hillmaker computations and outputs ([#55][i55])
 - enhanced plotting capabilities ([#36][i36])
 - added examples to docstrings for API related elements ([#56][i56])
-
+- removed option to treat missing departure timestamps as censored data.
 
 ### Fixed
 
@@ -42,169 +41,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.5] - 2022-11-20
 
-### Examples
-
-**New features and API changes**
+### Changed
 
 - moved examples folder to project root
 - updated dependencies to python>=3.9, pandas>=1.4, numpy>=1.22
 - updated paths in ad-hoc tests to reflect new folder layout
 
-hillmaker 0.4.4
-===============
 
-**Release date:** 2022-07-22
+## [0.4.4] - 2022-07-22
 
-**New features and API changes**
+### Added
 
-- adding weekly and dow plots of arrivals, departures, occupancy
+- weekly and dow plots of arrivals, departures, occupancy
 
-hillmaker 0.4.3
-===============
+## [0.4.3] - 2022-07-19
 
-**Release date:** 2022-07-19
-
-**New features and API changes**
+### Added
 
 - can use TOML formatted config file for command line args
 - added percentiles to CLI
+
+### Changed
+
 - renamed verbose argument to verbosity
 
+## [0.4.2] - 2022-07-15
 
-
-hillmaker 0.4.2
-===============
-
-**Release date:** 2022-07-15
-
-**New features**
+### Added
 
 - Added option to treat missing departure timestamps as censored data.
 
-**Bug Fixes**
+### Fixed
 
 - disallowed missing entry timestamps
 
-hillmaker 0.4.1
-===============
+## [0.4.1] - 2022-07-14
 
-**Release date:** 2022-07-14
-
-
-**Bug Fixes**
+### Fixed
 
 - date range sanity check had copy paste error with start and end variables
 - removed old licensing references
 - fixed typos in basic usage notebook
 - added hillmaker related blog post links to readme
 
-hillmaker 0.4.0
-===============
+## [0.4.0] - 2022-07-14
 
-**Release date:** 2022-07-14
+### Added
 
-**New features**
+- basic usage explainer notebook
 
-- added basic usage explainer notebook
-
-**Bug Fixes**
+### Fixed
 
 - adjusted arrivals and departures by bin arrays to account for stops with arrivals or departures outside the analysis range
 
+## [0.3.0] - 2022-05-13
 
-hillmaker 0.3.0
-===============
+### Added
 
-**Release date:** 2022-05-13
+- CLI
+- flow conservation checks
+- logging
 
-**New features**
+### Changed
 
-- the main new feature is speed
-- added CLI
-- added flow conservation checks
-- added logging
+- Greatly improved speed by moving many computations into numpy arrays and vectorization.
 
-**Improvements to existing features**
-
-- Greatly improved speed by moving many computations into numpy arrays and vectorizing things.
-
-**API Changes**
+### Deprecated
 
 - deprecated use of multiple category fields and reverted to previous functionallity of a single (optional)
 category field. Multiple categories are best handled with composite keys.
 
-**Bug Fixes**
+## [0.2.3] - 2020-03-18
 
-hillmaker 0.2.3
-===============
-
-**Release date:** 2020-03-18
-
-**Bug Fixes**
+### Fixed
 
 - replaced call to deprecated time.clock() with time.process_time()
 
-hillmaker 0.2.0
-===============
+## [0.2.0] - 2020-02-04
 
-**Release date:** 2020-02-04
+### Added
 
-**New features**
-
-* Added `edge_bins` parameter to control how occupancy contribution is computed
+- Added `edge_bins` parameter to control how occupancy contribution is computed
 for arrival and departure bins. 1=fractional contribution (default), 2=whole bin
+- Multiple category fields allowed. ([#17][i17])
 
-* Multiple category fields allowed.(GH0017_)
-
-.. _GH0017: https://github.com/misken/hillmaker/issues/17
-
-    totals: int, default 1
-        0=no totals, 1=totals by datetime, 2=totals bydatetime as well as totals for each field in the
-        catfields (only relevant for > 1 category field)
-        
-* Can specify a field to use as occupancy weights. This can be useful
+- Can specify a field to use as occupancy weights. This can be useful
 for building plots of workload instead of occupancy.
 
-**Improvements to existing features**
+### Fixed
 
-**API Changes**
+- Replace deprecated sortlevel() by sort_index() ([#20][i20])
 
-**Bug Fixes**
+## [0.1.1] - 2016-01-24
 
-* Replace deprecated sortlevel() by sort_index() (GH0020_)
+### Fixed
 
-.. _GH0017: https://github.com/misken/hillmaker/issues/20
+- Removed duplicate output of category, bin of day and day of week fields ([#18][i18])
 
+## [0.1.0] - 2016-01-22
 
+### Added
 
-hillmaker 0.1.1
-===============
-
-**Release date:** 2016-01-24
-
-**New features**
-
-**Improvements to existing features**
-
-**API Changes**
-
-**Bug Fixes**
-
-  * Removed duplicate output of category, bin of day and day of week fields (GH0018_)
-
-.. _GH0018: https://github.com/misken/hillmaker/issues/18
-
-
-
-
-hillmaker 0.1.0
-===============
-
-**Release date:** 2016-01-22
-
-**New features**
-
-:mod:`hillmaker` consists of the following things and features
+This is the first Python based release for hillmaker.
 
  * Takes a pandas DataFrame as the input data type
  * Functions for computing arrival, departure and occupancy summary statistics
@@ -224,6 +162,9 @@ hillmaker 0.1.0
 [d37]: https://github.com/misken/hillmaker/discussions/37
 [i9]: https://github.com/misken/hillmaker/issues/9
 [i14]: https://github.com/misken/hillmaker/issues/14
+[i17]: https://github.com/misken/hillmaker/issues/17
+[i18]: https://github.com/misken/hillmaker/issues/18
+[i20]: https://github.com/misken/hillmaker/issues/20
 [i21]: https://github.com/misken/hillmaker/issues/21
 [i25]: https://github.com/misken/hillmaker/issues/25
 [i26]: https://github.com/misken/hillmaker/issues/26

@@ -4,13 +4,13 @@ Review Checklist: https://joss.readthedocs.io/en/latest/review_checklist.html
 
 ## Automated testing
 
-Got this successfully setup. See the YAML file in .github/workflows.
+- [x] Got this successfully setup. See the YAML file in .github/workflows.
 
 ## Conda environment
 
 Create a conda environment YAML file that someone could use for doing development.
 
-- created hillmaker_dev by cloning py310 and then pip installing with -r requirements.txt. Then did a cpipedot.
+- [x] created hillmaker_dev by cloning py310 and then pip installing with -r requirements.txt. Then did a cpipedot.
 
 ## Changelog
 
