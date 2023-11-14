@@ -22,7 +22,7 @@ statistics.
 - weekly and day of week plots can be created by default or on demand; numerous plot related input parameters are available,
 - summary report for length of stay automatically created
 - outputs are stored in a dictionary containing pandas dataframes and as matplotlib figures. These can be accessed by methods for further post-processing or for exporting to external files.
-- Requires Python >= 3.10, pandas >= 1.5.0, numpy >= 1.22, pydantic >= 2.1.1, seaborn >= 0.12.2, matplotlib >= 3.7.1, tomli >= 2.0.1 if not using Python 3.11
+- Requires Python >= 3.10, pandas >= 1.5.0, numpy >= 1.22, pydantic >= 2.1.1, seaborn >= 0.12.2, matplotlib >= 3.7.1, and tomli >= 2.0.1 (if not using Python 3.11)
 - MIT License
 
 See [Release Notes](https://github.com/misken/hillmaker/blob/develop/RELEASE.rst) for details on latest and older versions.
