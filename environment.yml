@@ -1,0 +1,25 @@
+name: hillmaker_dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy>=1.22
+  - pandas>=2.0.0
+  - matplotlib>=3.7.1
+  - seaborn>=0.12.2
+  - pytest
+  - tomli>=2.0.1
+  - jupyter-book
+  - ipykernel
+  - Jinja2
+  - pip
+  - pip:
+      - pydantic>=2.1.1
+
+
+
+
+
+    
+    
