@@ -38,9 +38,13 @@ Where to get it
 Installation
 -------------
 
-You can install using pip. 
+You can install using pip:
 
     pip install hillmaker
+    
+If you want to get the latest update, you can install from the GitHub repo's `develop` branch:
+
+    pip install git+https://github.com/misken/hillmaker/tree/develop
 
 Quick Start
 -----------
@@ -51,7 +55,7 @@ How to contribute
 -----------------
 
 Use the GitHub issue tracking system to report problems with the software, seek support, or suggest improvements. 
-Code contributions can be suggested using GitHub pull requests. Check documentation for details.
+Code contributions can be suggested using GitHub pull requests. 
 
 The `develop` branch contains the latest working code that has not been released yet. Any contributed code should
 branch off of `develop`.
@@ -64,6 +68,10 @@ virtual environment named `hillmaker_dev` that will install dependencies for doi
 If you don't use Conda, you can use `pip` along with `requirements.txt` to set up your development environment.
 
     pip install -r requirements.txt
+    
+After the dependencies are installed, you can do an editable install of hillamker into your virtual environment from the project root (where `setup.py` lives).
+
+    pip install -e .
 
 Learn more about the history of hillmaker
 -----------------------------------------
