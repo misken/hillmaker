@@ -44,7 +44,7 @@ You can install using pip:
     
 If you want to get the latest update, you can install from the GitHub repo's `develop` branch:
 
-    pip install git+https://github.com/misken/hillmaker/tree/develop
+    pip install git+https://github.com/misken/hillmaker@develop
 
 Quick Start
 -----------
