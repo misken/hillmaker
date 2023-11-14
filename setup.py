@@ -39,5 +39,5 @@ setup(name='hillmaker',
           'Source': 'http://github.com/misken/hillmaker',
           'Examples': 'https://github.com/misken/hillmaker-examples',
       }, 
-      install_requires=['pandas>=2.0.0', 'numpy>=1.22', 'tomli>=2.0.1', 'matplotlib>=3.7.1', 'pydantic>=2.1.1', 'seaborn>=0.12.2', 'Jinja2']
+      install_requires=['pandas>=2.0.0', 'numpy>=1.22', 'tomli>=2.0.1', 'matplotlib>=3.7.1', 'pydantic>=2.1.1', 'seaborn>=0.12.2', 'Jinja2', 'ipykernel']
       )
