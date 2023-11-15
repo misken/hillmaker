@@ -42,6 +42,12 @@ You can install using pip:
 
     pip install hillmaker
     
+You should also be able to install hillmaker from conda-forge shortly into a virtual environment.
+
+    conda config --add channels conda-forge
+    conda config --set channel_priority strict
+    conda install hillmaker 
+    
 If you want to get the latest update which is not yet on PyPI or conda-forge, you can install from the GitHub repo's `develop` branch:
 
     pip install git+https://github.com/misken/hillmaker@develop
