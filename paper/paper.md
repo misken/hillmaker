@@ -56,7 +56,7 @@ use that exhibit significant and important time of day and day of week patterns.
 are related to labor. Staffing and scheduling relies on effectively matching capacity to demand that varies significantly by time of day and day of week. Another motivating problem
 involved developing a surgical patient rerouting plan to temporarily accommodate patients while a post-surgical holding area
 renovation project was underway.  Proper statistical
-analysis of patient arrival, departure and occupancy patterns, including computation of percentiles, are a critical part of such analyses. Traditional
+analysis of patient arrival, departure, and occupancy patterns, including computation of percentiles, are a critical part of such analyses. Traditional
 statistics packages do not include this type of functionality and one-off SQL based approaches are tedious to create
 and generalize. Additionally, the implementation of percentile functions in SQL is dialect dependent. 
 
@@ -67,7 +67,7 @@ academic paper about this early version was published [@isken2002modeling] after
 and joined Oakland University. Unfortunately, development on this version languished for a variety of
 technical and logistical reasons. So, hillmaker continued to get significant use but few improvements were made.
 
-In addition to industry use, hillmaker is well suited for healthcare operations research projects involved patient 
+In addition to industry use, hillmaker is well-suited for healthcare operations research projects involved patient 
 [@broyles2010statistical; @isken2011open; @helm2014design; @konrad2012using], material [@isken2002simulation],
 and even information flow [@konrad2008characterizing]. Discrete event
 simulation is widely used in such research projects and hillmaker can aid in the statistical analysis needed for modeling
@@ -76,7 +76,7 @@ the development of hillmaker, it has been used in other domains such as
 [bike share systems](https://bitsofanalytics.org/posts/basic-usage-cycleshare/basic_usage_cycleshare),
 freight operations [@castrellon2023enabling], customer contact centers, and even for analyzing usage patterns of a high performance computing cluster by engineers at a large automobile manufacturer. 
 Any system for which you have data on start and stop times of events, or entry and exit times of entities, is 
-amenable to using hillmaker for characterizing temporal patterns in arrivals, departures and occupancy (or task starts, task completions and work in progress).
+amenable to using hillmaker for characterizing temporal patterns in arrivals, departures, and occupancy (or task starts, task completions and work in progress).
 
 Given the rise of Python
 in the scientific computing world, rewriting hillmaker in Python made a lot of sense for its future as an open source
