@@ -50,7 +50,7 @@ The [documentation](https://hillmaker.readthedocs.io/en/latest/intro.html) inclu
 # Statement of need
 
 The original motivation for hillmaker was a series of capacity planning problems faced by a management 
-engineering group at a large health care system. Such
+engineering group at a large healthcare system. Such
 problems are characterized by patient flow and capacity
 use that exhibit significant and important time of day and day of week patterns. A huge component of hospital costs 
 are related to labor. Staff sizing and scheduling relies on effectively matching capacity to demand that varies significantly by time of day and day of week. Another motivating problem
@@ -90,7 +90,7 @@ release which should make it even easier to use for non-programmers.
 
 # Acknowledgements
 
-We acknowledge contributions from the many analysts and health care institutions for both their direct and
+We acknowledge contributions from the many analysts and healthcare institutions for both their direct and
 indirect support of the ongoing evolution of hillmaker over the past three decades.  
 
 # References
