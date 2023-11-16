@@ -56,7 +56,9 @@ use that exhibit significant and important time of day and day of week patterns.
 are related to labor. Staff sizing and scheduling relies on effectively matching capacity to demand that varies significantly by time of day and day of week. Another motivating problem
 involved developing a surgical patient rerouting plan to temporarily accommodate patients while a post-surgical holding area
 renovation project was underway.  Proper statistical
-analysis of patient arrival, departure and occupancy patterns are a critical part of such analyses.
+analysis of patient arrival, departure and occupancy patterns, including computation of percentiles, are a critical part of such analyses. Traditional
+statistics packages do not include this type of functionality and one-off SQL based approaches are tedious to create
+and generalize. Additionally, the implementation of percentile functions in SQL is dialect dependent. 
 
 Early versions of hillmaker were used in hundreds of projects in multiple healthcare engineering departments and consulting firms. It
 was written in [Microsoft Access](https://www.microsoft.com/en-us/microsoft-365/access) and released as an open source project in the early 2000's. You can still find it
