@@ -80,7 +80,7 @@ in the scientific computing world, rewriting hillmaker in Python made a lot of s
 project. The first Python version was [released on GitHub](https://github.com/misken/hillmaker/) in 2016. A series of
 improvements followed over the next several years, culminating in the recent release of version 0.8.0 in November
 of 2023. Many of the recent improvements were motivated by the second author's use of hillmaker at the UNC Rex 
-healthcare system. They used hillmaker to better understand patient throughout and capacity management in their surgical services division as
+healthcare system. They used hillmaker to better understand patient throughput and capacity management in their surgical services division as
 well as to determine the optimal bed size for a potential same day recovery unit.
 
 By creating an easy to use Python version with extensive documentation, we are hoping that hillmaker can gain 
