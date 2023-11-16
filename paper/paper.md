@@ -35,7 +35,8 @@ summary occupancy plots - see \autoref{fig:occplot}.
 
 ![Weekly occupancy plot.\label{fig:occplot}](example1_occupancy_week.png)
 
-The hillmaker package can be used as a command line application as well as an importable library. There is an object-oriented API
+The hillmaker package can be used as a command line application as well as an importable library from Jupyter notebooks
+or Python scripts. There is an object-oriented API
 as well as a function based API. Under the hood, hillmaker relies primarily on numpy [@harris2020array], pandas [@reback2020pandas], 
 matplotlib [@Hunter:2007], seaborn [@Waskom2021] and [PyDantic](https://docs.pydantic.dev/latest/).
 Transaction data can be in CSV format or a pandas `DataFrame`. The primary outputs of hillmaker are:
@@ -52,8 +53,7 @@ The original motivation for hillmaker was a series of capacity planning problems
 engineering group at a large health care system. Such
 problems are characterized by patient flow and capacity
 use that exhibit significant and important time of day and day of week patterns. A huge component of hospital costs 
-are related to labor and staffing and staff
-scheduling relies on matching capacity to demand that varies significantly by time of day and day of week. Another motivating problem
+are related to labor. Staff sizing and scheduling relies on effectively matching capacity to demand that varies significantly by time of day and day of week. Another motivating problem
 involved developing a surgical patient rerouting plan to temporarily accommodate patients while a post-surgical holding area
 renovation project was underway.  Proper statistical
 analysis of patient arrival, departure and occupancy patterns are a critical part of such analyses.
@@ -63,7 +63,7 @@ was written in [Microsoft Access](https://www.microsoft.com/en-us/microsoft-365/
 on SourceForge at [https://sourceforge.net/projects/hillmaker/](https://sourceforge.net/projects/hillmaker/). An
 academic paper about this early version was published in 2002 [@isken2002modeling] after the first author left industry
 and joined Oakland University. Unfortunately, development on this version languished for a variety of
-technical and other reasons. So, hillmaker continued to get significant use but no improvements were made.
+technical and logistical reasons. So, hillmaker continued to get significant use but no improvements were made.
 
 In addition to industry use, hillmaker is well suited for healthcare operations research projects involved patient 
 [@broyles2010statistical; @isken2011open; @helm2014design; @konrad2012using], material [@isken2002simulation],
