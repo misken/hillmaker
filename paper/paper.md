@@ -41,7 +41,7 @@ as well as a function based API. Under the hood, hillmaker relies primarily on n
 matplotlib [@Hunter:2007], seaborn [@Waskom2021] and [Pyantic](https://docs.pydantic.dev/latest/).
 Transaction data can be in CSV format or a pandas `DataFrame`. The primary outputs of hillmaker are:
 
-- pandas `DataFrame`s and CSV files with arrival, departure and occupancy summaries by time of day, day of week and, optionally, a category.
+- pandas `DataFrame`s and CSV files with arrival, departure and occupancy summaries by time of day, day of week and, optionally, an entity category.
 - customizable weekly and daily plots of arrivals, departures and occupancy by time of day and day of week.
 - summary tables and plots for length of stay and implied operating hours.
 - 
@@ -70,11 +70,11 @@ technical and logistical reasons. So, hillmaker continued to get significant use
 In addition to industry use, hillmaker is well suited for healthcare operations research projects involved patient 
 [@broyles2010statistical; @isken2011open; @helm2014design; @konrad2012using], material [@isken2002simulation],
 and even information flow [@konrad2008characterizing]. Discrete event
-simulation is widely used in such projects and hillmaker can aid in the statistical analysis needed for modeling
+simulation is widely used in such research projects and hillmaker can aid in the statistical analysis needed for modeling
 entity arrival patterns and for analyzing and validating simulation output. While problems in the healthcare industry spurred 
 the development of hillmaker, it has been used in other domains such as [bike share systems](https://bitsofanalytics.org/posts/basic-usage-cycleshare/basic_usage_cycleshare),
 freight operations [@castrellon2023enabling], customer contact centers and even for analyzing usage patterns of a high performance computing cluster by engineers at a large automobile manufacturer. 
-Any system for which you have data on start and stop times of events or entry and exit times of entities is 
+Any system for which you have data on start and stop times of events, or entry and exit times of entities, is 
 amenable to using hillmaker for characterizing temporal patterns in arrivals, departures and occupancy (or work in progress).
 
 Given the rise of Python
