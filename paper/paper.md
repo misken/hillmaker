@@ -38,7 +38,7 @@ summary occupancy plots - see \autoref{fig:occplot}.
 The hillmaker package can be used as a command line application as well as an importable library from Jupyter notebooks
 or Python scripts. There is an object-oriented API
 as well as a function based API. Under the hood, hillmaker relies primarily on numpy [@harris2020array], pandas [@reback2020pandas], 
-matplotlib [@Hunter:2007], seaborn [@Waskom2021] and [PyDantic](https://docs.pydantic.dev/latest/).
+matplotlib [@Hunter:2007], seaborn [@Waskom2021] and [Pyantic](https://docs.pydantic.dev/latest/).
 Transaction data can be in CSV format or a pandas `DataFrame`. The primary outputs of hillmaker are:
 
 - pandas `DataFrame`s and CSV files with arrival, departure and occupancy summaries by time of day, day of week and, optionally, a category.
