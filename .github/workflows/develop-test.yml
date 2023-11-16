@@ -16,6 +16,8 @@ jobs:
   build:
 
     runs-on: ${{ matrix.os }}
+    env:
+      MPLBACKEND: Agg
 
     strategy:
       matrix:
