@@ -50,14 +50,14 @@ is of course very welcome. In this case, the preferred approach is as follows:
      $ cd name_of_dev_dir
      $ conda env create -f environment.yml
      $ conda activate hillmaker
-     $ pip install -e .[dev]
+     $ pip install -e .
 
 5.  Use ``pytest`` to create one or more (failing) tests that demonstrate the
     bug/feature. Make local changes to the code until the test passes. Running
     tests is simple::
 
      $ cd name_of_dev_dir
-     $ pytest
+     $ python -m pytest
 
 6.  Bump the minor version number (in ``__init__.py``) and make a descriptive
     entry in ``CHANGELOG.md``. Make changes to the documentation if necessary.
