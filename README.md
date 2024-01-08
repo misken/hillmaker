@@ -1,5 +1,7 @@
 # hillmaker
 
+
+
 **hillmaker** is a Python package that computes time of day and day of week specific
 occupancy statistics from transaction data containing arrival and departure
 timestamps. Typical use is for capacity planning problems in places like
@@ -34,6 +36,13 @@ Where to get it
 * PyPI: https://pypi.python.org/pypi/hillmaker
 * Documentation: https://hillmaker.readthedocs.io/en/latest/intro.html
 * More Examples: See notebooks and scripts at http://github.com/misken/hillmaker-examples
+
+We also have a paper under review at the Journal of Open Source Software.
+
+HTML: <a href="https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666"><img src="https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666/status.svg"></a>
+Markdown: [![status](https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666/status.svg)](https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666)
+
+
 
 Installation
 -------------
