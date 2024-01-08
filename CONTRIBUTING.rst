@@ -47,7 +47,6 @@ is of course very welcome. In this case, the preferred approach is as follows:
 4.  Use ``conda`` or ``virtualenv`` to create an isolated development
     environment. For instance, assuming that ``conda`` is installed, use::
 
-     $ cd name_of_dev_dir
      $ conda env create -f environment.yml
      $ conda activate hillmaker
      $ pip install -e .
@@ -56,7 +55,6 @@ is of course very welcome. In this case, the preferred approach is as follows:
     bug/feature. Make local changes to the code until the test passes. Running
     tests is simple::
 
-     $ cd name_of_dev_dir
      $ python -m pytest
 
 6.  Bump the minor version number (in ``__init__.py``) and make a descriptive
