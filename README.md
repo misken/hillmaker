@@ -1,4 +1,4 @@
-[![github actions docs](https://github.com/misken/hillmaker/actions/workflows/documentation.yml/badge.svg)](https://hillmaker.readthedocs.io/en/latest/intro.html)
+<!-- [![github actions docs](https://github.com/misken/hillmaker/actions/workflows/documentation.yml/badge.svg)](https://hillmaker.readthedocs.io/en/latest/intro.html) -->
 [![github actions pytest](https://github.com/misken/hillmaker/actions/workflows/develop-test.yml/badge.svg)](https://github.com/misken/hillmaker/actions)
 [![python versions](https://img.shields.io/pypi/pyversions/hillmaker)](https://img.shields.io/pypi/pyversions/hillmaker)
 [![PyPI version](https://badge.fury.io/py/hillmaker.svg)](https://pypi.org/project/hillmaker/)
