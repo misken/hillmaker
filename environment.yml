@@ -1,4 +1,4 @@
-name: hillmaker_dev
+name: hillmaker
 channels:
   - conda-forge
   - defaults
