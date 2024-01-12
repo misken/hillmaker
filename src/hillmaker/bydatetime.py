@@ -597,25 +597,3 @@ def update_occ_incs(in_bins, out_bins, list_of_inc_arrays, rec_types, num_bins):
             rectype_counts['unknown'] = rectype_counts.get('unknown', 0) + 1
 
     return rectype_counts
-
-
-if __name__ == '__main__':
-    # Required inputs
-    scenario = 'ss_little_ex01'
-    in_fld_name = 'InRoomTS'
-    out_fld_name = 'OutRoomTS'
-    # cat_fld_name = 'PatType'
-    start_analysis = '1/1/1996'
-    end_analysis = '1/3/1996 23:45'
-
-    # Optional inputs
-    verbosity = 1
-    output_path = './output/'
-
-    # Create dfs
-    file_stop_data = './data/ShortStay.csv'
-    ss_df = pd.read_csv(file_stop_data, parse_dates=[in_fld_name, out_fld_name])
-
-    bydate_dfs = make_bydatetime(ss_df, in_fld_name, out_fld_name, Timestamp(start_analysis), Timestamp(end_analysis))
-
-    print(bydate_dfs.keys())
