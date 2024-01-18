@@ -67,7 +67,7 @@ academic paper about this early version was published [@isken2002modeling] after
 and joined Oakland University. Unfortunately, development on this version languished for a variety of
 technical and logistical reasons. So, hillmaker continued to get significant use but few improvements were made.
 
-In addition to industry use, hillmaker is well-suited for healthcare operations research projects involved patient 
+In addition to industry use, hillmaker is well-suited for healthcare operations research projects involving patient 
 [@broyles2010statistical; @isken2011open; @helm2014design; @konrad2012using], material [@isken2002simulation],
 and even information flow [@konrad2008characterizing]. Discrete event
 simulation is widely used in such research projects and hillmaker can aid in the statistical analysis needed for modeling
@@ -83,12 +83,12 @@ in the scientific computing world, rewriting hillmaker in Python made a lot of s
 project. The first Python version was [released in 2016](https://bitsofanalytics.org/posts/hillmaker-python-released/hillmaker_python_released). A series of
 improvements followed over the next several years, culminating in the recent release of version 0.8.0 in November
 of 2023. Many of the recent improvements were motivated by the second author's use of hillmaker at 
-UNC Health Rex, part of a larger healthcare system in North Carolina. They used hillmaker to better understand patient throughput and capacity management in their surgical services division as
+UNC Health Rex, part of a large healthcare system in North Carolina. They used hillmaker to better understand patient throughput and capacity management in their surgical services division as
 well as to determine the optimal bed size for a potential same day recovery unit.
 
 By creating an easy to use Python version with extensive documentation, we are hoping that hillmaker can gain 
 greater traction now that Python has become so widely used in the data analysis community.
-Our plan is to add a form-based GUI (much like the one in the original MS Access version) in the next 
+Our plan is to add a form-based GUI (much like the one in the original MS Access version) in the next major
 release which should make it even easier to use for non-programmers.
 
 # Acknowledgements
