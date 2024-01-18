@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- added more detail to [How is occupancy computed documentation](https://hillmaker.readthedocs.io/en/latest/computing_occupancy.html)
+- added more detail to [occupancy computations documentation](https://hillmaker.readthedocs.io/en/latest/computing_occupancy.html)
 
 ## [0.8.0] - 2023-11-14
 
