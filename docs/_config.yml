@@ -2,7 +2,7 @@
 # Learn more at https://jupyterbook.org/customize/config.html
 
 title: hillmaker
-version: 0.8.0
+version: 0.8.1
 author: misken
 logo: images/hillmaker_logo-100px.png
 

@@ -5,7 +5,15 @@ This is the list of notable changes to hillmaker between each release.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.1] - 2024-01-18
+
+### Added
+
+- published hillmaker paper in [JOSS](https://joss.theoj.org/)
+
+### Changed
+
+- added more detail to [How is occupancy computed documentation](https://hillmaker.readthedocs.io/en/latest/computing_occupancy.html)
 
 ## [0.8.0] - 2023-11-14
 

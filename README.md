@@ -56,7 +56,7 @@ You can install using pip:
 
     pip install hillmaker
     
-You should also be able to install hillmaker from conda-forge shortly into a virtual environment.
+You should also be able to install hillmaker from conda-forge shortly (?) into a virtual environment.
 
     conda config --add channels conda-forge
     conda config --set channel_priority strict
@@ -81,7 +81,7 @@ The `develop` branch contains the latest working code that has not been released
 branch off of `develop`.
 
 If you use Conda to manage your virtual environments, you can use `environment.yml` to create a Conda
-virtual environment named `hillmaker_dev` that will install dependencies for doing hillmaker development.
+virtual environment named `hillmaker` that will install dependencies for doing hillmaker development.
 
     conda env create -f environment.yml
 
@@ -92,6 +92,8 @@ If you don't use Conda, you can use `pip` along with `requirements.txt` to set u
 After the dependencies are installed, you can do an editable install of hillamker into your virtual environment from the project root (where `setup.py` lives).
 
     pip install -e .
+    
+See [CONTRIBUTING.rst](https://github.com/misken/hillmaker/blob/main/CONTRIBUTING.rst) for more details.
 
 Learn more about the history of hillmaker
 -----------------------------------------
