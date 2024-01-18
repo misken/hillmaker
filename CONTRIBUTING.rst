@@ -51,22 +51,12 @@ is of course very welcome. In this case, the preferred approach is as follows:
      $ conda activate hillmaker
      $ pip install -e .
 
-5.  Use ``pytest`` to create one or more (failing) tests that demonstrate the
-    bug/feature. Make local changes to the code until the test passes. Running
-    tests is simple::
+5.  Create a new branch off of the devlop branch and make code changes in your new branch. Use ``pytest`` to create one or more (failing) tests that demonstrate the
+    bug/feature. Make local changes to the code until the test passes. Run tests with::
 
      $ python -m pytest
 
-6.  Bump the minor version number (in ``__init__.py``) and make a descriptive
-    entry in ``CHANGELOG.md``. Make changes to the documentation if necessary.
-    New features should be documented by creating a new example, or editing
-    an old one.
+6.  Commit your changes and push your branch to your GitHub repo.
 
-7.  Commit your changes and push your branch to GitHub::
-
-     $ git add .
-     $ git commit -m "Your detailed description of your changes."
-     $ git push origin name-of-your-bugfix-or-feature
-
-8.  Submit a pull request through the GitHub website. The developers may
+7.  Submit a pull request through the GitHub website. The developers may
     suggest changes to the code before the request is ultimately accepted.

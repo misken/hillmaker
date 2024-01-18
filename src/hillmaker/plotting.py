@@ -5,7 +5,6 @@ The :mod:`hillmaker.plotting` module includes functions for creating daily and w
 # Copyright 2022-2023 Mark Isken, Jacob Norman
 
 import logging
-import typing
 from typing import Tuple, List, Dict
 from pathlib import Path
 
@@ -347,9 +346,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         ax1.set_ylabel(ylabel)
 
         # Legend
-        if legend_properties is None:
-            legend_properties = {}
-        else:
+        if legend_properties is not None:
             ax1.legend(**legend_properties)
 
         # save figure
@@ -509,7 +506,6 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
             pct_name = pctile_field_name(p)
             label = f'{pct_name[1:]}th %ile {metric2}'
             ax1.plot(timestamps, occ_summary_df_plot[pct_name], label=label)
-
 
         # Create formatter variables
         day_fmt = '' if num_days == 1 else '%a'
@@ -729,9 +725,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         ax1.set_ylabel(ylabel)
 
         # Legend
-        if legend_properties is None:
-            legend_properties = {}
-        else:
+        if legend_properties is not None:
             ax1.legend(**legend_properties)
 
         # save figure

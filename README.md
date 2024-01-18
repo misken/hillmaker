@@ -42,13 +42,6 @@ Where to get it
 * Documentation: https://hillmaker.readthedocs.io/en/latest/intro.html
 * More Examples: See notebooks and scripts at http://github.com/misken/hillmaker-examples
 
-We also have a paper under review at the Journal of Open Source Software.
-
-HTML: <a href="https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666"><img src="https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666/status.svg"></a>
-Markdown: [![status](https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666/status.svg)](https://joss.theoj.org/papers/cd579f0843aedb47cea2ddc6cd2be666)
-
-
-
 Installation
 -------------
 
@@ -56,7 +49,7 @@ You can install using pip:
 
     pip install hillmaker
     
-You should also be able to install hillmaker from conda-forge shortly into a virtual environment.
+You should also be able to install hillmaker from conda-forge shortly (?) into a virtual environment.
 
     conda config --add channels conda-forge
     conda config --set channel_priority strict
@@ -76,22 +69,8 @@ How to contribute
 
 Use the GitHub issue tracking system to report problems with the software, seek support, or suggest improvements. 
 Code contributions can be suggested using GitHub pull requests. 
-
-The `develop` branch contains the latest working code that has not been released yet. Any contributed code should
-branch off of `develop`.
-
-If you use Conda to manage your virtual environments, you can use `environment.yml` to create a Conda
-virtual environment named `hillmaker_dev` that will install dependencies for doing hillmaker development.
-
-    conda env create -f environment.yml
-
-If you don't use Conda, you can use `pip` along with `requirements.txt` to set up your development environment.
-
-    pip install -r requirements.txt
-    
-After the dependencies are installed, you can do an editable install of hillamker into your virtual environment from the project root (where `setup.py` lives).
-
-    pip install -e .
+  
+See [CONTRIBUTING.rst](https://github.com/misken/hillmaker/blob/main/CONTRIBUTING.rst) for more details.
 
 Learn more about the history of hillmaker
 -----------------------------------------

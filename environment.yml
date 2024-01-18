@@ -9,6 +9,7 @@ dependencies:
   - matplotlib>=3.7.1
   - seaborn>=0.12.2
   - pytest
+  - flake8
   - tomli>=2.0.1
   - jupyter-book
   - ipykernel
