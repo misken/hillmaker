@@ -4,7 +4,7 @@
 title: hillmaker
 version: 0.8.0
 author: misken
-logo: images/logo2.png
+logo: images/hillmaker_logo-100px.png
 
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
