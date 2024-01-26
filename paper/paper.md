@@ -13,9 +13,9 @@ authors:
     affiliation: 2
 
 affiliations:
- - name: Oakland University, USA
+ - name: School of Business Administration, Oakland University, United States of America
    index: 1
- - name: UNC Health Rex, USA
+ - name: UNC Health Rex, Raleigh, United States of America
    index: 2
 
 date: 16 November 2023
