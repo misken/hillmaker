@@ -38,7 +38,7 @@ summary occupancy plots - see \autoref{fig:occplot}.
 The hillmaker package can be used as a command line application as well as an importable library from Jupyter notebooks
 or Python scripts. There is an object-oriented API
 as well as a function based API. Under the hood, hillmaker relies primarily on numpy [@harris2020array], pandas [@reback2020pandas], 
-matplotlib [@Hunter:2007], seaborn [@Waskom2021], and [Pydantic](https://docs.pydantic.dev/latest/).
+matplotlib [@Hunter:2007], seaborn [@Waskom2021], and Pydantic [@pydantic_2024].
 Transaction data can be in CSV format or a pandas `DataFrame`. The primary outputs of hillmaker are:
 
 - pandas `DataFrame`s and CSV files with arrival, departure, and occupancy summaries by time of day, day of week and, optionally, an entity category.
@@ -61,8 +61,8 @@ statistics packages do not include this type of functionality and one-off SQL ba
 and generalize. Additionally, the implementation of percentile functions in SQL is dialect dependent. 
 
 Early versions of hillmaker were used in hundreds of projects in multiple healthcare engineering departments and consulting firms. It
-was written in [Microsoft Access](https://www.microsoft.com/en-us/microsoft-365/access) and released as an open source project in the early 2000s. You can still find it
-on SourceForge at [https://sourceforge.net/projects/hillmaker/](https://sourceforge.net/projects/hillmaker/). An
+was written in Microsoft Access [@msaccess] and released as an open source project in the early 2000s. You can still find it
+on SourceForge at [sourceforge.net/projects/hillmaker/](https://sourceforge.net/projects/hillmaker/). An
 academic paper about this early version was published [@isken2002modeling] after the first author left industry
 and joined Oakland University. Unfortunately, development on this version languished for a variety of
 technical and logistical reasons. So, hillmaker continued to get significant use but few improvements were made.
