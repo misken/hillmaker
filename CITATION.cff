@@ -1,0 +1,32 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Isken
+  given-names: Mark W.
+  orcid: "https://orcid.org/0000-0001-8471-9116"
+- family-names: Norman
+  given-names: Jacob W.
+doi: 10.5281/zenodo.10530420
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Isken
+    given-names: Mark W.
+    orcid: "https://orcid.org/0000-0001-8471-9116"
+  - family-names: Norman
+    given-names: Jacob W.
+  date-published: 2024-01-30
+  doi: 10.21105/joss.06154
+  issn: 2475-9066
+  issue: 93
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6154
+  title: "hillmaker: A Python package for occupancy analysis in discrete
+    entity flow systems"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06154"
+  volume: 9
+title: "hillmaker: A Python package for occupancy analysis in discrete
+  entity flow systems"
