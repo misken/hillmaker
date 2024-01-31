@@ -13,9 +13,9 @@ authors:
     affiliation: 2
 
 affiliations:
- - name: Oakland University, USA
+ - name: School of Business Administration, Oakland University, United States of America
    index: 1
- - name: UNC Health Rex, USA
+ - name: UNC Health Rex, Raleigh, United States of America
    index: 2
 
 date: 16 November 2023
@@ -26,7 +26,7 @@ bibliography: paper.bib
 
 # Summary
 
-hillmaker is a Python package that computes time of day and day of week specific arrival, departure, and 
+hillmaker is a Python package that computes time-of-day and day-of-week-specific arrival, departure, and
 occupancy statistics from 
 transaction data containing arrival and departure timestamps. Typical use is for capacity planning problems in 
 places like hospital emergency departments, surgical recovery rooms, or any system in which entities arrive, 
@@ -37,8 +37,8 @@ summary occupancy plots - see \autoref{fig:occplot}.
 
 The hillmaker package can be used as a command line application as well as an importable library from Jupyter notebooks
 or Python scripts. There is an object-oriented API
-as well as a function based API. Under the hood, hillmaker relies primarily on numpy [@harris2020array], pandas [@reback2020pandas], 
-matplotlib [@Hunter:2007], seaborn [@Waskom2021], and [Pydantic](https://docs.pydantic.dev/latest/).
+as well as a function-based API. Under the hood, hillmaker relies primarily on numpy [@harris2020array], pandas [@reback2020pandas],
+matplotlib [@Hunter:2007], seaborn [@Waskom2021], and Pydantic [@pydantic_2024].
 Transaction data can be in CSV format or a pandas `DataFrame`. The primary outputs of hillmaker are:
 
 - pandas `DataFrame`s and CSV files with arrival, departure, and occupancy summaries by time of day, day of week and, optionally, an entity category.
@@ -52,25 +52,25 @@ The [documentation](https://hillmaker.readthedocs.io/en/latest/intro.html) inclu
 The original motivation for hillmaker was a series of capacity planning problems faced by a management 
 engineering group at a large healthcare system. Such
 problems are characterized by patient flow and capacity
-use that exhibit significant and important time of day and day of week patterns. For example, a huge component of hospital costs 
+use that exhibit significant and important time-of-day and day-of-week patterns. For example, a huge component of hospital costs
 are related to labor. Staffing and scheduling relies on effectively matching capacity to demand that varies significantly by time of day and day of week. Another motivating problem
 involved developing a surgical patient rerouting plan to temporarily accommodate patients while a post-surgical holding area
 renovation project was underway.  Proper statistical
 analysis of patient arrival, departure, and occupancy patterns, including computation of percentiles, are a critical part of such projects. Traditional
 statistics packages do not include this type of functionality and one-off SQL based approaches are tedious to create
-and generalize. Additionally, the implementation of percentile functions in SQL is dialect dependent. 
+and generalize. Additionally, the implementation of percentile functions in SQL is dialect-dependent.
 
 Early versions of hillmaker were used in hundreds of projects in multiple healthcare engineering departments and consulting firms. It
-was written in [Microsoft Access](https://www.microsoft.com/en-us/microsoft-365/access) and released as an open source project in the early 2000s. You can still find it
-on SourceForge at [https://sourceforge.net/projects/hillmaker/](https://sourceforge.net/projects/hillmaker/). An
+was written in Microsoft Access [@msaccess] and released as an open source project in the early 2000s. You can still find it
+on SourceForge at [sourceforge.net/projects/hillmaker/](https://sourceforge.net/projects/hillmaker/). An
 academic paper about this early version was published [@isken2002modeling] after the first author left industry
 and joined Oakland University. Unfortunately, development on this version languished for a variety of
 technical and logistical reasons. So, hillmaker continued to get significant use but few improvements were made.
 
-In addition to industry use, hillmaker is well-suited for healthcare operations research projects involving patient 
+In addition to industry use, hillmaker is well-suited for healthcare operations research projects involving patient
 [@broyles2010statistical; @isken2011open; @helm2014design; @konrad2012using], material [@isken2002simulation],
 and even information flow [@konrad2008characterizing]. Discrete event
-simulation is widely used in such research projects and hillmaker can aid in the statistical analysis needed for modeling
+simulation is widely used in such research projects, and hillmaker can aid in the statistical analysis needed for modeling
 entity arrival patterns and for analyzing and validating simulation output. While problems in the healthcare industry spurred 
 the development of hillmaker, it has been used in other domains such as 
 [bike share systems](https://bitsofanalytics.org/posts/basic-usage-cycleshare/basic_usage_cycleshare),
