@@ -2,7 +2,7 @@
 The :mod:`hillmaker.plotting` module includes functions for creating daily and weekly plots.
 """
 
-# Copyright 2022-2023 Mark Isken, Jacob Norman
+# Copyright 2022-2025 Mark Isken, Jacob Norman
 
 import logging
 from typing import Tuple, List, Dict
@@ -272,7 +272,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         num_days = len(summary_df) / (60 / bin_size_minutes * 24)
 
         # Create a list to use as the X-axis values
-        num_bins = num_days * 1440 / bin_size_minutes
+        num_bins = int(num_days * 1440 / bin_size_minutes)
         base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
                       'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
         first_dow_map = {'sun': 6, 'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5}
@@ -286,8 +286,8 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         occ_summary_df_plot.sort_values(by=['plot_dow', 'bin_of_day'], inplace=True)
 
         # Choose appropriate major and minor tick locations
-        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 12:00:00', periods=7, freq='24H').tolist()
-        minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 06:00:00', periods=42, freq='4H').tolist()
+        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 12:00:00', periods=7, freq='24h').tolist()
+        minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 06:00:00', periods=42, freq='4h').tolist()
 
         # Set the tick locations for the axes object
         ax1.set_xticks(major_tick_locations)
@@ -317,7 +317,7 @@ def make_week_hill_plot(summary_df: pd.DataFrame, metric: str = 'occupancy',
         # Create formatter variables
         day_fmt = '' if num_days == 1 else '%a'
         dayofweek_formatter = DateFormatter(day_fmt)
-        qtrday_formatter = DateFormatter('%H')
+        qtrday_formatter = DateFormatter('%h')
 
         # Format the tick labels
         ax1.xaxis.set_major_formatter(dayofweek_formatter)
@@ -483,8 +483,8 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         occ_summary_df_plot.sort_values(by=['plot_dow', 'bin_of_day'], inplace=True)
 
         # Choose appropriate major and minor tick locations
-        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 12:00:00', periods=7, freq='24H').tolist()
-        minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 06:00:00', periods=42, freq='4H').tolist()
+        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 12:00:00', periods=7, freq='24h').tolist()
+        minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 06:00:00', periods=42, freq='4h').tolist()
 
         # Set the tick locations for the axes object
         ax1.set_xticks(major_tick_locations)
@@ -510,7 +510,7 @@ def make_week_combo_plot(summary_df1: pd.DataFrame,
         # Create formatter variables
         day_fmt = '' if num_days == 1 else '%a'
         dayofweek_formatter = DateFormatter(day_fmt)
-        qtrday_formatter = DateFormatter('%H')
+        qtrday_formatter = DateFormatter('%h')
 
         # Format the tick labels
         ax1.xaxis.set_major_formatter(dayofweek_formatter)
@@ -667,8 +667,8 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         occ_summary_df_plot.sort_values(by=['bin_of_day'], inplace=True)
 
         # Choose appropriate major and minor tick locations
-        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 00:00:00', periods=24, freq='1H').tolist()
-        # minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 01:00:00', periods=24, freq='1H').tolist()
+        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 00:00:00', periods=24, freq='1h').tolist()
+        # minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 01:00:00', periods=24, freq='1h').tolist()
 
         # Set the tick locations for the axes object
         ax1.set_xticks(major_tick_locations)
@@ -697,7 +697,7 @@ def make_daily_hill_plot(summary_df: pd.DataFrame, day_of_week: str, metric: str
         # Create formatter variables
         # day_fmt = '' if num_days == 1 else '%a'
         # dayofweek_formatter = DateFormatter(day_fmt)
-        hour_formatter = DateFormatter('%H')
+        hour_formatter = DateFormatter('%h')
 
         # Format the tick labels
         ax1.xaxis.set_major_formatter(hour_formatter)
@@ -841,7 +841,7 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
         num_days = 1
 
         # Create a list to use as the X-axis values
-        num_bins = num_days * 1440 / bin_size_minutes
+        num_bins = int(num_days * 1440 / bin_size_minutes)
         base_dates = {'sun': '2015-01-04', 'mon': '2015-01-05', 'tue': '2015-01-06',
                       'wed': '2015-01-07', 'thu': '2015-01-08', 'fri': '2015-01-09', 'sat': '2015-01-10'}
         dow_map = {'sun': 6, 'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5}
@@ -861,8 +861,8 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
         occ_summary_df_plot.sort_values(by=['bin_of_day'], inplace=True)
 
         # Choose appropriate major and minor tick locations
-        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 00:00:00', periods=24, freq='1H').tolist()
-        # minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 01:00:00', periods=24, freq='1H').tolist()
+        major_tick_locations = pd.date_range(f'{base_date_for_first_dow} 00:00:00', periods=24, freq='1h').tolist()
+        # minor_tick_locations = pd.date_range(f'{base_date_for_first_dow} 01:00:00', periods=24, freq='1h').tolist()
 
         # Set the tick locations for the axes object
         ax1.set_xticks(major_tick_locations)
@@ -887,7 +887,7 @@ def make_daily_combo_plot(summary_df1: pd.DataFrame,
         # Create formatter variables
         # day_fmt = '' if num_days == 1 else '%a'
         # dayofweek_formatter = DateFormatter(day_fmt)
-        hour_formatter = DateFormatter('%H')
+        hour_formatter = DateFormatter('%h')
 
         # Format the tick labels
         ax1.xaxis.set_major_formatter(hour_formatter)
